@@ -1,0 +1,30 @@
+{
+  "name": "@nervehq/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for Nerve Unified Notification-as-a-Service (NaaS) Platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "NodeNext",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "tsx --test tests/**/*.test.ts"
+  },
+  "author": "Nerve Engineering <engineering@ajianlabs.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
