@@ -1,6 +1,16 @@
 // node:crypto is dynamically imported at runtime to avoid breaking browser bundles
 import type { WebhookPayload, WebhookVerifyOptions, DeliveryStatus } from '../types.js';
 
+/**
+ * Signature verification and parsing helpers for delivery webhooks.
+ *
+ * **Nerve does not send outbound delivery webhooks yet.** They are explicitly
+ * out of scope for the first release — poll `events.get(eventId)` or
+ * `messages.list()` for delivery state instead. These helpers ship ahead of the
+ * feature so that an integration written today keeps working when webhooks land,
+ * and so the verification logic is reviewed once rather than reimplemented by
+ * every caller. Nothing will arrive at your endpoint until then.
+ */
 export class WebhooksResource {
   /**
    * Verify a webhook signature from a delivery provider.
