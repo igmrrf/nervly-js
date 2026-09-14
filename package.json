@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/*.test.ts"
   },
   "author": "Nerve Engineering <engineering@ajianlabs.com>",
   "license": "MIT",
