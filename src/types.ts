@@ -11,7 +11,7 @@ export interface NerveConfig {
 export type Priority = 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW';
 
 // --- Delivery Status ---
-export type DeliveryStatus = 'TRIGGERED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'SEEN' | 'CLICKED' | 'FAILED';
+export type DeliveryStatus = 'TRIGGERED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'SEEN' | 'CLICKED' | 'FAILED' | 'SUPPRESSED';
 
 // --- Recipient ---
 export interface Recipient {
