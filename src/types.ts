@@ -13,6 +13,9 @@ export type Priority = 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW';
 // --- Delivery Status ---
 export type DeliveryStatus = 'TRIGGERED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'SEEN' | 'CLICKED' | 'FAILED' | 'SUPPRESSED';
 
+// --- Channel Providers ---
+export type EmailProvider = 'resend' | 'zeptomail' | 'postmark' | 'sendgrid' | string;
+
 // --- Recipient ---
 export interface Recipient {
   subscriberId: string;
@@ -24,6 +27,7 @@ export interface Recipient {
 // --- Overrides ---
 export interface EmailOverride {
   sender?: string;
+  provider?: EmailProvider;
   customHeaders?: Record<string, string>;
 }
 
@@ -32,11 +36,36 @@ export interface WhatsAppOverride {
   language?: string;
 }
 
+export interface SmsOverride {
+  sender?: string;
+}
+
 export interface ProviderOverrides {
   email?: EmailOverride;
   whatsapp?: WhatsAppOverride;
+  sms?: SmsOverride;
   extraParams?: Record<string, string>;
 }
+
+// --- Email Helper Request ---
+export interface SendEmailOptions {
+  to: string | Recipient;
+  subject: string;
+  body?: string;
+  html?: string;
+  text?: string;
+  name?: string;
+  category?: string;
+  payload?: Record<string, unknown>;
+  sender?: string;
+  provider?: EmailProvider;
+  customHeaders?: Record<string, string>;
+  overrides?: ProviderOverrides;
+  idempotencyKey?: string;
+  priority?: Priority;
+}
+
+export type EmailSendRequest = SendEmailOptions;
 
 // --- Event Trigger ---
 export interface TriggerEventRequest {
@@ -44,6 +73,7 @@ export interface TriggerEventRequest {
   to: Recipient;
   payload?: Record<string, unknown>;
   overrides?: ProviderOverrides;
+  category?: string;
 }
 
 export interface TriggerEventOptions {
@@ -56,6 +86,7 @@ export interface TriggerEventResponse {
   status: string;
   idempotencyKey: string | null;
   priority: string;
+  channel?: string;
   timestamp: string;
 }
 

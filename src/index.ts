@@ -1,5 +1,6 @@
 import { NerveHttpClient } from './client.js';
 import { EventsResource } from './resources/events.js';
+import { EmailResource } from './resources/email.js';
 import { MessagesResource } from './resources/messages.js';
 import { SubscribersResource } from './resources/subscribers.js';
 import { UsersResource } from './resources/users.js';
@@ -20,14 +21,15 @@ import type { NerveConfig } from './types.js';
  *
  * const nerve = new Nerve({ apiKey: 'your_api_key' });
  *
- * // Trigger a notification
- * const result = await nerve.events.trigger({
- *   name: 'welcome_email',
- *   to: { subscriberId: 'usr_001', email: 'user@example.com' },
- *   payload: { firstName: 'John' },
+ * // Send a transactional email
+ * const res = await nerve.email.send({
+ *   to: 'user@example.com',
+ *   subject: 'Welcome to Nerve',
+ *   html: '<p>Hello!</p>',
+ *   provider: 'resend',
  * });
  *
- * console.log(result.eventId);
+ * console.log(res.eventId);
  * ```
  */
 export class Nerve {
@@ -35,6 +37,9 @@ export class Nerve {
 
   /** Events resource — trigger and bulk dispatch notifications, fetch timeline. */
   public readonly events: EventsResource;
+
+  /** Email resource — ergonomic convenience helpers for transactional email dispatch. */
+  public readonly email: EmailResource;
 
   /** Messages resource — list and search message history. */
   public readonly messages: MessagesResource;
@@ -61,6 +66,7 @@ export class Nerve {
 
     this.client = new NerveHttpClient(config);
     this.events = new EventsResource(this.client);
+    this.email = new EmailResource(this.client);
     this.messages = new MessagesResource(this.client);
     this.subscribers = new SubscribersResource(this.client);
     this.users = new UsersResource(this.client);
@@ -76,6 +82,7 @@ export default Nerve;
 // Named re-exports for convenience
 export { NerveHttpClient } from './client.js';
 export { EventsResource } from './resources/events.js';
+export { EmailResource } from './resources/email.js';
 export { MessagesResource } from './resources/messages.js';
 export { SubscribersResource } from './resources/subscribers.js';
 export { UsersResource } from './resources/users.js';
@@ -88,10 +95,14 @@ export type {
   NerveConfig,
   Priority,
   DeliveryStatus,
+  EmailProvider,
   Recipient,
   EmailOverride,
   WhatsAppOverride,
+  SmsOverride,
   ProviderOverrides,
+  SendEmailOptions,
+  EmailSendRequest,
   TriggerEventRequest,
   TriggerEventOptions,
   TriggerEventResponse,

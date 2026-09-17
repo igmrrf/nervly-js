@@ -11,6 +11,7 @@ describe('Nerve Client', () => {
     const nerve = new Nerve({ apiKey: 'test_key_123' });
     assert.ok(nerve);
     assert.ok(nerve.events);
+    assert.ok(nerve.email);
     assert.ok(nerve.messages);
     assert.ok(nerve.subscribers);
     assert.ok(nerve.users);
@@ -22,6 +23,8 @@ describe('Nerve Client', () => {
   it('should expose all resource properties', () => {
     const nerve = new Nerve({ apiKey: 'test_key' });
     assert.equal(typeof nerve.events.trigger, 'function');
+    assert.equal(typeof nerve.events.triggerEmail, 'function');
+    assert.equal(typeof nerve.email.send, 'function');
     assert.equal(typeof nerve.events.bulkTrigger, 'function');
     assert.equal(typeof nerve.events.get, 'function');
     assert.equal(typeof nerve.messages.list, 'function');
