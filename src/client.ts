@@ -2,12 +2,15 @@ import {
   NerveApiError,
   NerveAuthenticationError,
   NerveValidationError,
+  NerveNotFoundError,
   NerveIdempotencyError,
   NerveRateLimitError,
+  NerveServerError,
   NerveNetworkError,
   NerveRetryExhaustedError,
 } from './errors.js';
 import type { NerveConfig, RequestOptions, ApiErrorBody } from './types.js';
+import { SDK_VERSION } from './version.js';
 
 /**
  * Low-level HTTP transport client for the Nerve Gateway API.
@@ -66,8 +69,19 @@ export class NerveHttpClient {
   /**
    * Execute an HTTP request with retry logic and error handling.
    *
-   * Retries on: 429, 500, 502, 503, 504, and network errors.
-   * Uses exponential backoff with jitter: min(base * 2^attempt + jitter, 30s).
+   * Retries on 429, 500, 502, 503, 504 and network errors, with exponential
+   * backoff plus jitter: `min(base * 2^attempt + jitter, 30s)`. A 429 that
+   * carried a `Retry-After` waits for that instead.
+   *
+   * Two distinct failures reach the caller:
+   *
+   * - the *retryable* error itself, when the budget was never spent (a 400, a
+   *   404, or a 503 on a client configured with `maxRetries: 0`) — you were
+   *   only told once, so the underlying error is the honest answer;
+   * - {@link NerveRetryExhaustedError} when retries actually ran and all of
+   *   them failed, carrying the last error on `lastError`. Without this you
+   *   could not tell "the server hiccuped once" from "we gave up", which is
+   *   what the class exists to express.
    */
   public async request<T>(options: RequestOptions): Promise<T> {
     const url = `${this.baseUrl}${options.path.startsWith('/') ? options.path : `/${options.path}`}`;
@@ -88,17 +102,21 @@ export class NerveHttpClient {
           continue;
         }
 
-        throw error;
+        if (attempt > 0 && this.isRetryable(lastError)) {
+          throw new NerveRetryExhaustedError(attempt, lastError);
+        }
+
+        throw lastError;
       }
     }
 
-    throw new NerveRetryExhaustedError(this.maxRetries, lastError!);
+    throw new NerveRetryExhaustedError(attempt, lastError!);
   }
 
   private async executeRequest<T>(url: string, options: RequestOptions): Promise<T> {
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
-    headers.set('User-Agent', '@nervehq/sdk/0.1.0');
+    headers.set('User-Agent', `@nervehq/sdk/${SDK_VERSION}`);
 
     if (!options.skipAuth) {
       headers.set('Authorization', `Bearer ${this.apiKey}`);
@@ -155,24 +173,30 @@ export class NerveHttpClient {
 
     switch (response.status) {
       case 400:
-        throw new NerveValidationError(message);
+        throw new NerveValidationError(message, requestId);
       case 401:
-        throw new NerveAuthenticationError(message);
+        throw new NerveAuthenticationError(message, requestId);
+      case 404:
+        throw new NerveNotFoundError(message, requestId);
       case 409:
-        throw new NerveIdempotencyError(message);
+        throw new NerveIdempotencyError(message, requestId);
       case 429: {
         const retryAfter = response.headers.get('retry-after');
         const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000;
-        throw new NerveRateLimitError(message, retryAfterMs);
+        throw new NerveRateLimitError(message, retryAfterMs, requestId);
       }
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        throw new NerveServerError(message, response.status, requestId);
       default:
         throw new NerveApiError(response.status, errorType, message, requestId);
     }
   }
 
-  private shouldRetry(error: Error, attempt: number): boolean {
-    if (attempt >= this.maxRetries) return false;
-
+  /** Whether a failure is worth another attempt, budget aside. */
+  private isRetryable(error: Error): boolean {
     if (error instanceof NerveNetworkError) return true;
 
     if (error instanceof NerveApiError) {
@@ -180,6 +204,10 @@ export class NerveHttpClient {
     }
 
     return false;
+  }
+
+  private shouldRetry(error: Error, attempt: number): boolean {
+    return attempt < this.maxRetries && this.isRetryable(error);
   }
 
   private calculateRetryDelay(error: Error, attempt: number): number {

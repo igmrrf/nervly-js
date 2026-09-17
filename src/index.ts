@@ -89,6 +89,7 @@ export { UsersResource } from './resources/users.js';
 export { HealthResource } from './resources/health.js';
 export { McpResource } from './resources/mcp.js';
 export { WebhooksResource } from './resources/webhooks.js';
+export { SDK_VERSION } from './version.js';
 
 // Re-export all types
 export type {
@@ -107,6 +108,7 @@ export type {
   TriggerEventOptions,
   TriggerEventResponse,
   BulkTriggerRequest,
+  BulkEventResult,
   BulkTriggerResponse,
   EventItemDto,
   MessageDto,
@@ -122,17 +124,32 @@ export type {
   WebhookPayload,
   WebhookVerifyOptions,
   ApiErrorBody,
+  HttpMethod,
+  RequestOptions,
 } from './types.js';
 
-// Re-export all errors
+// Re-export all errors — both the long names and their short aliases. Both
+// spellings are the same class object, so `instanceof` works either way.
 export {
   NerveError,
+  NerveError as NerveSdkError,
   NerveApiError,
+  NerveApiError as ApiError,
   NerveAuthenticationError,
+  NerveAuthenticationError as AuthenticationError,
   NerveValidationError,
+  NerveValidationError as ValidationError,
+  NerveNotFoundError,
+  NerveNotFoundError as NotFoundError,
   NerveIdempotencyError,
+  NerveIdempotencyError as IdempotencyError,
   NerveRateLimitError,
+  NerveRateLimitError as RateLimitError,
+  NerveServerError,
+  NerveServerError as ServerError,
   NerveNetworkError,
+  NerveNetworkError as NetworkError,
   NerveRetryExhaustedError,
+  NerveRetryExhaustedError as RetryExhaustedError,
 } from './errors.js';
 

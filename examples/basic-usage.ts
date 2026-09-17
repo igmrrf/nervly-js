@@ -69,7 +69,8 @@ async function main() {
           customHeaders: { 'zoho-enczapikey': 'secret-token-bypass' },
         },
         whatsapp: {
-          templateName: 'tx_receipt_v2',
+          // Snake_case to match the gateway's WhatsAppOverrideDto.
+          template_name: 'tx_receipt_v2',
           language: 'en_GB',
         },
       },
@@ -103,7 +104,7 @@ async function main() {
   });
   console.log(`  Job ID: ${batchJob.jobId}`);
   console.log(`  Events queued: ${batchJob.count}`);
-  console.log(`  Est. completion: ${batchJob.estimatedCompletion}\n`);
+  console.log(`  Events rejected: ${batchJob.failedCount}\n`);
 
   // ─────────────────────────────────────────────────────────────
   // 5. Update User Notification Preferences
@@ -123,7 +124,7 @@ async function main() {
   });
   console.log(`  Subscriber: ${prefs.subscriberId}`);
   console.log(`  Status: ${prefs.status}`);
-  console.log(`  Updated at: ${prefs.updatedAt}\n`);
+  console.log(`  Updated at: ${prefs.updated_at}\n`);
 
   // ─────────────────────────────────────────────────────────────
   // 6. MCP — Model Context Protocol Tools

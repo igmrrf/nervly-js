@@ -17,6 +17,10 @@ Nerve is a unified notification infrastructure designed for developers. This SDK
 npm install @nervehq/sdk
 ```
 
+Ships as both ES modules and CommonJS, with no runtime dependencies — `import`
+resolves `dist/esm`, `require` resolves `dist/cjs`, each with its own type
+declarations. Node 24+.
+
 ## Quick Start
 
 ```typescript
@@ -188,6 +192,12 @@ console.log(tools);
 
 Verify incoming provider webhooks securely via timing-safe HMAC-SHA256.
 
+> [!NOTE]
+> **Nerve does not send outbound delivery webhooks yet.** Poll
+> `events.get(eventId)` or `messages.list()` for delivery state. These helpers
+> ship ahead of the feature so integrations written today keep working when it
+> lands; nothing will arrive at your endpoint until then.
+
 ```typescript
 import express from 'express';
 const app = express();
@@ -219,10 +229,10 @@ The SDK exposes typed error classes for granular control.
 ```typescript
 import {
   Nerve,
+  NerveError,
   NerveApiError,
   NerveAuthenticationError,
   NerveRateLimitError,
-  NerveValidationError
 } from '@nervehq/sdk';
 
 try {
@@ -234,11 +244,19 @@ try {
     console.error('Rate limit reached. Retry after ms:', error.retryAfterMs);
   } else if (error instanceof NerveApiError) {
     console.error('API Error:', error.statusCode, error.message);
-  } else {
-    console.error('Unexpected error:', error);
+  } else if (error instanceof NerveError) {
+    // Network failure, or retries exhausted — inspect `lastError` for the cause.
+    console.error('Request failed:', error.message);
   }
 }
 ```
+
+Every status-specific class also has a short alias — `AuthenticationError`,
+`RateLimitError`, `ValidationError`, `NotFoundError`, `IdempotencyError`,
+`ServerError` — which is the same class object, so `instanceof` works either
+way. `NerveApiError.errorType` carries the gateway's machine-readable code and
+`requestId` the `x-request-id` header, both worth logging. See
+[`docs/api_reference.md`](docs/api_reference.md) §9.
 
 ## Configuration Options
 

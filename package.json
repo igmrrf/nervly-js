@@ -3,27 +3,49 @@
   "version": "0.1.0",
   "description": "Official TypeScript SDK for Nerve Unified Notification-as-a-Service (NaaS) Platform",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "module": "NodeNext",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    }
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
+  "files": [
+    "dist/esm",
+    "dist/cjs",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx src/index.ts",
-    "test": "tsx --test tests/*.test.ts"
+    "build": "node scripts/build.mjs",
+    "codegen": "openapi-typescript ../nerve-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
+    "check:codegen": "node scripts/check-codegen.mjs",
+    "check:types": "tsc --project tsconfig.check.json",
+    "check:exports": "node scripts/check-exports.mjs",
+    "check": "npm run check:codegen && npm run check:types && npx tsc --noEmit",
+    "verify": "npm run check && npm test",
+    "pretest": "npm run build",
+    "test": "tsx --test tests/*.test.ts",
+    "dev": "tsx src/index.ts"
   },
   "author": "Nerve Engineering <engineering@ajianlabs.com>",
   "license": "MIT",
   "engines": {
     "node": ">=24.0.0"
   },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.12.7",
+    "openapi-typescript": "^7.13.0",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5"
   }
