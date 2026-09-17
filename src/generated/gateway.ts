@@ -106,8 +106,11 @@ export interface paths {
          * Report gateway health.
          * @description Unauthenticated. Use this as your load-balancer health check and as a
          *     quick way to confirm which gateway version is live in an environment.
-         *     A `200` means the process is up; inspect `nats_connected` to tell whether
-         *     it can currently reach the broker.
+         *     A `200` means the process is accepting new work; inspect `nats_connected`
+         *     to tell whether it can currently reach the broker. A `503` with
+         *     `"status": "DRAINING"` means the process received a termination signal and
+         *     is finishing in-flight requests before exit — a load balancer must take it
+         *     out of rotation and stop sending new traffic.
          */
         get: operations["get-health"];
         put?: never;
@@ -460,7 +463,8 @@ export interface components {
              */
             service: string;
             /**
-             * @description Always `OK` when the process is able to answer at all.
+             * @description `OK` while the process is accepting work, `DRAINING` once a termination
+             *     signal has been received and the in-flight drain has begun.
              * @example OK
              */
             status: string;
@@ -1045,6 +1049,15 @@ export interface operations {
         responses: {
             /** @description Gateway is serving traffic */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+            /** @description Gateway is draining after a termination signal; stop routing new traffic to this instance */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
