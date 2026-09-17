@@ -166,7 +166,7 @@ category you send replaces that category's flags wholesale.
 
 ```typescript
 const health = await nerve.health.check();
-// { status, service, version, environment, uptime_seconds, nats_connected, nats_url }
+// { status, service, version, environment, uptime_seconds, nats_connected }
 ```
 
 `nats_connected: false` means accepted events are being buffered rather than

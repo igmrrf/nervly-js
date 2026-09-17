@@ -452,11 +452,6 @@ export interface components {
              */
             nats_connected: boolean;
             /**
-             * @description NATS endpoint this instance is configured against.
-             * @example nats://nats:4222
-             */
-            nats_url: string;
-            /**
              * @description Service identifier, useful when several Nerve components sit behind
              *     one load balancer.
              * @example nerve-gateway

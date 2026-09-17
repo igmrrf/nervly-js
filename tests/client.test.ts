@@ -87,7 +87,6 @@ describe('NerveHttpClient — request shape', () => {
           environment: 'ci',
           uptime_seconds: 1,
           nats_connected: true,
-          nats_url: 'nats://nats:4222',
         } satisfies HealthStatus);
       },
       async () => {

@@ -236,7 +236,6 @@ export interface HealthStatus {
   environment: string;
   uptime_seconds: number;
   nats_connected: boolean;
-  nats_url: string;
 }
 
 // --- MCP ---

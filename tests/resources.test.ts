@@ -202,7 +202,6 @@ describe('HealthResource', () => {
             environment: 'ci',
             uptime_seconds: 12,
             nats_connected: true,
-            nats_url: 'nats://nats:4222',
           };
         },
       }),
