@@ -615,6 +615,7 @@ export interface components {
                 [key: string]: string;
             } | null;
             sms?: null | components["schemas"]["SmsOverrideDto"];
+            voice?: null | components["schemas"]["VoiceOverrideDto"];
             whatsapp?: null | components["schemas"]["WhatsAppOverrideDto"];
         };
         /**
@@ -748,9 +749,10 @@ export interface components {
              *     supplied and the resolved priority. Urgent events take the most
              *     reachable channel, everything else the cheapest.
              *
-             *     One of `sms`, `email`, `push` or `whatsapp`. The workers may still fail
-             *     over to another channel if every provider on this one rejects the
-             *     message; the delivery receipt reports what actually happened.
+             *     One of `sms`, `email`, `push`, `whatsapp` or `voice`. The workers may
+             *     still fail over to another channel if every provider on this one
+             *     rejects the message; the delivery receipt reports what actually
+             *     happened.
              * @example email
              */
             channel: string;
@@ -805,6 +807,33 @@ export interface components {
              * @example 2026-08-28T09:15:04.221Z
              */
             updated_at: string;
+        };
+        /**
+         * @description Per-request overrides for the Voice channel.
+         *
+         *     Supplying this at all opts the event into voice; voice calls cost roughly
+         *     three times an SMS and ring a phone, so the channel is never inferred from
+         *     the recipient merely having a number.
+         */
+        VoiceOverrideDto: {
+            /**
+             * @description BCP-47 language tag for the voice profile.
+             * @example en-US
+             */
+            language?: string | null;
+            /**
+             * @description Spoken script for the call. Falls back to the workspace voice template
+             *     when omitted.
+             * @example Your verification code is 48291
+             */
+            script?: string | null;
+            /**
+             * @description TTS voice profile to speak the script in. Serialised snake_case
+             *     (`voice_id`) to match the canonical `VoiceOverride` contract and the
+             *     worker key; `voiceId` is accepted as an input alias.
+             * @example Ada
+             */
+            voice_id?: string | null;
         };
         /** @description Acknowledgement that a delivery receipt was accepted. */
         WebhookResponse: {

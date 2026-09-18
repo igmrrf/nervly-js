@@ -1,6 +1,7 @@
 import { NerveHttpClient } from './client.js';
 import { EventsResource } from './resources/events.js';
 import { EmailResource } from './resources/email.js';
+import { VoiceResource } from './resources/voice.js';
 import { MessagesResource } from './resources/messages.js';
 import { SubscribersResource } from './resources/subscribers.js';
 import { UsersResource } from './resources/users.js';
@@ -41,6 +42,9 @@ export class Nerve {
   /** Email resource — ergonomic convenience helpers for transactional email dispatch. */
   public readonly email: EmailResource;
 
+  /** Voice resource — ergonomic convenience helpers for Voice OTP dispatch. */
+  public readonly voice: VoiceResource;
+
   /** Messages resource — list and search message history. */
   public readonly messages: MessagesResource;
 
@@ -67,6 +71,7 @@ export class Nerve {
     this.client = new NerveHttpClient(config);
     this.events = new EventsResource(this.client);
     this.email = new EmailResource(this.client);
+    this.voice = new VoiceResource(this.client);
     this.messages = new MessagesResource(this.client);
     this.subscribers = new SubscribersResource(this.client);
     this.users = new UsersResource(this.client);
@@ -83,6 +88,7 @@ export default Nerve;
 export { NerveHttpClient } from './client.js';
 export { EventsResource } from './resources/events.js';
 export { EmailResource } from './resources/email.js';
+export { VoiceResource } from './resources/voice.js';
 export { MessagesResource } from './resources/messages.js';
 export { SubscribersResource } from './resources/subscribers.js';
 export { UsersResource } from './resources/users.js';
@@ -90,6 +96,10 @@ export { HealthResource } from './resources/health.js';
 export { McpResource } from './resources/mcp.js';
 export { WebhooksResource } from './resources/webhooks.js';
 export { SDK_VERSION } from './version.js';
+
+// `Channel` is both a runtime const (so consumers can write `Channel.VOICE`)
+// and a type; a value re-export carries both.
+export { Channel } from './types.js';
 
 // Re-export all types
 export type {
@@ -101,9 +111,12 @@ export type {
   EmailOverride,
   WhatsAppOverride,
   SmsOverride,
+  VoiceOverride,
   ProviderOverrides,
   SendEmailOptions,
   EmailSendRequest,
+  SendVoiceOptions,
+  VoiceSendRequest,
   TriggerEventRequest,
   TriggerEventOptions,
   TriggerEventResponse,

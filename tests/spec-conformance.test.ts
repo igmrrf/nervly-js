@@ -99,6 +99,7 @@ const MODELLED_SCHEMAS = new Set([
   'TriggerResponse',
   'UserPreferencesRequest',
   'UserPreferencesResponse',
+  'VoiceOverrideDto',
   'WhatsAppOverrideDto',
 ]);
 

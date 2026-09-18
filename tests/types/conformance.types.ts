@@ -39,6 +39,7 @@ import type {
   TriggerEventResponse,
   UserPreferencesRequest,
   UserPreferencesResponse,
+  VoiceOverride,
   WebhookPayload,
   WhatsAppOverride,
 } from '../../src/index.js';
@@ -102,6 +103,7 @@ export type _ProviderOverrides = Expect<Equal<ProviderOverrides, Spec['ProviderO
 export type _EmailOverride = Expect<Equal<EmailOverride, Spec['EmailOverrideDto']>>;
 export type _WhatsAppOverride = Expect<Equal<WhatsAppOverride, Spec['WhatsAppOverrideDto']>>;
 export type _SmsOverride = Expect<Equal<SmsOverride, Spec['SmsOverrideDto']>>;
+export type _VoiceOverride = Expect<Equal<VoiceOverride, Spec['VoiceOverrideDto']>>;
 export type _BulkTriggerRequest = Expect<Equal<BulkTriggerRequest, BulkTriggerRequestFromSpec>>;
 export type _UserPreferencesRequest = Expect<
   Equal<UserPreferencesRequest, UserPreferencesRequestFromSpec>
@@ -137,6 +139,7 @@ export type ConformanceAssertions = [
   _EmailOverride,
   _WhatsAppOverride,
   _SmsOverride,
+  _VoiceOverride,
   _BulkTriggerRequest,
   _UserPreferencesRequest,
   _ChannelPreferences,

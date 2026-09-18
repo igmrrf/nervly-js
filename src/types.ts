@@ -10,6 +10,22 @@ export interface NerveConfig {
 // --- Priority ---
 export type Priority = 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW';
 
+// --- Channel ---
+//
+// The delivery channels the gateway routes an event over. Exposed as a const
+// object *and* a type of the same name so consumers can write `Channel.VOICE`
+// for the value and `Channel` for the union.
+export const Channel = {
+  SMS: 'sms',
+  EMAIL: 'email',
+  PUSH: 'push',
+  WHATSAPP: 'whatsapp',
+  VOICE: 'voice',
+  ITSM: 'itsm',
+} as const;
+
+export type Channel = (typeof Channel)[keyof typeof Channel];
+
 // --- Delivery Status ---
 //
 // `MessageDto.status` is an open string on the wire. These are the values the
@@ -68,10 +84,28 @@ export interface SmsOverride {
   sender?: string | null;
 }
 
+export interface VoiceOverride {
+  /**
+   * Spoken script for the call. Falls back to the workspace voice template
+   * when omitted.
+   */
+  script?: string | null;
+  /**
+   * TTS voice profile to speak the script in. The wire field is snake_case
+   * (`voice_id`), matching the gateway's `VoiceOverrideDto` and the worker key.
+   */
+  voice_id?: string | null;
+  /**
+   * BCP-47 language tag for the voice profile.
+   */
+  language?: string | null;
+}
+
 export interface ProviderOverrides {
   email?: EmailOverride | null;
   whatsapp?: WhatsAppOverride | null;
   sms?: SmsOverride | null;
+  voice?: VoiceOverride | null;
   extraParams?: Record<string, string> | null;
 }
 
@@ -97,6 +131,30 @@ export interface SendEmailOptions {
 }
 
 export type EmailSendRequest = SendEmailOptions;
+
+// --- Voice Helper Request ---
+//
+// Client-side convenience shape, not a wire type: `VoiceResource` compiles it
+// into a `TriggerEventRequest`. Voice is opt-in per event: supplying this at
+// all (specifically `overrides.voice`) is what makes the channel eligible.
+export interface SendVoiceOptions {
+  /** A subscriber id or phone number, or a full recipient; voice needs `phone`. */
+  to: string | Recipient;
+  /** Spoken script. Supports `{{variable}}` placeholders from `payload`. */
+  script: string;
+  /** TTS voice profile; only Infobip honours this today. */
+  voice_id?: string;
+  /** BCP-47 language tag; defaults to `en-US` in the worker. */
+  language?: string;
+  name?: string;
+  category?: string;
+  payload?: Record<string, unknown>;
+  overrides?: ProviderOverrides;
+  idempotencyKey?: string;
+  priority?: Priority;
+}
+
+export type VoiceSendRequest = SendVoiceOptions;
 
 // --- Event Trigger ---
 //

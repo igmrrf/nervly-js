@@ -4,6 +4,10 @@ All notable changes to `@nervehq/sdk` are documented here. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- Voice channel support: the `Channel` const/type (`Channel.VOICE`), the `VoiceOverride` wire type (`script`, `voice_id`, `language`), `ProviderOverrides.voice`, and a typed `voice.send` resource with `SendVoiceOptions` / `VoiceSendRequest`.
+
 ## [0.1.0] - 2026-09-17
 
 ### Added

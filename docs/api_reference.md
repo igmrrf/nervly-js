@@ -113,7 +113,36 @@ it — useful for asserting what will go on the wire.
 
 ---
 
-## 4. Messages
+## 4. Voice
+
+### `voice.send(request, options?) → TriggerEventResponse` — `POST /v1/events/trigger` (200/202)
+
+```typescript
+await nerve.voice.send({
+  to: { subscriberId: 'user_8f21c', phone: '+2348012345678' },  // phone required
+  script: 'Your verification code is 4827',                    // required
+  voice_id: 'Ada',                                             // optional TTS profile
+  language: 'en-US',                                           // optional BCP-47 tag
+  category: 'security',
+  payload: { code: '4827' },                                   // {{variable}} source
+  idempotencyKey: 'otp_1',
+  priority: 'CRITICAL',
+});
+```
+
+Voice is opt-in per event — `voice.send` always emits `overrides.voice`, which
+is what makes the channel eligible; it is never inferred from a phone number.
+Only the fields you supply are sent (`voice_id` and `language` are omitted, not
+emptied, when unset), and a partial override merges with any pre-existing
+`overrides.voice`. `voice.buildTriggerRequest(request)` returns the
+`TriggerRequest` without sending it.
+
+`Channel` is exported as both a const and a type, so `Channel.VOICE === 'voice'`
+and `Channel` names the union `'sms' | 'email' | 'push' | 'whatsapp' | 'voice' | 'itsm'`.
+
+---
+
+## 5. Messages
 
 ### `messages.list(params?) → ListMessagesResponse` — `GET /v1/messages` (200)
 
@@ -132,7 +161,7 @@ const page = await nerve.messages.list({
 
 ---
 
-## 5. Subscribers & preferences
+## 6. Subscribers & preferences
 
 ### `subscribers.delete(subscriberId) → SubscriberErasureResponse` — `DELETE /v1/subscribers/{subscriberId}` (202)
 
@@ -160,7 +189,7 @@ category you send replaces that category's flags wholesale.
 
 ---
 
-## 6. Health
+## 7. Health
 
 ### `health.check() → HealthStatus` — `GET /v1/health` (200, unauthenticated)
 
@@ -174,7 +203,7 @@ published to the broker.
 
 ---
 
-## 7. Model Context Protocol
+## 8. Model Context Protocol
 
 ### `mcp.listTools() → McpResponse` — `POST /v1/mcp` (200)
 
@@ -191,7 +220,7 @@ non-2xx status.
 
 ---
 
-## 8. Webhooks
+## 9. Webhooks
 
 > **Nerve does not send outbound delivery webhooks yet.** Poll `events.get()` or
 > `messages.list()` for delivery state. These helpers ship ahead of the feature
@@ -220,7 +249,7 @@ fails — handle it as a 400 to your own caller.
 
 ---
 
-## 9. Errors
+## 10. Errors
 
 Every failure is a `NerveError`. See [`architecture.md`](architecture.md) §4 for
 the full hierarchy; the short aliases are the same class objects as their
