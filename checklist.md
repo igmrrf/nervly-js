@@ -4,10 +4,23 @@ TypeScript `@nervehq/sdk` client library (npm). Primary responsibility: **API St
 Parent checklist: [`../checklist.md`](../checklist.md)
 
 ## Tests
-- [x] Unit tests on all public methods, retries, error mapping — 61 tests across
-      `tests/*.test.ts`; every resource method, both retry paths (success after a
-      503, exhaustion), all five status→error mappings, timeouts, and the
-      dual-build packaging assertions.
+- [x] Unit tests on all public methods, retries, error mapping — 287 tests across
+      `tests/*.test.ts`; every resource method over 2xx/4xx/5xx, both retry paths
+      (success after a 503, exhaustion), immediate failure on 401/403/422, all
+      status→error mappings, exponential backoff + jitter boundaries, real
+      `AbortSignal` timeouts, and the dual ESM/CJS loader resolution.
+- [x] Enforced coverage threshold in CI — `npm run test:coverage` runs the suite
+      under Node's V8 coverage scoped to `src/**/*.ts` and fails below 80% line,
+      branch, or function coverage. Last run: 99.44% lines, 94.71% branches,
+      100% functions. `npm test` runs this gate, so the CI step that runs
+      `npm test` fails when coverage drops.
+- [x] Mutation testing — `npm run test:mutation` (`scripts/mutation-test.mjs`)
+      seeds 15 condition inversions (retry counts, retryable status list, auth
+      header, error-body parsing, AbortError branch, exponential curve, jitter,
+      30s ceiling, URL/query encoding, `Idempotency-Key`) and requires the owning
+      test to fail. Last run killed 15/15 (100%); the report is committed at
+      [`docs/mutation-report.json`](docs/mutation-report.json) and the table is in
+      [`docs/testing_and_conformance.md`](docs/testing_and_conformance.md) §4.
 - [ ] Contract tests against live `nerve-control-plane` (Pact or similar) — *not this ticket.*
       Today's contract proof is spec-based: the runtime path/schema coverage test plus the
       compiled type-level assertions against the generated OpenAPI types. A live Pact run

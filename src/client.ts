@@ -10,6 +10,7 @@ import {
   NerveRetryExhaustedError,
 } from './errors.js';
 import type { NerveConfig, RequestOptions, ApiErrorBody } from './types.js';
+import { computeBackoffDelay } from './retry.js';
 import { SDK_VERSION } from './version.js';
 
 /**
@@ -211,14 +212,11 @@ export class NerveHttpClient {
   }
 
   private calculateRetryDelay(error: Error, attempt: number): number {
-    if (error instanceof NerveRateLimitError && error.retryAfterMs) {
-      return error.retryAfterMs;
-    }
-
-    return Math.min(
-      this.retryBaseDelay * Math.pow(2, attempt) + Math.random() * 200,
-      30000,
-    );
+    return computeBackoffDelay({
+      attempt,
+      retryBaseDelay: this.retryBaseDelay,
+      retryAfterMs: error instanceof NerveRateLimitError ? error.retryAfterMs : undefined,
+    });
   }
 
   private sleep(ms: number): Promise<void> {

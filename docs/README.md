@@ -12,9 +12,10 @@ which is strictly customer-facing (ADR-012).
    condition carries its own declarations, and the error hierarchy.
 2. [`api_reference.md`](api_reference.md) — the public method surface, resource by resource,
    with the wire type each method returns.
-3. [`testing_and_conformance.md`](testing_and_conformance.md) — the four CI gates, the
-   spec → codegen → types → assertions chain, the normalised spec properties, and the
-   mutation evidence that each gate fails when it should.
+3. [`testing_and_conformance.md`](testing_and_conformance.md) — the CI gates, the
+   spec → codegen → types → assertions chain, the normalised spec properties, the
+   client-contract coverage thresholds, the mutation evidence that each gate fails
+   when it should, and the dual-loader proof.
 4. [`publishing.md`](publishing.md) — what ships in the tarball, the `exports` map, the
    SemVer/deprecation/changelog gates, and the release checklist.
 5. [`version-compatibility.md`](version-compatibility.md) — the published matrix mapping each

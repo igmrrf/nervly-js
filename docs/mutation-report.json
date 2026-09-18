@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-09-18T05:35:20.343Z",
+  "runner": "node:test via tsx (targeted condition inversion)",
+  "tool": "scripts/mutation-test.mjs",
+  "total": 15,
+  "killed": 15,
+  "survived": 0,
+  "score": 100,
+  "mutants": [
+    {
+      "id": "retry-budget-off-by-one",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "the retry budget is bounded by maxRetries",
+      "status": "killed"
+    },
+    {
+      "id": "retry-budget-disabled",
+      "file": "src/client.ts",
+      "test": "tests/client.test.ts",
+      "proves": "retryable failures are retried",
+      "status": "killed"
+    },
+    {
+      "id": "retry-exhaustion-swallowed",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "spent retries surface as RetryExhaustedError",
+      "status": "killed"
+    },
+    {
+      "id": "retryable-status-503-removed",
+      "file": "src/client.ts",
+      "test": "tests/client.test.ts",
+      "proves": "503 is a retryable status",
+      "status": "killed"
+    },
+    {
+      "id": "network-error-not-retryable",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "network failures are retried",
+      "status": "killed"
+    },
+    {
+      "id": "authorization-header-removed",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "authenticated requests carry the Bearer token",
+      "status": "killed"
+    },
+    {
+      "id": "error-payload-parsing-stripped",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "the gateway error message reaches the caller",
+      "status": "killed"
+    },
+    {
+      "id": "timeout-abort-branch-disabled",
+      "file": "src/client.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "a timed-out request maps to a timeout network error",
+      "status": "killed"
+    },
+    {
+      "id": "exponential-curve-flattened",
+      "file": "src/retry.ts",
+      "test": "tests/backoff.test.ts",
+      "proves": "the backoff grows exponentially with the attempt",
+      "status": "killed"
+    },
+    {
+      "id": "jitter-removed",
+      "file": "src/retry.ts",
+      "test": "tests/backoff.test.ts",
+      "proves": "jitter is added to the exponential delay",
+      "status": "killed"
+    },
+    {
+      "id": "backoff-ceiling-removed",
+      "file": "src/retry.ts",
+      "test": "tests/backoff.test.ts",
+      "proves": "the exponential delay is capped at 30s",
+      "status": "killed"
+    },
+    {
+      "id": "subscriber-id-not-encoded",
+      "file": "src/resources/subscribers.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "reserved characters in the subscriber id are encoded",
+      "status": "killed"
+    },
+    {
+      "id": "event-id-not-encoded",
+      "file": "src/resources/events.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "reserved characters in the event id are encoded",
+      "status": "killed"
+    },
+    {
+      "id": "idempotency-header-skipped",
+      "file": "src/resources/events.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "the Idempotency-Key header is sent",
+      "status": "killed"
+    },
+    {
+      "id": "message-filter-dropped",
+      "file": "src/resources/messages.ts",
+      "test": "tests/http-contract.test.ts",
+      "proves": "the subscriber_id query filter is serialized",
+      "status": "killed"
+    }
+  ]
+}

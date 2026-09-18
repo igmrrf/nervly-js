@@ -3,22 +3,26 @@
 How `@nervehq/sdk` proves that its types, payloads, and build outputs match the
 contract the gateway actually serves — and how to re-run that proof yourself.
 
-Ticket 11 owns this document. Everything below was run against the scratch host
+Ticket 11 owns this document; ticket 39 added the client-contract coverage and
+mutation gates below. Everything recorded here was run against the scratch host
 during verification; the mutation results are recorded because "the gate exists"
 and "the gate fails when it should" are different claims.
 
 ---
 
-## 1. The four gates
+## 1. The gates
 
 | Gate | Command | Proves |
 | --- | --- | --- |
 | Codegen drift | `npm run check:codegen` | `src/generated/gateway.ts` is byte-identical to what the committed OpenAPI spec generates |
 | Type-level conformance | `npm run check:types` | Every SDK request/response type equals the generated spec type, field-for-field |
 | Runtime path coverage | `npm test` (`tests/spec-conformance.test.ts`) | Every path+method in the spec has an SDK method, no stale mappings, every referenced schema is modelled |
+| Client contract coverage | `npm run test:coverage` | Every public resource method is exercised over 2xx/4xx/5xx, and line/branch/function coverage stays at or above 80% |
+| Mutation | `npm run test:mutation` | Seeded defects in retry, backoff, encoding, auth, and error mapping make the owning tests fail |
 | Packaging | `npm run build && npm run check:exports` | The packed tarball loads and type-checks as both ESM and CJS |
 
-`npm run check` runs the first two. CI runs all four.
+`npm run check` runs the first two. `npm test` builds, then runs the coverage
+gate followed by the mutation gate. CI runs all six.
 
 ### Where the contract comes from
 
@@ -120,14 +124,87 @@ temporary project, then
 The package has no runtime dependencies at all (`dependencies: {}`), asserted by
 `tests/api-stability.test.ts`; HTTP is the platform `fetch` and nothing else.
 
+`tests/dual-module.test.ts` is the middle rung between the manifest assertions
+and `check:exports`: it asks Node's resolver (`import.meta.resolve` and
+`require.resolve`) which build each module system selects, loads that exact file
+through the matching loader, and asserts the two builds expose the same runtime
+export surface while remaining independent class objects.
+
 ---
 
-## 4. Running everything
+## 4. Client-contract coverage and mutation testing
+
+### Coverage
+
+`npm run test:coverage` runs the suite under Node's built-in V8 coverage,
+scoped to `src/**/*.ts`, and fails the process below any of the thresholds
+(line 80, branch 80, function 80). The last verified run:
+
+| Metric | Result | Threshold |
+| --- | --- | --- |
+| Lines | 99.44% | 80% |
+| Branches | 94.71% | 80% |
+| Functions | 100.00% | 80% |
+
+`tests/http-contract.test.ts` is what lifts the branch signal: it drives the
+real `NerveHttpClient` against a scripted `fetch` for every public method
+(`events.trigger`, `events.triggerBulk`, `events.get`, `events.triggerEmail`,
+`email.send`, `messages.list`, `subscribers.delete`,
+`subscribers.updatePreferences`, `users.updatePreferences`, `health.check`,
+`mcp.listTools`, `mcp.callTool`) across 2xx, non-retryable 4xx, and retryable
+5xx responses, and asserts the `Authorization`, `Idempotency-Key`,
+`X-Priority-Override`, `User-Agent`, and `Content-Type` headers, the exact
+query/URL encoding, and the empty-body rules for GET/DELETE.
+
+`src/retry.ts` extracts the backoff arithmetic — `min(base · 2^attempt + jitter,
+30s)`, with a provider `Retry-After` overriding the curve uncapped — into a pure
+function so `tests/backoff.test.ts` can assert each boundary exactly rather than
+sleeping through it. The same file proves the client *wires* that function up by
+capturing the delays it schedules under a pinned `Math.random`.
+
+### Mutation
+
+`npm run test:mutation` (`scripts/mutation-test.mjs`) applies a targeted
+condition inversion to a source file, runs only the test file that owns the
+behaviour, and requires it to fail. A survivor, a missing anchor string (source
+drift), or an unmutated control run that does not pass all exit non-zero. The
+last verified run killed 15/15 seeded mutants (score 100%); the machine-readable
+run is committed at [`mutation-report.json`](mutation-report.json).
+
+| Mutation | Owning test | Expected |
+| --- | --- | --- |
+| `attempt < maxRetries` → off by one | `tests/http-contract.test.ts` | killed |
+| `attempt < maxRetries` → never retry | `tests/client.test.ts` | killed |
+| Exhaustion wrapper `if (false)` | `tests/http-contract.test.ts` | killed |
+| Drop `503` from the retryable list | `tests/client.test.ts` | killed |
+| Network errors not retryable | `tests/http-contract.test.ts` | killed |
+| Remove the `Authorization` header | `tests/http-contract.test.ts` | killed |
+| Strip error-body parsing | `tests/http-contract.test.ts` | killed |
+| Disable the AbortError/timeout branch | `tests/http-contract.test.ts` | killed |
+| Flatten the exponential curve | `tests/backoff.test.ts` | killed |
+| Remove jitter | `tests/backoff.test.ts` | killed |
+| Remove the 30s ceiling | `tests/backoff.test.ts` | killed |
+| Stop encoding the subscriber id | `tests/http-contract.test.ts` | killed |
+| Stop encoding the event id | `tests/http-contract.test.ts` | killed |
+| Skip the `Idempotency-Key` header | `tests/http-contract.test.ts` | killed |
+| Drop the `subscriber_id` query filter | `tests/http-contract.test.ts` | killed |
+
+Stryker is intentionally not a dependency: the runner is Node's built-in
+`node:test` via `tsx`, so Stryker's command runner would boot a fresh full suite
+per mutant. The harness keeps the feedback loop to seconds and the seeded
+mutations readable in review.
+
+---
+
+## 5. Running everything
 
 ```bash
 npm install
-npm run check     # codegen drift + type-level conformance + typecheck
-npm test          # 61 unit/contract tests (builds dist first via pretest)
+npm run check           # codegen drift + type-level conformance + typecheck
+npm test                # build → coverage thresholds → mutation gate
+npm run test:coverage   # coverage gate only
+npm run test:mutation   # mutation gate only
 npm run build
 npm run check:exports
 ```
+

@@ -47,6 +47,41 @@ describe('WebhooksResource', () => {
 
       assert.equal(result, false);
     });
+
+    it('should return false for a same-length signature with the wrong value', async () => {
+      // A well-formed 64-hex digest, so the failure comes from the timing-safe
+      // comparison rather than a length guard.
+      const result = await webhooks.verifySignature({
+        provider: 'termii',
+        payload: '{"status": "DELIVERED"}',
+        signature: 'f'.repeat(64),
+        secret: 'test_secret',
+      });
+
+      assert.equal(result, false);
+    });
+
+    it('should return false when the signature is shorter than the digest', async () => {
+      const result = await webhooks.verifySignature({
+        provider: 'termii',
+        payload: '{"status": "DELIVERED"}',
+        signature: 'ab',
+        secret: 'test_secret',
+      });
+
+      assert.equal(result, false);
+    });
+
+    it('should return false for a non-hex signature without throwing', async () => {
+      const result = await webhooks.verifySignature({
+        provider: 'termii',
+        payload: '{"status": "DELIVERED"}',
+        signature: 'not-hex-at-all',
+        secret: 'test_secret',
+      });
+
+      assert.equal(result, false);
+    });
   });
 
   describe('parse', () => {
@@ -73,6 +108,11 @@ describe('WebhooksResource', () => {
       const result = webhooks.parse(buffer);
       assert.equal(result.message_id, 'msg_789');
       assert.equal(result.status, 'SENT');
+    });
+
+    it('should leave an absent status undefined and preserve an uppercase one', () => {
+      assert.equal(webhooks.parse('{"message_id":"msg_no_status"}').status, undefined);
+      assert.equal(webhooks.parse('{"status":"BOUNCED_HARD"}').status, 'BOUNCED_HARD');
     });
   });
 
