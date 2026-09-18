@@ -3,8 +3,9 @@
 Guidelines for versioning and publishing `@nervehq/sdk` to npm.
 
 Ticket 11 owns the packaging guarantees (dual build, exports map, no runtime
-dependencies). The release-provenance items — `--provenance`, SBOM, dependency
-audit, `SECURITY.md` — belong to ticket 20.
+dependencies). Ticket 20 owns the release path: `--provenance`, the runtime
+dependency audit, the SBOM, the `SECURITY.md` disclosure policy, and the
+SemVer/deprecation gates below.
 
 ---
 
@@ -19,6 +20,20 @@ The minor-versus-major boundary is mechanically checkable for the *wire* types:
 so a field rename in the spec cannot reach a release without the SDK types being
 changed deliberately. Because the SDK is `0.x`, a breaking change may still land
 in a minor — the `README` says so explicitly.
+
+The version, the changelog, and the compatibility matrix are held together by
+three gates, all of which run in `npm run check` and therefore in CI and in the
+tagged release workflow:
+
+| Gate | Command | Proves |
+| --- | --- | --- |
+| Changelog | `npm run check:changelog` | `package.json`, `src/version.ts`, and a dated, non-empty Keep-a-Changelog entry all agree |
+| Deprecations | `npm run check:deprecations` | every `@deprecated` symbol is registered in `deprecations.json`, carries the predicted annotation, and is removed before its `removeIn` window closes |
+| Release | `npm run check:release` | provenance, audit, SBOM, `SECURITY.md`, and the [compatibility matrix](version-compatibility.md) are all wired |
+
+The deprecation policy is a one-minor warning. A release that reaches a
+deprecated symbol's `removeIn` version without deleting the symbol fails
+`check:deprecations` — the promise is enforced, not documented.
 
 ## 2. What Ships
 
@@ -40,23 +55,45 @@ is visible in review rather than implicit in a lockfile.
 
 ## 3. Release Steps
 
+Publishing is automated by
+[`.github/workflows/release.yml`](../.github/workflows/release.yml), triggered by
+a `v*` tag. The steps below are what that workflow runs, and what you reproduce
+locally before tagging.
+
 1. Verify the contract and the build in one pass:
    ```bash
    npm install
-   npm run check          # codegen drift + type-level spec conformance
+   npm run check          # codegen, types, changelog, deprecations, release, tsc
    npm test               # unit + contract tests (rebuilds dist via pretest)
    npm run build
    npm run check:exports  # packed tarball loads and type-checks as ESM and CJS
    ```
 2. Update `version` in `package.json` and `SDK_VERSION` in `src/version.ts` to
-   match. `tests/api-stability.test.ts` asserts the two agree, so a forgotten
-   bump fails the suite rather than shipping a `User-Agent` that lies.
-3. Document the change in `CHANGELOG.md` (see the checklist; the file is added
-   when the first release is cut).
-4. Publish with provenance:
+   match. `tests/api-stability.test.ts` asserts the two agree, and
+   `check:changelog` fails when the new version has no dated entry, so a
+   forgotten bump fails the suite rather than shipping a `User-Agent` that lies.
+3. Document the change in `CHANGELOG.md` and add a row to
+   [`version-compatibility.md`](version-compatibility.md) for the API version the
+   release targets.
+4. Audit the runtime dependency tree and inventory the build:
    ```bash
-   npm publish --access public --provenance
+   npm run audit          # fails on high/critical advisories (runtime)
+   npm run sbom            # writes .security-reports/sbom/nerve-sdk.cdx.json
    ```
+5. Tag and push. The workflow re-runs the gates, checks that the tag equals
+   `v<package.json version>`, then:
+   ```bash
+   npm publish --provenance --access public
+   ```
+   Provenance is signed by the workflow's OIDC identity (`id-token: write`), so
+   the tarball is cryptographically linked to the commit that built it. The SBOM
+   is attached to the GitHub release.
+
+### Why `--provenance` is passed twice
+
+It is declared in `publishConfig` in `package.json` *and* passed on the command
+line. Removing it from the manifest alone does not silently downgrade a release:
+`npm run check:release` fails, and the workflow log still shows the flag.
 
 ## 4. Why the Packaging Check Installs the Tarball
 

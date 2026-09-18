@@ -23,15 +23,27 @@
   "files": [
     "dist/esm",
     "dist/cjs",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "codegen": "openapi-typescript ../nerve-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
     "check:codegen": "node scripts/check-codegen.mjs",
     "check:types": "tsc --project tsconfig.check.json",
     "check:exports": "node scripts/check-exports.mjs",
-    "check": "npm run check:codegen && npm run check:types && npx tsc --noEmit",
+    "check:changelog": "node scripts/check-changelog.mjs",
+    "check:deprecations": "node scripts/check-deprecations.mjs",
+    "check:release": "node scripts/check-release.mjs",
+    "audit": "npm audit --omit=dev --audit-level=high",
+    "sbom": "node scripts/sbom.mjs",
+    "check": "npm run check:codegen && npm run check:types && npm run check:changelog && npm run check:deprecations && npm run check:release && npx tsc --noEmit",
     "verify": "npm run check && npm test",
     "pretest": "npm run build",
     "test": "tsx --test tests/*.test.ts",

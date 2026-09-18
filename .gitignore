@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.security-reports/
 *.tsbuildinfo
 *.log
 .DS_Store

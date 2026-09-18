@@ -35,6 +35,7 @@ export class EventsResource {
   /**
    * Convenience helper to trigger an email notification with typed email payload.
    *
+   * @deprecated since 0.1.0: use `EmailResource.send`; removal in 0.2.0.
    * @param request - Typed email send options
    * @param options - Optional trigger options
    */

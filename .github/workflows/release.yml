@@ -1,0 +1,66 @@
+name: Release
+
+# Publishing is triggered by a version tag and by nothing else: the tag is the
+# claim that this commit is the release. The `verify` step below re-proves the
+# contract before the tarball leaves the building, and the provenance flag makes
+# npm sign the published artifact against this workflow's OIDC identity, so a
+# consumer can trace the tarball back to the commit it was built from.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # attach the SBOM to the GitHub release
+  id-token: write   # provenance is signed by the workflow OIDC identity
+
+jobs:
+  publish:
+    name: Publish to npm with provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Install from the locked tree
+        run: npm ci
+
+      # Codegen drift, type-level spec conformance, changelog/deprecation/
+      # release gates, the unit and contract tests, and the packaging proof.
+      - name: Verify the contract and the build
+        run: npm run verify
+
+      - name: Fail if the tag disagrees with package.json
+        run: |
+          set -euo pipefail
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "${expected}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json (${expected})"
+            exit 1
+          fi
+          echo "tag ${GITHUB_REF_NAME} matches package.json"
+
+      - name: Dependency audit (runtime)
+        run: npm run audit
+
+      - name: Generate the release SBOM
+        run: npm run sbom
+
+      # `--provenance` is also declared in `publishConfig`, but the flag is
+      # passed explicitly here so the guarantee is visible in the release log
+      # and cannot be silently dropped by editing package.json alone.
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Attach the SBOM to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: .security-reports/sbom/*.cdx.json

@@ -24,6 +24,7 @@ export class SubscribersResource {
    * Update a subscriber's notification channel and category preferences.
    * Maps to: PUT /v1/users/:subscriberId/preferences
    *
+   * @deprecated since 0.1.0: use `UsersResource.updatePreferences`; removal in 0.2.0.
    * @param subscriberId - Your identifier for the end user
    * @param data - Channel and category preferences
    */

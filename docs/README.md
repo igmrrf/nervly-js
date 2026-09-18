@@ -15,8 +15,10 @@ which is strictly customer-facing (ADR-012).
 3. [`testing_and_conformance.md`](testing_and_conformance.md) — the four CI gates, the
    spec → codegen → types → assertions chain, the normalised spec properties, and the
    mutation evidence that each gate fails when it should.
-4. [`publishing.md`](publishing.md) — what ships in the tarball, the `exports` map, and the
-   release checklist.
+4. [`publishing.md`](publishing.md) — what ships in the tarball, the `exports` map, the
+   SemVer/deprecation/changelog gates, and the release checklist.
+5. [`version-compatibility.md`](version-compatibility.md) — the published matrix mapping each
+   SDK release to the gateway API version it was generated against.
 
 ## Related, outside this directory
 

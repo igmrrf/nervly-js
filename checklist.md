@@ -22,25 +22,44 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       `0.x` caveat honestly: the surface is unstable until 1.0.0, so a breaking change may
       land in a minor. Wire types cannot drift silently: `check:types` asserts them against
       the spec, and `check:codegen` asserts the spec against the SDK snapshot.
-- [x] Deprecation policy: warn one minor before removal — `events.triggerEmail`,
-      `subscribers.updatePreferences`, and the `Nerve`-prefixed error names all predate
-      their successors and are still exported. Short error aliases were *added* beside the
-      long names rather than replacing them.
-- [ ] CHANGELOG.md maintained every release — the file lands with the first published
-      release; `docs/publishing.md` step 3 names it.
+- [x] Deprecation policy: warn one minor before removal — the policy lives in
+      [`deprecations.json`](deprecations.json) (a single source of truth) and is enforced by
+      `npm run check:deprecations`: every registered symbol must carry the exact
+      `@deprecated` annotation the registry predicts, no source file may carry an
+      unregistered deprecation, and a symbol whose `removeIn` version has been reached while
+      it is still exported fails the build. `EventsResource.triggerEmail` and
+      `SubscribersResource.updatePreferences` are the current warnings, both removable in
+      `0.2.0`. The checker self-tests against five mutations before it runs.
+- [x] CHANGELOG.md maintained every release — `npm run check:changelog` fails unless the
+      `package.json` version has a dated, non-empty, Keep-a-Changelog entry, the file
+      declares the Keep-a-Changelog and SemVer conventions, and the link reference exists.
+      The gate self-tests against five mutations.
 - [x] Version aligned with control-plane API version; compatibility matrix published —
-      `SDK_VERSION` is asserted equal to `package.json` by `tests/api-stability.test.ts`,
-      and it is what the `User-Agent` reports; the compatibility matrix is the generated
-      spec plus the conformance gates that pin the SDK to it.
+      `SDK_VERSION` is asserted equal to `package.json` by `tests/api-stability.test.ts` and
+      `check:changelog`, and it is what the `User-Agent` reports. The published matrix lives
+      at [`docs/version-compatibility.md`](docs/version-compatibility.md) and is checked by
+      `npm run check:release`, which fails when the current SDK version has no row or its row
+      names an API version other than the committed spec's `info.version`.
 
 ## Security
 - [x] No secrets in examples; docs show env-var usage — `examples/basic-usage.ts` reads
       `process.env.NERVE_API_KEY`; the README quickstart likewise.
-- [ ] npm provenance + signed releases; `npm publish --provenance` — documented in
-      `docs/publishing.md` §3; wired up by ticket 20.
-- [ ] Dependency audit in CI; SBOM for the package — *ticket 20.* The SDK currently has
-      `dependencies: {}`, asserted by `tests/api-stability.test.ts`.
-- [ ] SECURITY.md + vulnerability disclosure policy — *ticket 20.*
+- [x] npm provenance + signed releases; `npm publish --provenance` — 
+      [`.github/workflows/release.yml`](.github/workflows/release.yml) publishes on a `v*`
+      tag with `id-token: write` and `npm publish --provenance --access public`; the
+      `publishConfig` block declares the same. `npm run check:release` fails if any of
+      those invariants is removed. Publishing itself requires the npm credential, so it is
+      the one step a scratch host cannot perform — the path is gated, the publish is not
+      executed here.
+- [x] Dependency audit in CI; SBOM for the package — `npm run audit`
+      (`npm audit --omit=dev --audit-level=high`) and `npm run sbom`
+      (`scripts/sbom.mjs`, CycloneDX via `npm sbom`) run in CI and in the release workflow;
+      the SBOM is attached to the GitHub release. The SDK still has `dependencies: {}`,
+      asserted by `tests/api-stability.test.ts`.
+- [x] SECURITY.md + vulnerability disclosure policy — [`SECURITY.md`](SECURITY.md) describes
+      reporting (`security@nervehq.io`), the response commitments, coordinated disclosure and
+      safe harbour, in/out of scope, and supported versions. It is in `files[]`, so it ships
+      inside the tarball, and `npm run check:release` asserts its required sections exist.
 
 ## Documentation (external)
 - [ ] README quickstart matches `nerve-docs` — checked in ticket 12, which owns the
