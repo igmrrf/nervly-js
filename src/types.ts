@@ -271,6 +271,7 @@ export interface ChannelPreferences {
   sms?: boolean | null;
   push?: boolean | null;
   whatsapp?: boolean | null;
+  voice?: boolean | null;
 }
 
 export interface UserPreferencesRequest {

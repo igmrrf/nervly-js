@@ -333,6 +333,8 @@ export interface components {
             push?: boolean | null;
             /** @description Allow SMS delivery. */
             sms?: boolean | null;
+            /** @description Allow voice calls. */
+            voice?: boolean | null;
             /** @description Allow WhatsApp delivery. */
             whatsapp?: boolean | null;
         };
