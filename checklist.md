@@ -4,16 +4,18 @@ TypeScript `@nervehq/sdk` client library (npm). Primary responsibility: **API St
 Parent checklist: [`../checklist.md`](../checklist.md)
 
 ## Tests
-- [x] Unit tests on all public methods, retries, error mapping — 287 tests across
+- [x] Unit tests on all public methods, retries, error mapping — 295 tests across
       `tests/*.test.ts`; every resource method over 2xx/4xx/5xx, both retry paths
       (success after a 503, exhaustion), immediate failure on 401/403/422, all
       status→error mappings, exponential backoff + jitter boundaries, real
       `AbortSignal` timeouts, and the dual ESM/CJS loader resolution.
-- [x] Enforced coverage threshold in CI — `npm run test:coverage` runs the suite
-      under Node's V8 coverage scoped to `src/**/*.ts` and fails below 80% line,
-      branch, or function coverage. Last run: 99.44% lines, 94.71% branches,
-      100% functions. `npm test` runs this gate, so the CI step that runs
-      `npm test` fails when coverage drops.
+- [x] Enforced coverage threshold in CI — `npm run test:coverage` builds, then
+      runs the suite under Node's V8 coverage scoped to `src/**/*.ts` with
+      `--test-coverage-include-all` (type-only `src/types.ts` and
+      `src/generated/**` excluded), and fails below 80% line, branch, or function
+      coverage. Last run: 99.44% lines, 94.71% branches, 100% functions.
+      `npm test` runs this gate, so the CI step that runs `npm test` fails when
+      coverage drops.
 - [x] Mutation testing — `npm run test:mutation` (`scripts/mutation-test.mjs`)
       seeds 15 condition inversions (retry counts, retryable status list, auth
       header, error-body parsing, AbortError branch, exponential curve, jitter,

@@ -136,9 +136,16 @@ export surface while remaining independent class objects.
 
 ### Coverage
 
-`npm run test:coverage` runs the suite under Node's built-in V8 coverage,
-scoped to `src/**/*.ts`, and fails the process below any of the thresholds
-(line 80, branch 80, function 80). The last verified run:
+`npm run test:coverage` builds (the dual-module suite needs `dist/`), then runs
+the suite under Node's built-in V8 coverage scoped to `src/**/*.ts`, failing the
+process below any of the thresholds (line 80, branch 80, function 80). It uses
+`--test-coverage-include-all`, so a runtime module that no test imports still
+appears in the report at 0% instead of silently escaping the threshold. The
+type-only files `src/types.ts` and `src/generated/gateway.ts` are excluded —
+they have no runtime statements to cover. The thresholds are aggregate, so a
+single tiny unimported module can be visible in the report yet not enough to
+push the total below 80%; the include-all flag is what guarantees visibility
+rather than silence. The last verified run (295 tests):
 
 | Metric | Result | Threshold |
 | --- | --- | --- |
@@ -202,8 +209,8 @@ mutations readable in review.
 npm install
 npm run check           # codegen drift + type-level conformance + typecheck
 npm test                # build → coverage thresholds → mutation gate
-npm run test:coverage   # coverage gate only
-npm run test:mutation   # mutation gate only
+npm run test:coverage   # builds, then the coverage gate (standalone)
+npm run test:mutation   # mutation gate only (no build needed)
 npm run build
 npm run check:exports
 ```
