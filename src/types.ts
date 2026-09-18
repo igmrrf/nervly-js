@@ -1,7 +1,7 @@
 // --- Client Configuration ---
 export interface NerveConfig {
   apiKey: string;
-  baseUrl?: string;       // defaults to 'https://api.nervehq.io'
+  baseUrl?: string;       // defaults to 'https://api.nervly.io'
   timeout?: number;        // ms, defaults to 10000
   maxRetries?: number;      // defaults to 3
   retryBaseDelay?: number;  // ms, defaults to 1000

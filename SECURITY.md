@@ -5,7 +5,7 @@ vulnerability here can leak a workspace's API key, forge or replay a request, or
 cause an integration to trust a response it should not. We welcome reports from
 independent researchers and from anyone who depends on the package.
 
-For the hosted platform (`api.nervehq.io`, `app.nervehq.io`, cross-tenant
+For the hosted platform (`api.nervly.io`, `app.nervly.io`, cross-tenant
 isolation, billing, and the rest of the service), see the platform policy at
 [`../SECURITY.md`](../SECURITY.md). This document covers the published npm
 package and its release pipeline.
@@ -14,7 +14,7 @@ package and its release pipeline.
 
 **Do not open a public GitHub issue, pull request, or discussion for a security problem.**
 
-Email **security@nervehq.io** with a description of the issue and the steps to
+Email **security@nervly.io** with a description of the issue and the steps to
 reproduce it. If you prefer encrypted email, ask for our PGP key in your first
 message and we will reply with it.
 

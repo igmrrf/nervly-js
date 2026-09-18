@@ -80,11 +80,11 @@ describe('Event Trigger Schema OpenAPI Contract Test', () => {
   it('built SDK email payload strictly conforms to OpenAPI TriggerRequest schema', () => {
     const nerve = new Nerve({ apiKey: 'nv_live_contract_test' });
     const payload = nerve.email.buildTriggerRequest({
-      to: { subscriberId: 'sub_test_1', email: 'test@nervehq.io' },
+      to: { subscriberId: 'sub_test_1', email: 'test@nervly.io' },
       subject: 'Contract Test',
       html: '<p>Contract test html</p>',
       provider: 'resend',
-      sender: 'Nerve <test@nervehq.io>',
+      sender: 'Nerve <test@nervly.io>',
       category: 'notifications',
     });
 

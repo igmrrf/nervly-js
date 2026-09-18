@@ -33,7 +33,7 @@ export class NerveHttpClient {
       throw new NerveAuthenticationError('API key is required');
     }
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl?.replace(/\/$/, '') || 'https://api.nervehq.io';
+    this.baseUrl = config.baseUrl?.replace(/\/$/, '') || 'https://api.nervly.io';
     this.timeout = config.timeout || 10000;
     this.maxRetries = config.maxRetries ?? 3;
     this.retryBaseDelay = config.retryBaseDelay || 1000;

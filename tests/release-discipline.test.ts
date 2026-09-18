@@ -45,7 +45,7 @@ describe('npm release security', () => {
 
   it('publishes a vulnerability disclosure policy with a contact', () => {
     const security = read('SECURITY.md');
-    assert.match(security, /security@nervehq\.io/);
+    assert.match(security, /security@nervly\.io/);
     assert.match(security, /Reporting a vulnerability/i);
     assert.match(security, /Disclosure/i);
     assert.match(security, /Supported versions/i);

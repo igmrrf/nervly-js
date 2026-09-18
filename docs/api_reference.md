@@ -18,7 +18,7 @@ import { Nerve as Named } from '@nervehq/sdk'; // or the named one — same clas
 
 const nerve = new Nerve({
   apiKey: process.env.NERVE_API_KEY!, // required; throws if empty
-  baseUrl: 'https://api.nervehq.io',  // default
+  baseUrl: 'https://api.nervly.io',  // default
   timeout: 10_000,                    // ms, default
   maxRetries: 3,                      // default
   retryBaseDelay: 1_000,              // ms, backoff floor, default

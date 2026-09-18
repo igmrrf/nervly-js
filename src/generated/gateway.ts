@@ -231,7 +231,7 @@ export interface paths {
         /**
          * Receive a provider delivery receipt.
          * @description Point each provider's webhook setting at
-         *     `https://api.nervehq.io/v1/webhooks/{provider}` and Nerve normalises their
+         *     `https://api.nervly.io/v1/webhooks/{provider}` and Nerve normalises their
          *     receipts into delivery telemetry.
          *
          *     **Authentication is by signature, not API key.** This route is outside the

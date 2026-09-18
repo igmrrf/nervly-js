@@ -41,7 +41,7 @@ describe('Nerve Client', () => {
     assert.throws(() => new Nerve({ apiKey: '' }), /API key/);
   });
 
-  it('should create client with valid config and default to https://api.nervehq.io', () => {
+  it('should create client with valid config and default to https://api.nervly.io', () => {
     const nerve = new Nerve({ apiKey: 'test_key_123' });
     assert.ok(nerve);
     assert.ok(nerve.events);
@@ -74,7 +74,7 @@ describe('Nerve Client', () => {
 });
 
 describe('NerveHttpClient — request shape', () => {
-  it('should default to https://api.nervehq.io and strip a trailing slash from baseUrl', async () => {
+  it('should default to https://api.nervly.io and strip a trailing slash from baseUrl', async () => {
     let capturedUrl = '';
 
     await withFetch(
@@ -96,7 +96,7 @@ describe('NerveHttpClient — request shape', () => {
 
         const defaulted = new Nerve({ apiKey: 'k' });
         await defaulted.health.check();
-        assert.equal(capturedUrl, 'https://api.nervehq.io/v1/health');
+        assert.equal(capturedUrl, 'https://api.nervly.io/v1/health');
       },
     );
   });

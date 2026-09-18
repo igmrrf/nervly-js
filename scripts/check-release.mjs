@@ -85,7 +85,7 @@ export function evaluateRelease({ pkg, workflow, security, matrix, specVersion }
 
   // ── Disclosure policy ─────────────────────────────────────────────────────
   const securityChecks = [
-    [/security@nervehq\.io/, 'SECURITY.md must name a reporting contact'],
+    [/security@nervly\.io/, 'SECURITY.md must name a reporting contact'],
     [/Reporting a vulnerability/i, 'SECURITY.md must describe how to report'],
     [/Disclosure/i, 'SECURITY.md must describe the disclosure process'],
     [/Supported versions/i, 'SECURITY.md must list supported versions'],
@@ -137,7 +137,7 @@ const GOOD = {
     'run: npm run verify\nrun: npm run audit\nrun: npm run sbom\n' +
     'run: npm publish --provenance --access public\nNODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}\n',
   security:
-    '# Security Policy\n\n## Reporting a vulnerability\n\nEmail security@nervehq.io\n\n' +
+    '# Security Policy\n\n## Reporting a vulnerability\n\nEmail security@nervly.io\n\n' +
     '## Disclosure\n\ncoordinated\n\n## Supported versions\n\nlatest 0.x\n',
   matrix: '| `0.1.0` | `0.1.0` | Supported | Current |\n',
   specVersion: '0.1.0',

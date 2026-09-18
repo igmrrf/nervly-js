@@ -72,7 +72,7 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       the SBOM is attached to the GitHub release. The SDK still has `dependencies: {}`,
       asserted by `tests/api-stability.test.ts`.
 - [x] SECURITY.md + vulnerability disclosure policy — [`SECURITY.md`](SECURITY.md) describes
-      reporting (`security@nervehq.io`), the response commitments, coordinated disclosure and
+      reporting (`security@nervly.io`), the response commitments, coordinated disclosure and
       safe harbour, in/out of scope, and supported versions. It is in `files[]`, so it ships
       inside the tarball, and `npm run check:release` asserts its required sections exist.
 

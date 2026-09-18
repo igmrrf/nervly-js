@@ -30,7 +30,7 @@ import { Nerve } from '@nervehq/sdk';
 const nerve = new Nerve({
   apiKey: 'nerve_sk_live_your_api_key',
   // Optional overrides:
-  // baseUrl: 'https://api.nervehq.io', // defaults to production https://api.nervehq.io
+  // baseUrl: 'https://api.nervly.io', // defaults to production https://api.nervly.io
   // maxRetries: 3,
   // timeout: 10000,
 });
@@ -79,7 +79,7 @@ const result = await nerve.events.trigger(
     to: { subscriberId: 'usr_abc', email: 'customer@example.com' },
     payload: { trackingUrl: 'https://...' },
     overrides: {
-      email: { sender: 'orders@nervehq.io' }
+      email: { sender: 'orders@nervly.io' }
     }
   },
   {
@@ -97,8 +97,8 @@ Maps to `POST /v1/events/bulk`.
 ```typescript
 const result = await nerve.events.bulkTrigger({
   events: [
-    { name: 'daily.digest', to: { subscriberId: 'usr_1', email: 'u1@nervehq.io' }, payload: {} },
-    { name: 'daily.digest', to: { subscriberId: 'usr_2', email: 'u2@nervehq.io' }, payload: {} },
+    { name: 'daily.digest', to: { subscriberId: 'usr_1', email: 'u1@nervly.io' }, payload: {} },
+    { name: 'daily.digest', to: { subscriberId: 'usr_2', email: 'u2@nervly.io' }, payload: {} },
   ]
 });
 console.log('Batch Job ID:', result.jobId);
@@ -263,7 +263,7 @@ way. `NerveApiError.errorType` carries the gateway's machine-readable code and
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `apiKey` | `string` | **Required** | Your API Key for Nerve. |
-| `baseUrl` | `string` | `https://api.nervehq.io` | The base URL for the API. |
+| `baseUrl` | `string` | `https://api.nervly.io` | The base URL for the API. |
 | `maxRetries` | `number` | `3` | Number of retries on transient errors. |
 | `timeout` | `number` | `10000` | Timeout in milliseconds. |
 | `retryBaseDelay` | `number` | `1000` | Initial exponential backoff delay in ms. |

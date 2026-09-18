@@ -164,7 +164,7 @@ describe('VoiceResource & Voice helpers', () => {
       async () => {
         const nerve = new Nerve({
           apiKey: 'nv_live_test_voice_key',
-          baseUrl: 'https://test-api.nervehq.io',
+          baseUrl: 'https://test-api.nervly.io',
         });
 
         const result = await nerve.voice.send(
@@ -216,7 +216,7 @@ describe('VoiceResource & Voice helpers', () => {
       async () => {
         const nerve = new Nerve({
           apiKey: 'nv_live_test_voice_key',
-          baseUrl: 'https://test-api.nervehq.io',
+          baseUrl: 'https://test-api.nervly.io',
         });
 
         await nerve.voice.send({ to: '+2348012345678', script: 'Hello' });
@@ -250,7 +250,7 @@ describe('VoiceResource & Voice helpers', () => {
       async () => {
         const nerve = new Nerve({
           apiKey: 'nv_live_test_voice_key',
-          baseUrl: 'https://test-api.nervehq.io',
+          baseUrl: 'https://test-api.nervly.io',
         });
 
         await nerve.voice.send({
