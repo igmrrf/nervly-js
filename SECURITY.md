@@ -28,7 +28,7 @@ Please include, where you can:
   proxy, a specific `baseUrl`).
 
 Do not test against the production service with real credentials or send to
-real recipients. A **Test mode API key** (`nerve_sk_test_...`) exists for
+real recipients. A **Test mode API key** (`nervly_sk_test_...`) exists for
 verifying findings against your own workspace.
 
 ## Our commitments

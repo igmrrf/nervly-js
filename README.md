@@ -28,7 +28,7 @@ import { Nervly } from '@nervly/sdk';
 
 // Initialize the client
 const nerve = new Nervly({
-  apiKey: 'nerve_sk_live_your_api_key',
+  apiKey: 'nervly_sk_live_your_api_key',
   // Optional overrides:
   // baseUrl: 'https://api.nervly.io', // defaults to production https://api.nervly.io
   // maxRetries: 3,
