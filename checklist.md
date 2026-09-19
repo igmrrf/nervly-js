@@ -1,6 +1,6 @@
-# nerve-sdk Checklist
+# nervly-sdk Checklist
 
-TypeScript `@nervehq/sdk` client library (npm). Primary responsibility: **API Stability & Contract Correctness**.
+TypeScript `@nervly/sdk` client library (npm). Primary responsibility: **API Stability & Contract Correctness**.
 Parent checklist: [`../checklist.md`](../checklist.md)
 
 ## Tests
@@ -23,7 +23,7 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       test to fail. Last run killed 15/15 (100%); the report is committed at
       [`docs/mutation-report.json`](docs/mutation-report.json) and the table is in
       [`docs/testing_and_conformance.md`](docs/testing_and_conformance.md) §4.
-- [ ] Contract tests against live `nerve-control-plane` (Pact or similar) — *not this ticket.*
+- [ ] Contract tests against live `nervly-control-plane` (Pact or similar) — *not this ticket.*
       Today's contract proof is spec-based: the runtime path/schema coverage test plus the
       compiled type-level assertions against the generated OpenAPI types. A live Pact run
       against the control plane belongs to a later ticket.
@@ -77,7 +77,7 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       inside the tarball, and `npm run check:release` asserts its required sections exist.
 
 ## Documentation (external)
-- [ ] README quickstart matches `nerve-docs` — checked in ticket 12, which owns the
+- [ ] README quickstart matches `nervly-docs` — checked in ticket 12, which owns the
       customer-facing portal. The README was corrected here where it described methods that
       do not exist (and now carries the "webhooks are not sent yet" warning).
 - [x] Examples (`examples/`) tested in CI — `examples/**/*` is inside `tsconfig.check.json`,

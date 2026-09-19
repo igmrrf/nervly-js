@@ -1,6 +1,6 @@
-# Security Policy — `@nervehq/sdk`
+# Security Policy — `@nervly/sdk`
 
-The `@nervehq/sdk` package is the client half of Nerve's public API surface. A
+The `@nervly/sdk` package is the client half of Nervly's public API surface. A
 vulnerability here can leak a workspace's API key, forge or replay a request, or
 cause an integration to trust a response it should not. We welcome reports from
 independent researchers and from anyone who depends on the package.
@@ -20,7 +20,7 @@ message and we will reply with it.
 
 Please include, where you can:
 
-- The affected package version (`npm ls @nervehq/sdk`) and runtime (Node.js
+- The affected package version (`npm ls @nervly/sdk`) and runtime (Node.js
   version, bundler, or edge runtime).
 - A description of the vulnerability and its impact.
 - A minimal reproduction or proof-of-concept.
@@ -56,7 +56,7 @@ against researchers who:
 - Only interact with accounts and workspaces they own or have explicit
   permission to test.
 - Do not exfiltrate data, pivot into other tenants, or use social engineering
-  against Nerve staff or customers.
+  against Nervly staff or customers.
 - Report promptly and do not exploit a finding beyond what is needed to
   demonstrate it.
 
@@ -65,7 +65,7 @@ authorised, and we will not pursue or support legal action against you for it.
 
 ## In scope
 
-- The published `@nervehq/sdk` tarball and its ESM/CommonJS builds.
+- The published `@nervly/sdk` tarball and its ESM/CommonJS builds.
 - Signature verification and webhook parsing (`nerve.webhooks.*`).
 - Credential handling: API keys reaching logs, telemetry, errors, or the
   `User-Agent`/query string.
@@ -76,7 +76,7 @@ authorised, and we will not pursue or support legal action against you for it.
 
 ## Out of scope
 
-- The hosted Nerve platform and its APIs — report those under the platform
+- The hosted Nervly platform and its APIs — report those under the platform
   policy instead.
 - Findings that require a compromised device, a malicious browser extension, or
   physical access.

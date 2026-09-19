@@ -1,7 +1,7 @@
 {
   "name": "@nervehq/sdk",
   "version": "0.1.0",
-  "description": "Official TypeScript SDK for Nerve Unified Notification-as-a-Service (NaaS) Platform",
+  "description": "Official TypeScript SDK for Nervly Unified Notification-as-a-Service (NaaS) Platform",
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -50,7 +50,7 @@
     "test:mutation": "node scripts/mutation-test.mjs",
     "dev": "tsx src/index.ts"
   },
-  "author": "Nerve Engineering <engineering@ajianlabs.com>",
+  "author": "Nervly Engineering <engineering@ajianlabs.com>",
   "license": "MIT",
   "engines": {
     "node": ">=24.0.0"

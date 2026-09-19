@@ -1,6 +1,6 @@
-# nerve-sdk Testing & Conformance
+# nervly-sdk Testing & Conformance
 
-How `@nervehq/sdk` proves that its types, payloads, and build outputs match the
+How `@nervly/sdk` proves that its types, payloads, and build outputs match the
 contract the gateway actually serves — and how to re-run that proof yourself.
 
 Ticket 11 owns this document; ticket 39 added the client-contract coverage and
@@ -27,16 +27,16 @@ gate followed by the mutation gate. CI runs all six.
 ### Where the contract comes from
 
 ```
-nerve-gateway/src/**            (Rust handlers + utoipa derivations)
+nervly-gateway/src/**            (Rust handlers + utoipa derivations)
         │  cargo run --bin gen_openapi
         ▼
-nerve-docs/static/openapi/gateway.json      committed, drift-gated by the gateway repo
+nervly-docs/static/openapi/gateway.json      committed, drift-gated by the gateway repo
         │  npm run codegen   (openapi-typescript)
         ▼
-nerve-sdk/src/generated/gateway.ts          committed, drift-gated by check:codegen
+nervly-sdk/src/generated/gateway.ts          committed, drift-gated by check:codegen
         │  tests/types/conformance.types.ts
         ▼
-nerve-sdk/src/types.ts                      the hand-written public types
+nervly-sdk/src/types.ts                      the hand-written public types
 ```
 
 Two gates hold this chain together at the SDK end. `check:codegen` catches the
@@ -154,7 +154,7 @@ rather than silence. The last verified run (295 tests):
 | Functions | 100.00% | 80% |
 
 `tests/http-contract.test.ts` is what lifts the branch signal: it drives the
-real `NerveHttpClient` against a scripted `fetch` for every public method
+real `NervlyHttpClient` against a scripted `fetch` for every public method
 (`events.trigger`, `events.triggerBulk`, `events.get`, `events.triggerEmail`,
 `email.send`, `messages.list`, `subscribers.delete`,
 `subscribers.updatePreferences`, `users.updatePreferences`, `health.check`,

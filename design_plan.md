@@ -1,8 +1,8 @@
-# Nerve SDK — Design Plan
+# Nervly SDK — Design Plan
 
 ## 1. Overview
 
-The **Nerve SDK** (`@nerve/sdk`) is a fully-typed TypeScript client library for the Nerve Unified Notification-as-a-Service (NaaS) platform. It provides developers with an ergonomic, type-safe interface to interact with the Nerve Gateway API — abstracting HTTP communication, authentication, idempotency, priority management, retry logic, and error handling.
+The **Nervly SDK** (`@nervly/sdk`) is a fully-typed TypeScript client library for the Nervly Unified Notification-as-a-Service (NaaS) platform. It provides developers with an ergonomic, type-safe interface to interact with the Nervly Gateway API — abstracting HTTP communication, authentication, idempotency, priority management, retry logic, and error handling.
 
 ## 2. Design Principles
 
@@ -19,7 +19,7 @@ The **Nerve SDK** (`@nerve/sdk`) is a fully-typed TypeScript client library for 
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                    Nerve (Main Client)                │
+│                    Nervly (Main Client)                │
 │  ┌─────────┐ ┌──────┐ ┌──────────┐ ┌─────┐ ┌──────┐│
 │  │ Events  │ │Users │ │Webhooks  │ │ MCP │ │Health││
 │  │Resource │ │Res.  │ │Resource  │ │Res. │ │Res.  ││
@@ -27,7 +27,7 @@ The **Nerve SDK** (`@nerve/sdk`) is a fully-typed TypeScript client library for 
 │       └─────────┴──────────┴──────────┴───────┘     │
 │                         │                            │
 │              ┌──────────┴──────────┐                 │
-│              │    NerveHttpClient  │                 │
+│              │    NervlyHttpClient  │                 │
 │              │  (fetch + retry +   │                 │
 │              │   auth + headers)   │                 │
 │              └─────────────────────┘                 │
@@ -36,7 +36,7 @@ The **Nerve SDK** (`@nerve/sdk`) is a fully-typed TypeScript client library for 
                     HTTPS/REST
                           │
               ┌───────────┴───────────┐
-              │   Nerve Gateway API   │
+              │   Nervly Gateway API   │
               │   (Rust / Axum)       │
               └───────────────────────┘
 ```
@@ -45,11 +45,11 @@ The **Nerve SDK** (`@nerve/sdk`) is a fully-typed TypeScript client library for 
 
 ### 4.1 Client Initialization
 ```typescript
-import Nerve from '@nerve/sdk';
+import Nervly from '@nervly/sdk';
 
-const nerve = new Nerve({
+const nerve = new Nervly({
   apiKey: 'your_api_key',
-  baseUrl: 'https://api.nerve.io',  // optional, defaults to production
+  baseUrl: 'https://api.nervly.io',  // optional, defaults to production
   timeout: 5000,                     // optional, ms
   maxRetries: 3,                     // optional
 });
@@ -134,12 +134,12 @@ const event = nerve.webhooks.parse(rawBody);
 try {
   await nerve.events.trigger({ ... });
 } catch (error) {
-  if (error instanceof NerveAuthenticationError) { /* 401 */ }
-  if (error instanceof NerveRateLimitError) { /* 429, has retryAfter */ }
-  if (error instanceof NerveIdempotencyError) { /* 409 */ }
-  if (error instanceof NerveValidationError) { /* 400 */ }
-  if (error instanceof NerveApiError) { /* any API error */ }
-  if (error instanceof NerveNetworkError) { /* connection/timeout */ }
+  if (error instanceof NervlyAuthenticationError) { /* 401 */ }
+  if (error instanceof NervlyRateLimitError) { /* 429, has retryAfter */ }
+  if (error instanceof NervlyIdempotencyError) { /* 409 */ }
+  if (error instanceof NervlyValidationError) { /* 400 */ }
+  if (error instanceof NervlyApiError) { /* any API error */ }
+  if (error instanceof NervlyNetworkError) { /* connection/timeout */ }
 }
 ```
 
@@ -152,7 +152,7 @@ sdk/
 ├── README.md
 ├── design_plan.md
 ├── src/
-│   ├── index.ts                 # Main Nerve client & re-exports
+│   ├── index.ts                 # Main Nervly client & re-exports
 │   ├── types.ts                 # All TypeScript interfaces
 │   ├── errors.ts                # Custom error hierarchy
 │   ├── client.ts                # Core HTTP client (fetch + retry)
@@ -182,4 +182,4 @@ sdk/
 - **Target**: ES2022, NodeNext module resolution
 - **Output**: CommonJS + ESM dual package (`dist/cjs/` + `dist/esm/`)
 - **Declarations**: Full `.d.ts` type declarations
-- **Package name**: `@nerve/sdk`
+- **Package name**: `@nervly/sdk`

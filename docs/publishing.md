@@ -1,6 +1,6 @@
-# nerve-sdk Publishing & Release Standards
+# nervly-sdk Publishing & Release Standards
 
-Guidelines for versioning and publishing `@nervehq/sdk` to npm.
+Guidelines for versioning and publishing `@nervly/sdk` to npm.
 
 Ticket 11 owns the packaging guarantees (dual build, exports map, no runtime
 dependencies). Ticket 20 owns the release path: `--provenance`, the runtime
@@ -78,7 +78,7 @@ locally before tagging.
 4. Audit the runtime dependency tree and inventory the build:
    ```bash
    npm run audit          # fails on high/critical advisories (runtime)
-   npm run sbom            # writes .security-reports/sbom/nerve-sdk.cdx.json
+   npm run sbom            # writes .security-reports/sbom/nervly-sdk.cdx.json
    ```
 5. Tag and push. The workflow re-runs the gates, checks that the tag equals
    `v<package.json version>`, then:
@@ -98,7 +98,7 @@ line. Removing it from the manifest alone does not silently downgrade a release:
 ## 4. Why the Packaging Check Installs the Tarball
 
 `npm run check:exports` does not import `./dist/…` directly. It runs `npm pack`,
-installs the result into a scratch directory, and resolves `@nervehq/sdk` from
+installs the result into a scratch directory, and resolves `@nervly/sdk` from
 there. Path-relative imports would pass while the published package was broken —
 a missing `files` entry, a stray `.npmignore`, or an `exports` condition that
 points at a directory the tarball does not contain. Installing the tarball is the

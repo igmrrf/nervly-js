@@ -1,6 +1,6 @@
-# nerve-sdk API Reference
+# nervly-sdk API Reference
 
-Programmatic interface for `@nervehq/sdk`. Every method below maps to exactly one
+Programmatic interface for `@nervly/sdk`. Every method below maps to exactly one
 operation in [`gateway.json`](../../nerve-docs/static/openapi/gateway.json); the
 mapping is asserted by `tests/spec-conformance.test.ts`, and the request/response
 shapes are asserted against the generated spec by
@@ -13,10 +13,10 @@ Status codes shown are what the gateway returns on success.
 ## 1. Initialization
 
 ```typescript
-import Nerve from '@nervehq/sdk';          // default export
-import { Nerve as Named } from '@nervehq/sdk'; // or the named one — same class
+import Nervly from '@nervly/sdk';          // default export
+import { Nervly as Named } from '@nervly/sdk'; // or the named one — same class
 
-const nerve = new Nerve({
+const nerve = new Nervly({
   apiKey: process.env.NERVE_API_KEY!, // required; throws if empty
   baseUrl: 'https://api.nervly.io',  // default
   timeout: 10_000,                    // ms, default
@@ -26,7 +26,7 @@ const nerve = new Nerve({
 ```
 
 Configure from the environment; never inline a key. The SDK sends
-`Authorization: Bearer <apiKey>` and `User-Agent: @nervehq/sdk/<version>` on
+`Authorization: Bearer <apiKey>` and `User-Agent: @nervly/sdk/<version>` on
 every request except `health.check()`.
 
 ---
@@ -44,7 +44,7 @@ const event = await nerve.events.trigger(
     category: 'receipts',            // matched against subscriber preferences
     overrides: {
       email: { sender: 'billing@yourcompany.com', provider: 'resend' },
-      sms: { sender: 'Nerve' },
+      sms: { sender: 'Nervly' },
       whatsapp: { template_name: 'order_shipped_v3', language: 'en_US' },
       extraParams: { custom_key: 'value' },
     },
@@ -222,7 +222,7 @@ non-2xx status.
 
 ## 9. Webhooks
 
-> **Nerve does not send outbound delivery webhooks yet.** Poll `events.get()` or
+> **Nervly does not send outbound delivery webhooks yet.** Poll `events.get()` or
 > `messages.list()` for delivery state. These helpers ship ahead of the feature
 > so an integration written today keeps working when it lands.
 
@@ -236,7 +236,7 @@ non-2xx status.
 const payload = await nerve.webhooks.verifyAndParse({
   provider: 'resend',
   payload: req.body,                       // raw string or Buffer — not parsed JSON
-  signature: req.headers['x-nerve-signature']!,
+  signature: req.headers['x-nervly-signature']!,
   secret: process.env.NERVE_WEBHOOK_SECRET!,
 });
 // { message_id?, recipient?, status?, channel?, latency_ms?, cost? }
@@ -251,12 +251,12 @@ fails — handle it as a 400 to your own caller.
 
 ## 10. Errors
 
-Every failure is a `NerveError`. See [`architecture.md`](architecture.md) §4 for
+Every failure is a `NervlyError`. See [`architecture.md`](architecture.md) §4 for
 the full hierarchy; the short aliases are the same class objects as their
-`Nerve`-prefixed names.
+`Nervly`-prefixed names.
 
 ```typescript
-import { AuthenticationError, RateLimitError, ApiError, NerveError } from '@nervehq/sdk';
+import { AuthenticationError, RateLimitError, ApiError, NervlyError } from '@nervly/sdk';
 
 try {
   await nerve.events.trigger({ name: 'x', to: { subscriberId: 's' } });
@@ -267,7 +267,7 @@ try {
     // 401 — key missing, malformed, or revoked
   } else if (error instanceof ApiError) {
     console.error(error.statusCode, error.errorType, error.requestId);
-  } else if (error instanceof NerveError) {
+  } else if (error instanceof NervlyError) {
     // network, retry exhaustion, or anything else the SDK raises
   }
 }

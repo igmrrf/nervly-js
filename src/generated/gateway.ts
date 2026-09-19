@@ -138,7 +138,7 @@ export interface paths {
          *     are being tracked.
          *
          *     Point an MCP-capable client at this endpoint with your API key as a bearer
-         *     token to let it answer questions like "is Nerve currently reaching the
+         *     token to let it answer questions like "is Nervly currently reaching the
          *     broker?" without giving it shell access.
          */
         post: operations["invoke-mcp-tool"];
@@ -231,7 +231,7 @@ export interface paths {
         /**
          * Receive a provider delivery receipt.
          * @description Point each provider's webhook setting at
-         *     `https://api.nervly.io/v1/webhooks/{provider}` and Nerve normalises their
+         *     `https://api.nervly.io/v1/webhooks/{provider}` and Nervly normalises their
          *     receipts into delivery telemetry.
          *
          *     **Authentication is by signature, not API key.** This route is outside the
@@ -266,7 +266,7 @@ export interface components {
              */
             error?: string | null;
             /**
-             * @description Nerve's identifier for the event, present when it was queued.
+             * @description Nervly's identifier for the event, present when it was queued.
              * @example evt_9c4f1a2b3d5e6f708192a3b4c5d6e7f8
              */
             eventId?: string | null;
@@ -403,7 +403,7 @@ export interface components {
             status: string;
         };
         /**
-         * @description Normalised delivery receipt, covering the fields Nerve extracts from every
+         * @description Normalised delivery receipt, covering the fields Nervly extracts from every
          *     provider's own webhook body.
          */
         GenericWebhookPayload: {
@@ -454,7 +454,7 @@ export interface components {
              */
             nats_connected: boolean;
             /**
-             * @description Service identifier, useful when several Nerve components sit behind
+             * @description Service identifier, useful when several Nervly components sit behind
              *     one load balancer.
              * @example nerve-gateway
              */
@@ -605,7 +605,7 @@ export interface components {
          * @description Channel-specific overrides applied to this event only.
          *
          *     Everything here is optional; anything you omit falls back to the channel
-         *     configuration held in your Nerve workspace.
+         *     configuration held in your Nervly workspace.
          */
         ProviderOverridesDto: {
             email?: null | components["schemas"]["EmailOverrideDto"];
@@ -650,7 +650,7 @@ export interface components {
         SmsOverrideDto: {
             /**
              * @description Replace the resolved Sender ID for this event only. Falls back to the
-             *     tenant's provider credential, then "Nerve", when omitted. Nigerian NCC
+             *     tenant's provider credential, then "Nervly", when omitted. Nigerian NCC
              *     rules reject or rewrite unregistered alphanumeric Sender IDs.
              * @example YourBrand
              */
@@ -689,7 +689,7 @@ export interface components {
              */
             provider: string;
             /**
-             * @description Internal Nerve receipt event identifier (`dlr_...`).
+             * @description Internal Nervly receipt event identifier (`dlr_...`).
              * @example dlr_1a2b3c4d5e6f70819
              */
             raw_event_id: string;
@@ -725,7 +725,7 @@ export interface components {
              */
             category?: string | null;
             /**
-             * @description Workflow name to run, as configured in your Nerve workspace.
+             * @description Workflow name to run, as configured in your Nervly workspace.
              * @example payment-received
              */
             name: string;
@@ -741,7 +741,7 @@ export interface components {
         /**
          * @description Acknowledgement that an event was accepted and queued for delivery.
          *
-         *     A `202` does not mean the notification was delivered — it means Nerve has
+         *     A `202` does not mean the notification was delivered — it means Nervly has
          *     durably accepted responsibility for it. Delivery outcomes arrive as
          *     delivery receipts on your webhook endpoint.
          */
@@ -759,7 +759,7 @@ export interface components {
              */
             channel: string;
             /**
-             * @description Nerve's identifier for this event. Quote it in support requests and
+             * @description Nervly's identifier for this event. Quote it in support requests and
              *     use it to correlate delivery receipts.
              * @example evt_9c4f1a2b3d5e6f708192a3b4c5d6e7f8
              */
@@ -840,7 +840,7 @@ export interface components {
         /** @description Acknowledgement that a delivery receipt was accepted. */
         WebhookResponse: {
             /**
-             * @description Nerve's identifier for this receipt.
+             * @description Nervly's identifier for this receipt.
              * @example dlr_1a2b3c4d5e6f70819
              */
             event_id: string;

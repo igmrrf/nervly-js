@@ -1,7 +1,7 @@
-# nerve-sdk Documentation
+# nervly-sdk Documentation
 
-Internal engineering and release documentation for `@nervehq/sdk`, the official
-TypeScript client library for Nerve. Versioned here rather than in `nerve-docs`,
+Internal engineering and release documentation for `@nervly/sdk`, the official
+TypeScript client library for Nervly. Versioned here rather than in `nervly-docs`,
 which is strictly customer-facing (ADR-012).
 
 ---
@@ -23,7 +23,7 @@ which is strictly customer-facing (ADR-012).
 
 ## Related, outside this directory
 
-- Gateway contract source: [`nerve-docs/static/openapi/gateway.json`](../../nerve-docs/static/openapi/gateway.json)
+- Gateway contract source: [`nervly-docs/static/openapi/gateway.json`](../../nerve-docs/static/openapi/gateway.json)
   — generated from the Rust handlers, never edited by hand.
 - Generated types: [`src/generated/gateway.ts`](../src/generated/gateway.ts) — produced by
   `npm run codegen`, drift-gated by `npm run check:codegen`.

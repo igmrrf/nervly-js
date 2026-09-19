@@ -1,6 +1,6 @@
-# nerve-sdk Architecture
+# nervly-sdk Architecture
 
-`@nervehq/sdk` is a lightweight, zero-runtime-dependency TypeScript client library designed for serverless, Node.js, and edge runtimes (Cloudflare Workers, Vercel Edge).
+`@nervly/sdk` is a lightweight, zero-runtime-dependency TypeScript client library designed for serverless, Node.js, and edge runtimes (Cloudflare Workers, Vercel Edge).
 
 ---
 
@@ -9,7 +9,7 @@
 - **Zero Bloat:** Native `fetch` only. No Axios, Got, or Request; `dependencies` is `{}` and is asserted to stay that way by `tests/api-stability.test.ts`.
 - **Dual Build:** `import` resolves `dist/esm/`, `require` resolves `dist/cjs/`, each with its own `.d.ts`. See §3.
 - **Fail-Safe Retries:** Exponential backoff with jitter for transient failures (429, 500, 502, 503, 504) and network errors, capped at 30s. A 429 that carried `Retry-After` waits exactly that long instead.
-- **Typed Errors:** Every failure is a `NerveError`. See §4.
+- **Typed Errors:** Every failure is a `NervlyError`. See §4.
 
 ---
 
@@ -17,8 +17,8 @@
 
 ```
 src/
-  index.ts          public surface: the `Nerve` class, resource getters, all exported types and errors
-  client.ts         NerveHttpClient — auth, retries, timeouts, error classification
+  index.ts          public surface: the `Nervly` class, resource getters, all exported types and errors
+  client.ts         NervlyHttpClient — auth, retries, timeouts, error classification
   errors.ts         the error hierarchy and its short aliases
   types.ts          the hand-written public types (the contract, mirrored from the spec)
   version.ts        SDK_VERSION, the single literal the User-Agent and packaging test agree on
@@ -27,11 +27,11 @@ src/
 tests/
   *.test.ts         runtime suites (node:test via tsx)
   types/            compile-only contract assertions against the generated spec
-  helpers/          a typed NerveHttpClient stand-in
+  helpers/          a typed NervlyHttpClient stand-in
 ```
 
 Resources are thin: each one turns arguments into a path, a body, and headers,
-then hands off to `NerveHttpClient`. No resource talks to a socket directly,
+then hands off to `NervlyHttpClient`. No resource talks to a socket directly,
 which is why the whole suite runs without a server.
 
 ---
@@ -80,16 +80,16 @@ therefore asserts on the *resolved file path*.
 ## 4. Error hierarchy
 
 ```
-NerveError
-├── NerveApiError                     a response arrived, with a non-2xx status
-│   ├── NerveAuthenticationError      401
-│   ├── NerveValidationError          400
-│   ├── NerveNotFoundError            404
-│   ├── NerveIdempotencyError         409
-│   ├── NerveRateLimitError           429  (+ retryAfterMs)
-│   └── NerveServerError              5xx  (+ statusCode as received)
-├── NerveNetworkError                 no response: DNS, TLS, refused, timeout (+ cause)
-└── NerveRetryExhaustedError          retries ran and all failed (+ attempts, lastError)
+NervlyError
+├── NervlyApiError                     a response arrived, with a non-2xx status
+│   ├── NervlyAuthenticationError      401
+│   ├── NervlyValidationError          400
+│   ├── NervlyNotFoundError            404
+│   ├── NervlyIdempotencyError         409
+│   ├── NervlyRateLimitError           429  (+ retryAfterMs)
+│   └── NervlyServerError              5xx  (+ statusCode as received)
+├── NervlyNetworkError                 no response: DNS, TLS, refused, timeout (+ cause)
+└── NervlyRetryExhaustedError          retries ran and all failed (+ attempts, lastError)
 ```
 
 Every status-specific class has a short alias (`AuthenticationError`,
@@ -97,16 +97,16 @@ Every status-specific class has a short alias (`AuthenticationError`,
 identically whichever spelling you import. Both are exported; new code should
 prefer the aliases.
 
-`NerveApiError` carries `statusCode`, `errorType` (the gateway's machine-readable
+`NervlyApiError` carries `statusCode`, `errorType` (the gateway's machine-readable
 code, or `UNKNOWN_ERROR`), and `requestId` when the response sent
 `x-request-id`.
 
 Two distinctions worth knowing, because they are the reason the classes exist:
 
-- **`NerveRetryExhaustedError` vs the underlying error.** A retryable failure
+- **`NervlyRetryExhaustedError` vs the underlying error.** A retryable failure
   raises the exhausted wrapper *only when retries actually ran and all of them
   failed*; the last error is on `lastError`. A 503 on a client configured with
   `maxRetries: 0` — and any non-retryable status such as 400 or 404 — is thrown
   as-is, because you were only told once.
-- **`NerveNetworkError` is not a `NerveApiError`.** No response arrived, so there
+- **`NervlyNetworkError` is not a `NervlyApiError`.** No response arrived, so there
   is no status code to report and no server-side request id to quote.

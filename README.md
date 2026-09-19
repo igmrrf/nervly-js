@@ -1,20 +1,20 @@
-# @nervehq/sdk
+# @nervly/sdk
 
-[![npm version](https://img.shields.io/npm/v/@nervehq/sdk.svg)](https://npmjs.org/package/@nervehq/sdk)
+[![npm version](https://img.shields.io/npm/v/@nervly/sdk.svg)](https://npmjs.org/package/@nervly/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The official TypeScript SDK for Nerve NaaS (Notification as a Service). Easily integrate powerful, cross-channel notifications with advanced delivery management, templating, and provider failover directly into your applications.
+The official TypeScript SDK for Nervly NaaS (Notification as a Service). Easily integrate powerful, cross-channel notifications with advanced delivery management, templating, and provider failover directly into your applications.
 
 > [!WARNING]
-> **API Stability Warning (`0.x`):** `@nervehq/sdk` is currently in active `0.x` development. The API surface is considered **unstable until 1.0.0**; minor versions may introduce refinements or backward-incompatible changes as new features land.
+> **API Stability Warning (`0.x`):** `@nervly/sdk` is currently in active `0.x` development. The API surface is considered **unstable until 1.0.0**; minor versions may introduce refinements or backward-incompatible changes as new features land.
 
 ## Overview
-Nerve is a unified notification infrastructure designed for developers. This SDK provides simple and intuitive access to the Nerve API, allowing you to seamlessly manage user preferences, trigger events, handle webhooks, inspect message delivery status, and ensure robust delivery across Email, SMS, Push, WhatsApp, and Voice.
+Nervly is a unified notification infrastructure designed for developers. This SDK provides simple and intuitive access to the Nervly API, allowing you to seamlessly manage user preferences, trigger events, handle webhooks, inspect message delivery status, and ensure robust delivery across Email, SMS, Push, WhatsApp, and Voice.
 
 ## Installation
 
 ```bash
-npm install @nervehq/sdk
+npm install @nervly/sdk
 ```
 
 Ships as both ES modules and CommonJS, with no runtime dependencies — `import`
@@ -24,10 +24,10 @@ declarations. Node 24+.
 ## Quick Start
 
 ```typescript
-import { Nerve } from '@nervehq/sdk';
+import { Nervly } from '@nervly/sdk';
 
 // Initialize the client
-const nerve = new Nerve({
+const nerve = new Nervly({
   apiKey: 'nerve_sk_live_your_api_key',
   // Optional overrides:
   // baseUrl: 'https://api.nervly.io', // defaults to production https://api.nervly.io
@@ -193,7 +193,7 @@ console.log(tools);
 Verify incoming provider webhooks securely via timing-safe HMAC-SHA256.
 
 > [!NOTE]
-> **Nerve does not send outbound delivery webhooks yet.** Poll
+> **Nervly does not send outbound delivery webhooks yet.** Poll
 > `events.get(eventId)` or `messages.list()` for delivery state. These helpers
 > ship ahead of the feature so integrations written today keep working when it
 > lands; nothing will arrive at your endpoint until then.
@@ -203,12 +203,12 @@ import express from 'express';
 const app = express();
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const signature = req.headers['x-nerve-signature'] as string;
+  const signature = req.headers['x-nervly-signature'] as string;
   const secret = process.env.NERVE_WEBHOOK_SECRET!;
   
   try {
     const payload = await nerve.webhooks.verifyAndParse({
-      provider: 'nerve',
+      provider: 'nervly',
       payload: req.body,
       signature,
       secret
@@ -228,23 +228,23 @@ The SDK exposes typed error classes for granular control.
 
 ```typescript
 import {
-  Nerve,
-  NerveError,
-  NerveApiError,
-  NerveAuthenticationError,
-  NerveRateLimitError,
-} from '@nervehq/sdk';
+  Nervly,
+  NervlyError,
+  NervlyApiError,
+  NervlyAuthenticationError,
+  NervlyRateLimitError,
+} from '@nervly/sdk';
 
 try {
   await nerve.events.trigger({ /* ... */ });
 } catch (error) {
-  if (error instanceof NerveAuthenticationError) {
+  if (error instanceof NervlyAuthenticationError) {
     console.error('Check your API Key');
-  } else if (error instanceof NerveRateLimitError) {
+  } else if (error instanceof NervlyRateLimitError) {
     console.error('Rate limit reached. Retry after ms:', error.retryAfterMs);
-  } else if (error instanceof NerveApiError) {
+  } else if (error instanceof NervlyApiError) {
     console.error('API Error:', error.statusCode, error.message);
-  } else if (error instanceof NerveError) {
+  } else if (error instanceof NervlyError) {
     // Network failure, or retries exhausted — inspect `lastError` for the cause.
     console.error('Request failed:', error.message);
   }
@@ -254,7 +254,7 @@ try {
 Every status-specific class also has a short alias — `AuthenticationError`,
 `RateLimitError`, `ValidationError`, `NotFoundError`, `IdempotencyError`,
 `ServerError` — which is the same class object, so `instanceof` works either
-way. `NerveApiError.errorType` carries the gateway's machine-readable code and
+way. `NervlyApiError.errorType` carries the gateway's machine-readable code and
 `requestId` the `x-request-id` header, both worth logging. See
 [`docs/api_reference.md`](docs/api_reference.md) §9.
 
@@ -262,7 +262,7 @@ way. `NerveApiError.errorType` carries the gateway's machine-readable code and
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `apiKey` | `string` | **Required** | Your API Key for Nerve. |
+| `apiKey` | `string` | **Required** | Your API Key for Nervly. |
 | `baseUrl` | `string` | `https://api.nervly.io` | The base URL for the API. |
 | `maxRetries` | `number` | `3` | Number of retries on transient errors. |
 | `timeout` | `number` | `10000` | Timeout in milliseconds. |
