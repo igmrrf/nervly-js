@@ -7,7 +7,7 @@ import { Nervly } from '../src/index.js';
 
 describe('Event Trigger Schema OpenAPI Contract Test', () => {
   const currentDir = dirname(fileURLToPath(import.meta.url));
-  const openApiPath = resolve(currentDir, '../../nerve-docs/static/openapi/gateway.json');
+  const openApiPath = resolve(currentDir, '../../nervly-docs/static/openapi/gateway.json');
   const specContent = readFileSync(openApiPath, 'utf-8');
   const openApiSpec = JSON.parse(specContent) as {
     components: {

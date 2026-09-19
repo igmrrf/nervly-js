@@ -1,7 +1,7 @@
 # nervly-sdk API Reference
 
 Programmatic interface for `@nervly/sdk`. Every method below maps to exactly one
-operation in [`gateway.json`](../../nerve-docs/static/openapi/gateway.json); the
+operation in [`gateway.json`](../../nervly-docs/static/openapi/gateway.json); the
 mapping is asserted by `tests/spec-conformance.test.ts`, and the request/response
 shapes are asserted against the generated spec by
 `tests/types/conformance.types.ts`.

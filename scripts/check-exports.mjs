@@ -26,7 +26,7 @@ for (const build of ['dist/esm/index.js', 'dist/cjs/index.js']) {
   }
 }
 
-const scratch = mkdtempSync(join(tmpdir(), 'nerve-sdk-exports-'));
+const scratch = mkdtempSync(join(tmpdir(), 'nervly-js-exports-'));
 
 try {
   execFileSync('npm', ['pack', '--pack-destination', scratch, '--silent'], {
@@ -42,7 +42,7 @@ try {
 
   writeFileSync(
     join(scratch, 'package.json'),
-    `${JSON.stringify({ name: 'nerve-sdk-exports-check', private: true, type: 'module' }, null, 2)}\n`,
+    `${JSON.stringify({ name: 'nervly-js-exports-check', private: true, type: 'module' }, null, 2)}\n`,
   );
   execFileSync('npm', ['install', '--silent', '--no-audit', '--no-fund', join(scratch, tarball)], {
     cwd: scratch,

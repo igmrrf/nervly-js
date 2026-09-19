@@ -23,7 +23,7 @@ which is strictly customer-facing (ADR-012).
 
 ## Related, outside this directory
 
-- Gateway contract source: [`nervly-docs/static/openapi/gateway.json`](../../nerve-docs/static/openapi/gateway.json)
+- Gateway contract source: [`nervly-docs/static/openapi/gateway.json`](../../nervly-docs/static/openapi/gateway.json)
   — generated from the Rust handlers, never edited by hand.
 - Generated types: [`src/generated/gateway.ts`](../src/generated/gateway.ts) — produced by
   `npm run codegen`, drift-gated by `npm run check:codegen`.

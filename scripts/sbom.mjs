@@ -20,7 +20,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
 const outDir = join(root, '.security-reports', 'sbom');
-const outFile = join(outDir, 'nerve-sdk.cdx.json');
+const outFile = join(outDir, 'nervly-js.cdx.json');
 mkdirSync(outDir, { recursive: true });
 
 const raw = execFileSync('npm', ['sbom', '--sbom-format', 'cyclonedx', '--sbom-type', 'library'], {
@@ -45,6 +45,6 @@ if (component.version !== pkg.version) {
 const dependencyCount = (bom.components ?? []).length;
 const runtimeDependencies = Object.keys(pkg.dependencies ?? {}).length;
 console.log(
-  `✓ wrote .security-reports/sbom/nerve-sdk.cdx.json — ` +
+  `✓ wrote .security-reports/sbom/nervly-js.cdx.json — ` +
     `${dependencyCount} component(s), ${runtimeDependencies} runtime dependency(ies)`,
 );

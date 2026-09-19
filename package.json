@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "codegen": "openapi-typescript ../nerve-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
+    "codegen": "openapi-typescript ../nervly-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
     "check:codegen": "node scripts/check-codegen.mjs",
     "check:types": "tsc --project tsconfig.check.json",
     "check:exports": "node scripts/check-exports.mjs",

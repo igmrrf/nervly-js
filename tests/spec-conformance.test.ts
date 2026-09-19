@@ -19,7 +19,7 @@ interface Operation {
 
 /**
  * Explicit mapping between OpenAPI paths and the SDK method that calls them.
- * Every path+method in `nerve-docs/static/openapi/gateway.json` must appear
+ * Every path+method in `nervly-docs/static/openapi/gateway.json` must appear
  * here, or the first test fails.
  */
 const CONFORMANCE_MAP: Record<string, Record<string, SdkMethodAccessor>> = {
@@ -104,7 +104,7 @@ const MODELLED_SCHEMAS = new Set([
 ]);
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const openApiPath = resolve(currentDir, '../../nerve-docs/static/openapi/gateway.json');
+const openApiPath = resolve(currentDir, '../../nervly-docs/static/openapi/gateway.json');
 const openApiSpec = JSON.parse(readFileSync(openApiPath, 'utf-8')) as Spec;
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;

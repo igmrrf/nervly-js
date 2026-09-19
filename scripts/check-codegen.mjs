@@ -17,9 +17,9 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const specPath = resolve(root, '../nerve-docs/static/openapi/gateway.json');
+const specPath = resolve(root, '../nervly-docs/static/openapi/gateway.json');
 const generatedPath = resolve(root, 'src/generated/gateway.ts');
-const tmp = mkdtempSync(join(tmpdir(), 'nerve-sdk-codegen-'));
+const tmp = mkdtempSync(join(tmpdir(), 'nervly-js-codegen-'));
 
 try {
   execFileSync(
@@ -40,12 +40,12 @@ try {
     console.error('');
     console.error('  Generated gateway types are stale.');
     console.error('  The committed OpenAPI spec and src/generated/gateway.ts disagree.');
-    console.error('  Run "npm run codegen" in nerve-sdk and commit the result.');
+    console.error('  Run "npm run codegen" in nervly-js and commit the result.');
     console.error('');
     process.exit(1);
   }
 
-  console.log('✓ src/generated/gateway.ts matches nerve-docs/static/openapi/gateway.json');
+  console.log('✓ src/generated/gateway.ts matches nervly-docs/static/openapi/gateway.json');
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

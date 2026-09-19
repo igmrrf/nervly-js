@@ -120,7 +120,7 @@ export function readInputs(root) {
   const security = readFileSync(join(root, 'SECURITY.md'), 'utf8');
   const matrix = readFileSync(join(root, 'docs/version-compatibility.md'), 'utf8');
   const spec = JSON.parse(
-    readFileSync(join(root, '../nerve-docs/static/openapi/gateway.json'), 'utf8'),
+    readFileSync(join(root, '../nervly-docs/static/openapi/gateway.json'), 'utf8'),
   );
   return { pkg, workflow, security, matrix, specVersion: spec.info.version };
 }

@@ -63,7 +63,7 @@ describe('version compatibility matrix', () => {
   it('maps the current SDK version to the committed gateway API version', () => {
     const pkg = readJson<{ version: string }>('package.json');
     const spec = readJson<{ info: { version: string } }>(
-      '../nerve-docs/static/openapi/gateway.json',
+      '../nervly-docs/static/openapi/gateway.json',
     );
     const matrix = read('docs/version-compatibility.md');
 
