@@ -1,11 +1,11 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type { HealthStatus } from '../types.js';
 
 export class HealthResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
-   * Check the health status of the Nerve Gateway.
+   * Check the health status of the Nervly Gateway.
    * Maps to: GET /v1/health (unauthenticated)
    */
   async check(): Promise<HealthStatus> {

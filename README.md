@@ -204,7 +204,7 @@ const app = express();
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const signature = req.headers['x-nervly-signature'] as string;
-  const secret = process.env.NERVE_WEBHOOK_SECRET!;
+  const secret = process.env.NERVLY_WEBHOOK_SECRET!;
   
   try {
     const payload = await nerve.webhooks.verifyAndParse({

@@ -1,4 +1,4 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type {
   SubscriberErasureResponse,
   UserPreferencesRequest,
@@ -6,7 +6,7 @@ import type {
 } from '../types.js';
 
 export class SubscribersResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * Erase a subscriber and delete their personal data (NDPR / right-to-erasure).

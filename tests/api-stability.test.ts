@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import * as sdk from '../src/index.js';
 import {
-  NerveError,
-  NerveApiError,
-  NerveAuthenticationError,
-  NerveValidationError,
-  NerveNotFoundError,
-  NerveIdempotencyError,
-  NerveRateLimitError,
-  NerveServerError,
-  NerveNetworkError,
-  NerveRetryExhaustedError,
+  NervlyError,
+  NervlyApiError,
+  NervlyAuthenticationError,
+  NervlyValidationError,
+  NervlyNotFoundError,
+  NervlyIdempotencyError,
+  NervlyRateLimitError,
+  NervlyServerError,
+  NervlyNetworkError,
+  NervlyRetryExhaustedError,
   AuthenticationError,
   RateLimitError,
   ValidationError,
@@ -25,21 +25,21 @@ import { dirname, resolve } from 'node:path';
 const currentDir = dirname(fileURLToPath(import.meta.url));
 
 describe('Error hierarchy', () => {
-  it('should root every SDK error at NerveError', () => {
-    const errors: NerveError[] = [
-      new NerveApiError(418, 'TEAPOT', 'teapot'),
-      new NerveAuthenticationError(),
-      new NerveValidationError('bad'),
-      new NerveNotFoundError(),
-      new NerveIdempotencyError(),
-      new NerveRateLimitError(),
-      new NerveServerError(),
-      new NerveNetworkError('offline'),
-      new NerveRetryExhaustedError(3, new Error('last')),
+  it('should root every SDK error at NervlyError', () => {
+    const errors: NervlyError[] = [
+      new NervlyApiError(418, 'TEAPOT', 'teapot'),
+      new NervlyAuthenticationError(),
+      new NervlyValidationError('bad'),
+      new NervlyNotFoundError(),
+      new NervlyIdempotencyError(),
+      new NervlyRateLimitError(),
+      new NervlyServerError(),
+      new NervlyNetworkError('offline'),
+      new NervlyRetryExhaustedError(3, new Error('last')),
     ];
 
     for (const error of errors) {
-      assert.ok(error instanceof NerveError, `${error.name} is not a NerveError`);
+      assert.ok(error instanceof NervlyError, `${error.name} is not a NervlyError`);
       assert.ok(error instanceof Error);
       assert.equal(typeof error.name, 'string');
       assert.ok(error.message.length > 0);
@@ -47,30 +47,30 @@ describe('Error hierarchy', () => {
   });
 
   it('should keep `instanceof` working across the prototype chain', () => {
-    assert.ok(new NerveAuthenticationError() instanceof NerveApiError);
-    assert.ok(new NerveRateLimitError() instanceof NerveApiError);
-    assert.ok(new NerveNotFoundError() instanceof NerveApiError);
-    assert.ok(new NerveServerError() instanceof NerveApiError);
+    assert.ok(new NervlyAuthenticationError() instanceof NervlyApiError);
+    assert.ok(new NervlyRateLimitError() instanceof NervlyApiError);
+    assert.ok(new NervlyNotFoundError() instanceof NervlyApiError);
+    assert.ok(new NervlyServerError() instanceof NervlyApiError);
     // A network error is not an API error: no response ever arrived.
-    assert.ok(!(new NerveNetworkError('offline') instanceof NerveApiError));
+    assert.ok(!(new NervlyNetworkError('offline') instanceof NervlyApiError));
   });
 
   it('should expose short aliases that are the same class object', () => {
-    assert.equal(AuthenticationError, NerveAuthenticationError);
-    assert.equal(RateLimitError, NerveRateLimitError);
-    assert.equal(ValidationError, NerveValidationError);
-    assert.equal(sdk.ApiError, NerveApiError);
-    assert.equal(sdk.NotFoundError, NerveNotFoundError);
-    assert.equal(sdk.IdempotencyError, NerveIdempotencyError);
-    assert.equal(sdk.ServerError, NerveServerError);
-    assert.equal(sdk.NetworkError, NerveNetworkError);
-    assert.equal(sdk.RetryExhaustedError, NerveRetryExhaustedError);
-    assert.equal(sdk.NerveSdkError, NerveError);
+    assert.equal(AuthenticationError, NervlyAuthenticationError);
+    assert.equal(RateLimitError, NervlyRateLimitError);
+    assert.equal(ValidationError, NervlyValidationError);
+    assert.equal(sdk.ApiError, NervlyApiError);
+    assert.equal(sdk.NotFoundError, NervlyNotFoundError);
+    assert.equal(sdk.IdempotencyError, NervlyIdempotencyError);
+    assert.equal(sdk.ServerError, NervlyServerError);
+    assert.equal(sdk.NetworkError, NervlyNetworkError);
+    assert.equal(sdk.RetryExhaustedError, NervlyRetryExhaustedError);
+    assert.equal(sdk.NervlySdkError, NervlyError);
 
     // The alias catches what the long name throws.
     const caught: unknown = (() => {
       try {
-        throw new NerveAuthenticationError();
+        throw new NervlyAuthenticationError();
       } catch (error) {
         return error;
       }
@@ -80,18 +80,18 @@ describe('Error hierarchy', () => {
   });
 
   it('should carry status-specific metadata', () => {
-    assert.equal(new NerveAuthenticationError().statusCode, 401);
-    assert.equal(new NerveValidationError('bad').statusCode, 400);
-    assert.equal(new NerveNotFoundError().statusCode, 404);
-    assert.equal(new NerveIdempotencyError().statusCode, 409);
-    assert.equal(new NerveRateLimitError('slow', 7000).retryAfterMs, 7000);
-    assert.equal(new NerveServerError('boom', 502).statusCode, 502);
-    assert.equal(new NerveApiError(499, 'CLIENT_CLOSED', 'gone', 'req_1').requestId, 'req_1');
+    assert.equal(new NervlyAuthenticationError().statusCode, 401);
+    assert.equal(new NervlyValidationError('bad').statusCode, 400);
+    assert.equal(new NervlyNotFoundError().statusCode, 404);
+    assert.equal(new NervlyIdempotencyError().statusCode, 409);
+    assert.equal(new NervlyRateLimitError('slow', 7000).retryAfterMs, 7000);
+    assert.equal(new NervlyServerError('boom', 502).statusCode, 502);
+    assert.equal(new NervlyApiError(499, 'CLIENT_CLOSED', 'gone', 'req_1').requestId, 'req_1');
   });
 
   it('should keep the last error on RetryExhaustedError', () => {
-    const last = new NerveServerError('db down', 503);
-    const error = new NerveRetryExhaustedError(3, last);
+    const last = new NervlyServerError('db down', 503);
+    const error = new NervlyRetryExhaustedError(3, last);
     assert.equal(error.attempts, 3);
     assert.equal(error.lastError, last);
     assert.match(error.message, /All 3 retry attempts exhausted/);

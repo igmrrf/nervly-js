@@ -1,5 +1,5 @@
 // --- Client Configuration ---
-export interface NerveConfig {
+export interface NervlyConfig {
   apiKey: string;
   baseUrl?: string;       // defaults to 'https://api.nervly.io'
   timeout?: number;        // ms, defaults to 10000

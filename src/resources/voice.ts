@@ -1,4 +1,4 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type {
   SendVoiceOptions,
   TriggerEventResponse,
@@ -10,7 +10,7 @@ import type {
 } from '../types.js';
 
 export class VoiceResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * Send a Voice OTP or spoken notification.

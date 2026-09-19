@@ -1,4 +1,4 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type {
   SendEmailOptions,
   TriggerEventResponse,
@@ -10,7 +10,7 @@ import type {
 } from '../types.js';
 
 export class EmailResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * Send a transactional email.
@@ -18,7 +18,7 @@ export class EmailResource {
    *
    * Normalizes string or object recipients, combines template variables,
    * configures provider overrides (sender, provider, customHeaders),
-   * and dispatches the event through the Nerve Gateway data plane.
+   * and dispatches the event through the Nervly Gateway data plane.
    *
    * @param request - Transactional email details and options
    * @param options - Optional trigger options (idempotency key, priority override)

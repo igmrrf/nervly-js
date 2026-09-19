@@ -20,8 +20,8 @@ const require = createRequire(import.meta.url);
 
 type SdkModule = typeof import('../src/index.js');
 
-const ESM_ENTRY = import.meta.resolve('@nervehq/sdk');
-const CJS_ENTRY = require.resolve('@nervehq/sdk');
+const ESM_ENTRY = import.meta.resolve('@nervly/sdk');
+const CJS_ENTRY = require.resolve('@nervly/sdk');
 
 function loadEsm(): Promise<SdkModule> {
   return import(ESM_ENTRY) as Promise<SdkModule>;
@@ -46,9 +46,9 @@ describe('dual ESM/CJS loader resolution', () => {
       ['cjs', cjs],
     ] as const) {
       assert.equal(typeof mod.default, 'function', `${label} default export`);
-      assert.equal(typeof mod.Nerve, 'function', `${label} named export`);
-      assert.equal(mod.default, mod.Nerve, `${label} default is the Nerve class`);
-      assert.equal(mod.Nerve.name, 'Nerve');
+      assert.equal(typeof mod.Nervly, 'function', `${label} named export`);
+      assert.equal(mod.default, mod.Nervly, `${label} default is the Nervly class`);
+      assert.equal(mod.Nervly.name, 'Nervly');
     }
   });
 
@@ -57,11 +57,11 @@ describe('dual ESM/CJS loader resolution', () => {
     const cjs = loadCjs();
 
     // Different builds are different class objects...
-    assert.notEqual(esm.Nerve, cjs.Nerve);
-    assert.notEqual(esm.NerveAuthenticationError, cjs.NerveAuthenticationError);
+    assert.notEqual(esm.Nervly, cjs.Nervly);
+    assert.notEqual(esm.NervlyAuthenticationError, cjs.NervlyAuthenticationError);
     // ...but each build keeps the alias identity its own consumers rely on.
-    assert.equal(esm.AuthenticationError, esm.NerveAuthenticationError);
-    assert.equal(cjs.AuthenticationError, cjs.NerveAuthenticationError);
+    assert.equal(esm.AuthenticationError, esm.NervlyAuthenticationError);
+    assert.equal(cjs.AuthenticationError, cjs.NervlyAuthenticationError);
     assert.equal(esm.SDK_VERSION, cjs.SDK_VERSION);
   });
 
@@ -70,7 +70,7 @@ describe('dual ESM/CJS loader resolution', () => {
     const cjs = loadCjs();
 
     assert.deepEqual(Object.keys(cjs).sort(), Object.keys(esm).sort());
-    assert.ok(Object.keys(esm).includes('Nerve'));
+    assert.ok(Object.keys(esm).includes('Nervly'));
     assert.ok(Object.keys(esm).includes('SDK_VERSION'));
     assert.ok(Object.keys(esm).includes('RetryExhaustedError'));
   });
@@ -82,8 +82,8 @@ describe('dual ESM/CJS loader resolution', () => {
     await withFetch(
       () => jsonResponse(200, { messages: [], next_cursor: null }),
       async (requests) => {
-        await new esm.Nerve({ apiKey: 'k', baseUrl: 'https://dual.test' }).messages.list();
-        await new cjs.Nerve({ apiKey: 'k', baseUrl: 'https://dual.test' }).messages.list();
+        await new esm.Nervly({ apiKey: 'k', baseUrl: 'https://dual.test' }).messages.list();
+        await new cjs.Nervly({ apiKey: 'k', baseUrl: 'https://dual.test' }).messages.list();
 
         assert.equal(requests.length, 2);
         assert.equal(requests[0]!.headers.get('authorization'), 'Bearer k');

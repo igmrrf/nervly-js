@@ -1,4 +1,4 @@
-import type { NerveHttpClient } from '../../src/client.js';
+import type { NervlyHttpClient } from '../../src/client.js';
 import type { RequestOptions } from '../../src/types.js';
 
 export interface MockHandlers {
@@ -10,7 +10,7 @@ export interface MockHandlers {
 }
 
 /**
- * A stand-in for `NerveHttpClient` that answers from the handlers a test hands
+ * A stand-in for `NervlyHttpClient` that answers from the handlers a test hands
  * it, so a resource can be exercised without a socket.
  *
  * Response bodies in tests are annotated with their real SDK type
@@ -18,7 +18,7 @@ export interface MockHandlers {
  * a fixture stops matching the contract — a blanket `as any` client would hide
  * exactly that drift.
  */
-export function mockClient(handlers: MockHandlers = {}): NerveHttpClient {
+export function mockClient(handlers: MockHandlers = {}): NervlyHttpClient {
   return {
     get: async (path: string) => handlers.get?.(path),
     post: async (path: string, body?: unknown, headers?: Record<string, string>) =>
@@ -26,7 +26,7 @@ export function mockClient(handlers: MockHandlers = {}): NerveHttpClient {
     put: async (path: string, body?: unknown) => handlers.put?.(path, body),
     delete: async (path: string) => handlers.delete?.(path),
     request: async (options: RequestOptions) => handlers.request?.(options),
-  } as unknown as NerveHttpClient;
+  } as unknown as NervlyHttpClient;
 }
 
 /**

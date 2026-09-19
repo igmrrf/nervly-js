@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Nerve } from '../src/index.js';
+import { Nervly } from '../src/index.js';
 import type { SendEmailOptions, TriggerEventRequest, TriggerEventResponse } from '../src/types.js';
 import { recorder } from './helpers/mock-client.js';
 
@@ -21,19 +21,19 @@ async function withFetch(
 
 describe('EmailResource & Email Helpers', () => {
   it('should have email.send and events.triggerEmail methods', () => {
-    const nerve = new Nerve({ apiKey: 'test_key' });
+    const nerve = new Nervly({ apiKey: 'test_key' });
     assert.equal(typeof nerve.email.send, 'function');
     assert.equal(typeof nerve.events.triggerEmail, 'function');
   });
 
   it('should build conforming TriggerEventRequest from string recipient', () => {
-    const nerve = new Nerve({ apiKey: 'test_key' });
+    const nerve = new Nervly({ apiKey: 'test_key' });
     const req: SendEmailOptions = {
       to: 'user@example.com',
       subject: 'Verify Your Email',
       html: '<p>Click here to verify</p>',
       provider: 'resend',
-      sender: 'Nerve <notifications@nervly.io>',
+      sender: 'Nervly <notifications@nervly.io>',
     };
 
     const built = nerve.email.buildTriggerRequest(req);
@@ -42,12 +42,12 @@ describe('EmailResource & Email Helpers', () => {
     assert.equal(built.payload?.subject, 'Verify Your Email');
     assert.equal(built.payload?.html, '<p>Click here to verify</p>');
     assert.equal(built.overrides?.email?.provider, 'resend');
-    assert.equal(built.overrides?.email?.sender, 'Nerve <notifications@nervly.io>');
+    assert.equal(built.overrides?.email?.sender, 'Nervly <notifications@nervly.io>');
     assert.equal(built.category, 'transactional');
   });
 
   it('should build conforming TriggerEventRequest with ZeptoMail and custom headers', () => {
-    const nerve = new Nerve({ apiKey: 'test_key' });
+    const nerve = new Nervly({ apiKey: 'test_key' });
     const req: SendEmailOptions = {
       to: { subscriberId: 'sub_456', email: 'recipient@domain.com' },
       subject: 'Monthly Invoice',
@@ -111,7 +111,7 @@ describe('EmailResource & Email Helpers', () => {
         });
       },
       async () => {
-        const nerve = new Nerve({
+        const nerve = new Nervly({
           apiKey: 'nv_live_test_email_key',
           baseUrl: 'https://test-api.nervly.io',
         });
@@ -160,7 +160,7 @@ describe('EmailResource & Email Helpers', () => {
         );
       },
       async () => {
-        const nerve = new Nerve({
+        const nerve = new Nervly({
           apiKey: 'nv_live_events_test_key',
           baseUrl: 'https://test-api.nervly.io',
         });

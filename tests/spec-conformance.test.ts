@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { Nerve } from '../src/index.js';
+import { Nervly } from '../src/index.js';
 
-type SdkMethodAccessor = (client: Nerve) => unknown;
+type SdkMethodAccessor = (client: Nervly) => unknown;
 
 interface Spec {
   paths: Record<string, Record<string, unknown>>;
@@ -128,7 +128,7 @@ function referencedSchemas(operation: Operation): string[] {
 }
 
 describe('SDK OpenAPI Spec Conformance', () => {
-  const nerve = new Nerve({ apiKey: 'nv_live_conformance_test' });
+  const nerve = new Nervly({ apiKey: 'nv_live_conformance_test' });
 
   it('should cover every path and method documented in gateway.json', () => {
     const missingEndpoints: string[] = [];

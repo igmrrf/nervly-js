@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generates the release SBOM for `@nervehq/sdk` (ticket 20, question 3).
+ * Generates the release SBOM for `@nervly/sdk` (ticket 20, question 3).
  *
  * `npm sbom` reads the locked dependency tree and emits CycloneDX, the format
  * npm's own tooling produces. The file lands in `.security-reports/sbom/`,

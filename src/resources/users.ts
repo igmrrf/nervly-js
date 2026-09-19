@@ -1,8 +1,8 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type { UserPreferencesRequest, UserPreferencesResponse } from '../types.js';
 
 export class UsersResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * Update a subscriber's notification channel and category preferences.

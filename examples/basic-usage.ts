@@ -1,7 +1,7 @@
 /**
- * @nerve/sdk Basic Usage Example
+ * @nervly/sdk Basic Usage Example
  *
- * Demonstrates the core features of the Nerve SDK:
+ * Demonstrates the core features of the Nervly SDK:
  * - Client initialization
  * - Single event trigger with idempotency + priority
  * - Bulk event dispatch
@@ -13,28 +13,28 @@
  */
 
 import { createHmac } from 'node:crypto';
-import Nerve, {
-  NerveApiError,
-  NerveAuthenticationError,
-  NerveRateLimitError,
-  NerveValidationError,
-  NerveIdempotencyError,
-  NerveNetworkError,
+import Nervly, {
+  NervlyApiError,
+  NervlyAuthenticationError,
+  NervlyRateLimitError,
+  NervlyValidationError,
+  NervlyIdempotencyError,
+  NervlyNetworkError,
 } from '../src/index.js';
 
 // ─────────────────────────────────────────────────────────────────
-// 1. Initialize the Nerve Client
+// 1. Initialize the Nervly Client
 // ─────────────────────────────────────────────────────────────────
-const nerve = new Nerve({
-  apiKey: process.env.NERVE_API_KEY || 'nv_test_1234567890abcdef',
-  baseUrl: process.env.NERVE_BASE_URL || 'http://localhost:8080',
+const nerve = new Nervly({
+  apiKey: process.env.NERVLY_API_KEY || 'nv_test_1234567890abcdef',
+  baseUrl: process.env.NERVLY_BASE_URL || 'http://localhost:8080',
   timeout: 5000,      // 5s request timeout
   maxRetries: 3,       // retry up to 3 times on transient failures
 });
 
 async function main() {
   console.log('╔══════════════════════════════════════════╗');
-  console.log('║       @nerve/sdk  —  Basic Usage         ║');
+  console.log('║       @nervly/sdk  —  Basic Usage         ║');
   console.log('╚══════════════════════════════════════════╝\n');
 
   // ─────────────────────────────────────────────────────────────
@@ -180,21 +180,21 @@ main().catch((error) => {
   console.error('║          Error Occurred                   ║');
   console.error('╚══════════════════════════════════════════╝\n');
 
-  if (error instanceof NerveAuthenticationError) {
+  if (error instanceof NervlyAuthenticationError) {
     console.error('🔑 Authentication Error:', error.message);
-    console.error('   → Check your NERVE_API_KEY environment variable');
-  } else if (error instanceof NerveRateLimitError) {
+    console.error('   → Check your NERVLY_API_KEY environment variable');
+  } else if (error instanceof NervlyRateLimitError) {
     console.error('⏱  Rate Limited:', error.message);
     console.error(`   → Retry after ${error.retryAfterMs}ms`);
-  } else if (error instanceof NerveIdempotencyError) {
+  } else if (error instanceof NervlyIdempotencyError) {
     console.error('🔄 Idempotency Conflict:', error.message);
     console.error('   → This event was already processed');
-  } else if (error instanceof NerveValidationError) {
+  } else if (error instanceof NervlyValidationError) {
     console.error('❌ Validation Error:', error.message);
-  } else if (error instanceof NerveNetworkError) {
+  } else if (error instanceof NervlyNetworkError) {
     console.error('🌐 Network Error:', error.message);
     console.error('   → Check if the gateway is running');
-  } else if (error instanceof NerveApiError) {
+  } else if (error instanceof NervlyApiError) {
     console.error(`⚠️  API Error (${error.statusCode}):`, error.message);
     console.error(`   Type: ${error.errorType}`);
   } else {

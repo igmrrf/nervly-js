@@ -67,8 +67,8 @@ const MUTATIONS = [
   {
     id: 'network-error-not-retryable',
     file: 'src/client.ts',
-    find: 'if (error instanceof NerveNetworkError) return true;',
-    replace: 'if (error instanceof NerveNetworkError) return false;',
+    find: 'if (error instanceof NervlyNetworkError) return true;',
+    replace: 'if (error instanceof NervlyNetworkError) return false;',
     test: 'tests/http-contract.test.ts',
     proves: 'network failures are retried',
   },

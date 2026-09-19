@@ -1,8 +1,8 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type { McpResponse } from '../types.js';
 
 export class McpResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * List available MCP tools.

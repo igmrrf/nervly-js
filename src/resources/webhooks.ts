@@ -4,7 +4,7 @@ import type { WebhookPayload, WebhookVerifyOptions, DeliveryStatus } from '../ty
 /**
  * Signature verification and parsing helpers for delivery webhooks.
  *
- * **Nerve does not send outbound delivery webhooks yet.** They are explicitly
+ * **Nervly does not send outbound delivery webhooks yet.** They are explicitly
  * out of scope for the first release — poll `events.get(eventId)` or
  * `messages.list()` for delivery state instead. These helpers ship ahead of the
  * feature so that an integration written today keeps working when webhooks land,

@@ -58,7 +58,7 @@ Parent checklist: [`../checklist.md`](../checklist.md)
 
 ## Security
 - [x] No secrets in examples; docs show env-var usage — `examples/basic-usage.ts` reads
-      `process.env.NERVE_API_KEY`; the README quickstart likewise.
+      `process.env.NERVLY_API_KEY`; the README quickstart likewise.
 - [x] npm provenance + signed releases; `npm publish --provenance` — 
       [`.github/workflows/release.yml`](.github/workflows/release.yml) publishes on a `v*`
       tag with `id-token: write` and `npm publish --provenance --access public`; the

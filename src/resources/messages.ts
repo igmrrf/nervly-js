@@ -1,8 +1,8 @@
-import { NerveHttpClient } from '../client.js';
+import { NervlyHttpClient } from '../client.js';
 import type { ListMessagesParams, ListMessagesResponse } from '../types.js';
 
 export class MessagesResource {
-  constructor(private readonly client: NerveHttpClient) {}
+  constructor(private readonly client: NervlyHttpClient) {}
 
   /**
    * List messages with optional filters and cursor-based pagination.

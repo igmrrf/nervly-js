@@ -9,7 +9,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Nerve } from '../src/index.js';
+import { Nervly } from '../src/index.js';
 import { EventsResource } from '../src/resources/events.js';
 import { McpResource } from '../src/resources/mcp.js';
 import { EmailResource } from '../src/resources/email.js';
@@ -25,7 +25,7 @@ const RESPONSE: TriggerEventResponse = {
 };
 
 function email(): EmailResource {
-  return new Nerve({ apiKey: 'branch_key' }).email;
+  return new Nervly({ apiKey: 'branch_key' }).email;
 }
 
 describe('EmailResource.buildTriggerRequest — branches', () => {

@@ -1,36 +1,36 @@
 import {
-  NerveApiError,
-  NerveAuthenticationError,
-  NerveValidationError,
-  NerveNotFoundError,
-  NerveIdempotencyError,
-  NerveRateLimitError,
-  NerveServerError,
-  NerveNetworkError,
-  NerveRetryExhaustedError,
+  NervlyApiError,
+  NervlyAuthenticationError,
+  NervlyValidationError,
+  NervlyNotFoundError,
+  NervlyIdempotencyError,
+  NervlyRateLimitError,
+  NervlyServerError,
+  NervlyNetworkError,
+  NervlyRetryExhaustedError,
 } from './errors.js';
-import type { NerveConfig, RequestOptions, ApiErrorBody } from './types.js';
+import type { NervlyConfig, RequestOptions, ApiErrorBody } from './types.js';
 import { computeBackoffDelay } from './retry.js';
 import { SDK_VERSION } from './version.js';
 
 /**
- * Low-level HTTP transport client for the Nerve Gateway API.
+ * Low-level HTTP transport client for the Nervly Gateway API.
  *
  * Handles authentication, retries with exponential backoff + jitter,
  * request timeouts via AbortController, and error classification.
  *
  * Uses native `fetch` — requires Node.js >= 18.
  */
-export class NerveHttpClient {
+export class NervlyHttpClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly timeout: number;
   private readonly maxRetries: number;
   private readonly retryBaseDelay: number;
 
-  constructor(config: NerveConfig) {
+  constructor(config: NervlyConfig) {
     if (!config.apiKey) {
-      throw new NerveAuthenticationError('API key is required');
+      throw new NervlyAuthenticationError('API key is required');
     }
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl?.replace(/\/$/, '') || 'https://api.nervly.io';
@@ -79,7 +79,7 @@ export class NerveHttpClient {
    * - the *retryable* error itself, when the budget was never spent (a 400, a
    *   404, or a 503 on a client configured with `maxRetries: 0`) — you were
    *   only told once, so the underlying error is the honest answer;
-   * - {@link NerveRetryExhaustedError} when retries actually ran and all of
+   * - {@link NervlyRetryExhaustedError} when retries actually ran and all of
    *   them failed, carrying the last error on `lastError`. Without this you
    *   could not tell "the server hiccuped once" from "we gave up", which is
    *   what the class exists to express.
@@ -104,20 +104,20 @@ export class NerveHttpClient {
         }
 
         if (attempt > 0 && this.isRetryable(lastError)) {
-          throw new NerveRetryExhaustedError(attempt, lastError);
+          throw new NervlyRetryExhaustedError(attempt, lastError);
         }
 
         throw lastError;
       }
     }
 
-    throw new NerveRetryExhaustedError(attempt, lastError!);
+    throw new NervlyRetryExhaustedError(attempt, lastError!);
   }
 
   private async executeRequest<T>(url: string, options: RequestOptions): Promise<T> {
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
-    headers.set('User-Agent', `@nervehq/sdk/${SDK_VERSION}`);
+    headers.set('User-Agent', `@nervly/sdk/${SDK_VERSION}`);
 
     if (!options.skipAuth) {
       headers.set('Authorization', `Bearer ${this.apiKey}`);
@@ -136,9 +136,9 @@ export class NerveHttpClient {
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new NerveNetworkError(`Request timed out after ${this.timeout}ms`);
+        throw new NervlyNetworkError(`Request timed out after ${this.timeout}ms`);
       }
-      throw new NerveNetworkError(
+      throw new NervlyNetworkError(
         'Network request failed',
         error instanceof Error ? error : undefined,
       );
@@ -174,33 +174,33 @@ export class NerveHttpClient {
 
     switch (response.status) {
       case 400:
-        throw new NerveValidationError(message, requestId);
+        throw new NervlyValidationError(message, requestId);
       case 401:
-        throw new NerveAuthenticationError(message, requestId);
+        throw new NervlyAuthenticationError(message, requestId);
       case 404:
-        throw new NerveNotFoundError(message, requestId);
+        throw new NervlyNotFoundError(message, requestId);
       case 409:
-        throw new NerveIdempotencyError(message, requestId);
+        throw new NervlyIdempotencyError(message, requestId);
       case 429: {
         const retryAfter = response.headers.get('retry-after');
         const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000;
-        throw new NerveRateLimitError(message, retryAfterMs, requestId);
+        throw new NervlyRateLimitError(message, retryAfterMs, requestId);
       }
       case 500:
       case 502:
       case 503:
       case 504:
-        throw new NerveServerError(message, response.status, requestId);
+        throw new NervlyServerError(message, response.status, requestId);
       default:
-        throw new NerveApiError(response.status, errorType, message, requestId);
+        throw new NervlyApiError(response.status, errorType, message, requestId);
     }
   }
 
   /** Whether a failure is worth another attempt, budget aside. */
   private isRetryable(error: Error): boolean {
-    if (error instanceof NerveNetworkError) return true;
+    if (error instanceof NervlyNetworkError) return true;
 
-    if (error instanceof NerveApiError) {
+    if (error instanceof NervlyApiError) {
       return [429, 500, 502, 503, 504].includes(error.statusCode);
     }
 
@@ -215,7 +215,7 @@ export class NerveHttpClient {
     return computeBackoffDelay({
       attempt,
       retryBaseDelay: this.retryBaseDelay,
-      retryAfterMs: error instanceof NerveRateLimitError ? error.retryAfterMs : undefined,
+      retryAfterMs: error instanceof NervlyRateLimitError ? error.retryAfterMs : undefined,
     });
   }
 

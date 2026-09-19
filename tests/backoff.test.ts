@@ -9,7 +9,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeBackoffDelay, JITTER_SPAN_MS, MAX_BACKOFF_MS } from '../src/retry.js';
-import { NerveHttpClient } from '../src/client.js';
+import { NervlyHttpClient } from '../src/client.js';
 import { jsonResponse, withFetch, withCapturedTimeouts } from './helpers/http.js';
 
 describe('computeBackoffDelay', () => {
@@ -74,7 +74,7 @@ describe('computeBackoffDelay', () => {
   });
 });
 
-describe('NerveHttpClient retry-delay wiring', () => {
+describe('NervlyHttpClient retry-delay wiring', () => {
   it('waits the computed exponential delay between attempts', async () => {
     const originalRandom = Math.random;
     Math.random = () => 0;
@@ -90,7 +90,7 @@ describe('NerveHttpClient retry-delay wiring', () => {
               : jsonResponse(200, { status: 'OK' });
           },
           async () => {
-            const client = new NerveHttpClient({
+            const client = new NervlyHttpClient({
               apiKey: 'k',
               baseUrl: 'https://example.test',
               maxRetries: 2,
@@ -130,7 +130,7 @@ describe('NerveHttpClient retry-delay wiring', () => {
               : jsonResponse(200, { status: 'OK' });
           },
           async () => {
-            const client = new NerveHttpClient({
+            const client = new NervlyHttpClient({
               apiKey: 'k',
               baseUrl: 'https://example.test',
               maxRetries: 1,
@@ -171,7 +171,7 @@ describe('NerveHttpClient retry-delay wiring', () => {
               : jsonResponse(200, { status: 'OK' });
           },
           async () => {
-            const client = new NerveHttpClient({
+            const client = new NervlyHttpClient({
               apiKey: 'k',
               baseUrl: 'https://example.test',
               maxRetries: 1,

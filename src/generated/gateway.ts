@@ -456,7 +456,7 @@ export interface components {
             /**
              * @description Service identifier, useful when several Nervly components sit behind
              *     one load balancer.
-             * @example nerve-gateway
+             * @example nervly-gateway
              */
             service: string;
             /**

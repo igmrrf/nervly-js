@@ -17,7 +17,7 @@ import Nervly from '@nervly/sdk';          // default export
 import { Nervly as Named } from '@nervly/sdk'; // or the named one — same class
 
 const nerve = new Nervly({
-  apiKey: process.env.NERVE_API_KEY!, // required; throws if empty
+  apiKey: process.env.NERVLY_API_KEY!, // required; throws if empty
   baseUrl: 'https://api.nervly.io',  // default
   timeout: 10_000,                    // ms, default
   maxRetries: 3,                      // default
@@ -237,7 +237,7 @@ const payload = await nerve.webhooks.verifyAndParse({
   provider: 'resend',
   payload: req.body,                       // raw string or Buffer — not parsed JSON
   signature: req.headers['x-nervly-signature']!,
-  secret: process.env.NERVE_WEBHOOK_SECRET!,
+  secret: process.env.NERVLY_WEBHOOK_SECRET!,
 });
 // { message_id?, recipient?, status?, channel?, latency_ms?, cost? }
 ```

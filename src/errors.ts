@@ -1,14 +1,14 @@
 /**
- * Structured error hierarchy for `@nervehq/sdk`.
+ * Structured error hierarchy for `@nervly/sdk`.
  *
- * Every failure the SDK raises is an instance of {@link NerveError}, so a
- * single `instanceof NerveError` catch is enough to distinguish SDK errors from
+ * Every failure the SDK raises is an instance of {@link NervlyError}, so a
+ * single `instanceof NervlyError` catch is enough to distinguish SDK errors from
  * your own. Below that root the hierarchy is split by *where* the failure came
- * from — HTTP response (`NerveApiError` and its status-specific subclasses) or
- * the transport itself (`NerveNetworkError`, `NerveRetryExhaustedError`).
+ * from — HTTP response (`NervlyApiError` and its status-specific subclasses) or
+ * the transport itself (`NervlyNetworkError`, `NervlyRetryExhaustedError`).
  *
  * Each status-specific subclass also has a short alias (`AuthenticationError`
- * for `NerveAuthenticationError`, and so on). Both names are exported and both
+ * for `NervlyAuthenticationError`, and so on). Both names are exported and both
  * refer to the same class, so `instanceof` works whichever you import. New code
  * should prefer the short aliases; the longer names are kept because they are
  * already in the published API surface.
@@ -17,10 +17,10 @@
 /**
  * Base class for all errors raised by the SDK.
  */
-export class NerveError extends Error {
+export class NervlyError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NerveError';
+    this.name = 'NervlyError';
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
@@ -31,14 +31,14 @@ export class NerveError extends Error {
  * Carries the numeric `statusCode` and the machine-readable `errorType` the
  * gateway returned, plus the `requestId` when the response supplied one.
  */
-export class NerveApiError extends NerveError {
+export class NervlyApiError extends NervlyError {
   public readonly statusCode: number;
   public readonly errorType: string;
   public readonly requestId?: string;
 
   constructor(statusCode: number, errorType: string, message: string, requestId?: string) {
     super(message);
-    this.name = 'NerveApiError';
+    this.name = 'NervlyApiError';
     this.statusCode = statusCode;
     this.errorType = errorType;
     this.requestId = requestId;
@@ -48,43 +48,43 @@ export class NerveApiError extends NerveError {
 /**
  * 401 Unauthorized — missing, malformed, or revoked API key.
  */
-export class NerveAuthenticationError extends NerveApiError {
+export class NervlyAuthenticationError extends NervlyApiError {
   constructor(message: string = 'Invalid or missing API key', requestId?: string) {
     super(401, 'UNAUTHORIZED', message, requestId);
-    this.name = 'NerveAuthenticationError';
+    this.name = 'NervlyAuthenticationError';
   }
 }
 
 /**
  * 400 Bad Request — the request body or query failed validation.
  */
-export class NerveValidationError extends NerveApiError {
+export class NervlyValidationError extends NervlyApiError {
   constructor(message: string, requestId?: string) {
     super(400, 'BAD_REQUEST', message, requestId);
-    this.name = 'NerveValidationError';
+    this.name = 'NervlyValidationError';
   }
 }
 
 /**
  * 404 Not Found — the event or subscriber does not exist.
  */
-export class NerveNotFoundError extends NerveApiError {
+export class NervlyNotFoundError extends NervlyApiError {
   constructor(message: string = 'Resource not found', requestId?: string) {
     super(404, 'NOT_FOUND', message, requestId);
-    this.name = 'NerveNotFoundError';
+    this.name = 'NervlyNotFoundError';
   }
 }
 
 /**
  * 409 Conflict — the idempotency key has already been used.
  */
-export class NerveIdempotencyError extends NerveApiError {
+export class NervlyIdempotencyError extends NervlyApiError {
   constructor(
     message: string = 'Idempotency key conflict — this request was already processed',
     requestId?: string,
   ) {
     super(409, 'IDEMPOTENCY_CONFLICT', message, requestId);
-    this.name = 'NerveIdempotencyError';
+    this.name = 'NervlyIdempotencyError';
   }
 }
 
@@ -94,7 +94,7 @@ export class NerveIdempotencyError extends NerveApiError {
  * `retryAfterMs` carries the `Retry-After` header, in milliseconds, when the
  * gateway sent one.
  */
-export class NerveRateLimitError extends NerveApiError {
+export class NervlyRateLimitError extends NervlyApiError {
   public readonly retryAfterMs: number;
 
   constructor(
@@ -103,7 +103,7 @@ export class NerveRateLimitError extends NerveApiError {
     requestId?: string,
   ) {
     super(429, 'RATE_LIMIT_EXCEEDED', message, requestId);
-    this.name = 'NerveRateLimitError';
+    this.name = 'NervlyRateLimitError';
     this.retryAfterMs = retryAfterMs;
   }
 }
@@ -111,10 +111,10 @@ export class NerveRateLimitError extends NerveApiError {
 /**
  * 5xx Server Error — the gateway failed to process an otherwise valid request.
  */
-export class NerveServerError extends NerveApiError {
-  constructor(message: string = 'Nerve server error', statusCode: number = 500, requestId?: string) {
+export class NervlyServerError extends NervlyApiError {
+  constructor(message: string = 'Nervly server error', statusCode: number = 500, requestId?: string) {
     super(statusCode, 'SERVER_ERROR', message, requestId);
-    this.name = 'NerveServerError';
+    this.name = 'NervlyServerError';
   }
 }
 
@@ -123,12 +123,12 @@ export class NerveServerError extends NerveApiError {
  *
  * The original `fetch` failure is preserved on `cause`.
  */
-export class NerveNetworkError extends NerveError {
+export class NervlyNetworkError extends NervlyError {
   public readonly cause?: Error;
 
   constructor(message: string, cause?: Error) {
     super(message);
-    this.name = 'NerveNetworkError';
+    this.name = 'NervlyNetworkError';
     this.cause = cause;
   }
 }
@@ -136,13 +136,13 @@ export class NerveNetworkError extends NerveError {
 /**
  * Every retry attempt was used up; the SDK stopped rather than looping.
  */
-export class NerveRetryExhaustedError extends NerveError {
+export class NervlyRetryExhaustedError extends NervlyError {
   public readonly attempts: number;
   public readonly lastError: Error;
 
   constructor(attempts: number, lastError: Error) {
     super(`All ${attempts} retry attempts exhausted. Last error: ${lastError.message}`);
-    this.name = 'NerveRetryExhaustedError';
+    this.name = 'NervlyRetryExhaustedError';
     this.attempts = attempts;
     this.lastError = lastError;
   }
@@ -153,32 +153,32 @@ export class NerveRetryExhaustedError extends NerveError {
 // The same class object under a shorter name, so `instanceof` behaves
 // identically through either import.
 
-/** Alias of {@link NerveError}. */
-export { NerveError as NerveSdkError };
+/** Alias of {@link NervlyError}. */
+export { NervlyError as NervlySdkError };
 
-/** Alias of {@link NerveApiError}. */
-export { NerveApiError as ApiError };
+/** Alias of {@link NervlyApiError}. */
+export { NervlyApiError as ApiError };
 
-/** Alias of {@link NerveAuthenticationError}. */
-export { NerveAuthenticationError as AuthenticationError };
+/** Alias of {@link NervlyAuthenticationError}. */
+export { NervlyAuthenticationError as AuthenticationError };
 
-/** Alias of {@link NerveValidationError}. */
-export { NerveValidationError as ValidationError };
+/** Alias of {@link NervlyValidationError}. */
+export { NervlyValidationError as ValidationError };
 
-/** Alias of {@link NerveNotFoundError}. */
-export { NerveNotFoundError as NotFoundError };
+/** Alias of {@link NervlyNotFoundError}. */
+export { NervlyNotFoundError as NotFoundError };
 
-/** Alias of {@link NerveIdempotencyError}. */
-export { NerveIdempotencyError as IdempotencyError };
+/** Alias of {@link NervlyIdempotencyError}. */
+export { NervlyIdempotencyError as IdempotencyError };
 
-/** Alias of {@link NerveRateLimitError}. */
-export { NerveRateLimitError as RateLimitError };
+/** Alias of {@link NervlyRateLimitError}. */
+export { NervlyRateLimitError as RateLimitError };
 
-/** Alias of {@link NerveServerError}. */
-export { NerveServerError as ServerError };
+/** Alias of {@link NervlyServerError}. */
+export { NervlyServerError as ServerError };
 
-/** Alias of {@link NerveNetworkError}. */
-export { NerveNetworkError as NetworkError };
+/** Alias of {@link NervlyNetworkError}. */
+export { NervlyNetworkError as NetworkError };
 
-/** Alias of {@link NerveRetryExhaustedError}. */
-export { NerveRetryExhaustedError as RetryExhaustedError };
+/** Alias of {@link NervlyRetryExhaustedError}. */
+export { NervlyRetryExhaustedError as RetryExhaustedError };

@@ -197,7 +197,7 @@ describe('HealthResource', () => {
           captured.push(options);
           return {
             status: 'OK',
-            service: 'nerve-gateway',
+            service: 'nervly-gateway',
             version: '0.1.0',
             environment: 'ci',
             uptime_seconds: 12,

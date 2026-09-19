@@ -1,4 +1,4 @@
-import { NerveHttpClient } from './client.js';
+import { NervlyHttpClient } from './client.js';
 import { EventsResource } from './resources/events.js';
 import { EmailResource } from './resources/email.js';
 import { VoiceResource } from './resources/voice.js';
@@ -8,24 +8,24 @@ import { UsersResource } from './resources/users.js';
 import { HealthResource } from './resources/health.js';
 import { McpResource } from './resources/mcp.js';
 import { WebhooksResource } from './resources/webhooks.js';
-import type { NerveConfig } from './types.js';
+import type { NervlyConfig } from './types.js';
 
 /**
- * The main Nerve SDK client.
+ * The main Nervly SDK client.
  *
- * Provides a type-safe, ergonomic interface to the Nerve Unified
+ * Provides a type-safe, ergonomic interface to the Nervly Unified
  * Notification-as-a-Service (NaaS) Gateway API.
  *
  * @example
  * ```typescript
- * import Nerve from '@nervehq/sdk';
+ * import Nervly from '@nervly/sdk';
  *
- * const nerve = new Nerve({ apiKey: 'your_api_key' });
+ * const nerve = new Nervly({ apiKey: 'your_api_key' });
  *
  * // Send a transactional email
  * const res = await nerve.email.send({
  *   to: 'user@example.com',
- *   subject: 'Welcome to Nerve',
+ *   subject: 'Welcome to Nervly',
  *   html: '<p>Hello!</p>',
  *   provider: 'resend',
  * });
@@ -33,8 +33,8 @@ import type { NerveConfig } from './types.js';
  * console.log(res.eventId);
  * ```
  */
-export class Nerve {
-  private readonly client: NerveHttpClient;
+export class Nervly {
+  private readonly client: NervlyHttpClient;
 
   /** Events resource — trigger and bulk dispatch notifications, fetch timeline. */
   public readonly events: EventsResource;
@@ -63,12 +63,12 @@ export class Nerve {
   /** Webhooks resource — verify signatures and parse delivery receipts. */
   public readonly webhooks: WebhooksResource;
 
-  constructor(config: NerveConfig) {
+  constructor(config: NervlyConfig) {
     if (!config.apiKey) {
-      throw new Error('Nerve SDK requires an API key. Pass { apiKey: "your_key" } to the constructor.');
+      throw new Error('Nervly SDK requires an API key. Pass { apiKey: "your_key" } to the constructor.');
     }
 
-    this.client = new NerveHttpClient(config);
+    this.client = new NervlyHttpClient(config);
     this.events = new EventsResource(this.client);
     this.email = new EmailResource(this.client);
     this.voice = new VoiceResource(this.client);
@@ -82,10 +82,10 @@ export class Nerve {
 }
 
 // Default export
-export default Nerve;
+export default Nervly;
 
 // Named re-exports for convenience
-export { NerveHttpClient } from './client.js';
+export { NervlyHttpClient } from './client.js';
 export { EventsResource } from './resources/events.js';
 export { EmailResource } from './resources/email.js';
 export { VoiceResource } from './resources/voice.js';
@@ -103,7 +103,7 @@ export { Channel } from './types.js';
 
 // Re-export all types
 export type {
-  NerveConfig,
+  NervlyConfig,
   Priority,
   DeliveryStatus,
   EmailProvider,
@@ -144,25 +144,25 @@ export type {
 // Re-export all errors — both the long names and their short aliases. Both
 // spellings are the same class object, so `instanceof` works either way.
 export {
-  NerveError,
-  NerveError as NerveSdkError,
-  NerveApiError,
-  NerveApiError as ApiError,
-  NerveAuthenticationError,
-  NerveAuthenticationError as AuthenticationError,
-  NerveValidationError,
-  NerveValidationError as ValidationError,
-  NerveNotFoundError,
-  NerveNotFoundError as NotFoundError,
-  NerveIdempotencyError,
-  NerveIdempotencyError as IdempotencyError,
-  NerveRateLimitError,
-  NerveRateLimitError as RateLimitError,
-  NerveServerError,
-  NerveServerError as ServerError,
-  NerveNetworkError,
-  NerveNetworkError as NetworkError,
-  NerveRetryExhaustedError,
-  NerveRetryExhaustedError as RetryExhaustedError,
+  NervlyError,
+  NervlyError as NervlySdkError,
+  NervlyApiError,
+  NervlyApiError as ApiError,
+  NervlyAuthenticationError,
+  NervlyAuthenticationError as AuthenticationError,
+  NervlyValidationError,
+  NervlyValidationError as ValidationError,
+  NervlyNotFoundError,
+  NervlyNotFoundError as NotFoundError,
+  NervlyIdempotencyError,
+  NervlyIdempotencyError as IdempotencyError,
+  NervlyRateLimitError,
+  NervlyRateLimitError as RateLimitError,
+  NervlyServerError,
+  NervlyServerError as ServerError,
+  NervlyNetworkError,
+  NervlyNetworkError as NetworkError,
+  NervlyRetryExhaustedError,
+  NervlyRetryExhaustedError as RetryExhaustedError,
 } from './errors.js';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@nervehq/sdk",
+  "name": "@nervly/sdk",
   "version": "0.1.0",
   "description": "Official TypeScript SDK for Nervly Unified Notification-as-a-Service (NaaS) Platform",
   "type": "module",

@@ -53,15 +53,15 @@ try {
   writeFileSync(
     join(scratch, 'esm-consumer.mjs'),
     `import { fileURLToPath } from 'node:url';\n` +
-      `import Nerve, { SDK_VERSION, AuthenticationError, NerveAuthenticationError } from '@nervehq/sdk';\n` +
-      `if (typeof Nerve !== 'function') throw new Error('default export is not a class');\n` +
+      `import Nervly, { SDK_VERSION, AuthenticationError, NervlyAuthenticationError } from '@nervly/sdk';\n` +
+      `if (typeof Nervly !== 'function') throw new Error('default export is not a class');\n` +
       `if (typeof SDK_VERSION !== 'string') throw new Error('SDK_VERSION missing');\n` +
-      `if (AuthenticationError !== NerveAuthenticationError) throw new Error('error alias mismatch');\n` +
+      `if (AuthenticationError !== NervlyAuthenticationError) throw new Error('error alias mismatch');\n` +
       // Node supports `require(esm)` as of v22.12, so "it loaded" no longer
       // proves the CJS build was used. Assert on the *resolved path* instead.
-      `const resolved = fileURLToPath(import.meta.resolve('@nervehq/sdk'));\n` +
+      `const resolved = fileURLToPath(import.meta.resolve('@nervly/sdk'));\n` +
       `if (!resolved.includes('/dist/esm/')) throw new Error('import resolved to ' + resolved);\n` +
-      `const client = new Nerve({ apiKey: 'nv_test_exports' });\n` +
+      `const client = new Nervly({ apiKey: 'nv_test_exports' });\n` +
       `if (typeof client.messages.list !== 'function') throw new Error('resources missing');\n` +
       `console.log('  import  → ESM build OK (v' + SDK_VERSION + ')');\n`,
   );
@@ -69,15 +69,15 @@ try {
   // `require` — must resolve the CJS build.
   writeFileSync(
     join(scratch, 'cjs-consumer.cjs'),
-    `const Nerve = require('@nervehq/sdk').default;\n` +
-      `const { SDK_VERSION, RateLimitError, NerveRateLimitError } = require('@nervehq/sdk');\n` +
-      `if (typeof Nerve !== 'function') throw new Error('default export is not a class');\n` +
+    `const Nervly = require('@nervly/sdk').default;\n` +
+      `const { SDK_VERSION, RateLimitError, NervlyRateLimitError } = require('@nervly/sdk');\n` +
+      `if (typeof Nervly !== 'function') throw new Error('default export is not a class');\n` +
       `if (typeof SDK_VERSION !== 'string') throw new Error('SDK_VERSION missing');\n` +
-      `if (RateLimitError !== NerveRateLimitError) throw new Error('error alias mismatch');\n` +
+      `if (RateLimitError !== NervlyRateLimitError) throw new Error('error alias mismatch');\n` +
       // See the ESM consumer above: the resolved path is the real assertion.
-      `const resolved = require.resolve('@nervehq/sdk');\n` +
+      `const resolved = require.resolve('@nervly/sdk');\n` +
       `if (!resolved.includes('/dist/cjs/')) throw new Error('require resolved to ' + resolved);\n` +
-      `const client = new Nerve({ apiKey: 'nv_test_exports' });\n` +
+      `const client = new Nervly({ apiKey: 'nv_test_exports' });\n` +
       `if (typeof client.email.send !== 'function') throw new Error('resources missing');\n` +
       `console.log('  require → CJS build OK (v' + SDK_VERSION + ')');\n`,
   );
@@ -106,8 +106,8 @@ try {
   );
   writeFileSync(
     join(scratch, 'consumer-types.mts'),
-    `import Nerve, { AuthenticationError, type TriggerEventRequest } from '@nervehq/sdk';\n` +
-      `const nerve = new Nerve({ apiKey: 'k' });\n` +
+    `import Nervly, { AuthenticationError, type TriggerEventRequest } from '@nervly/sdk';\n` +
+      `const nerve = new Nervly({ apiKey: 'k' });\n` +
       `const request: TriggerEventRequest = { name: 'x', to: { subscriberId: 's' } };\n` +
       `void nerve.events.trigger(request);\n` +
       `const err: unknown = new AuthenticationError();\n` +
@@ -115,11 +115,11 @@ try {
   );
   writeFileSync(
     join(scratch, 'consumer-types.cts'),
-    `import Nerve = require('@nervehq/sdk');\n` +
-      `const nerve = new Nerve.Nerve({ apiKey: 'k' });\n` +
+    `import Nervly = require('@nervly/sdk');\n` +
+      `const nerve = new Nervly.Nervly({ apiKey: 'k' });\n` +
       `void nerve.messages.list();\n` +
-      `const err: unknown = new Nerve.RateLimitError();\n` +
-      `if (err instanceof Nerve.RateLimitError) void err.retryAfterMs;\n`,
+      `const err: unknown = new Nervly.RateLimitError();\n` +
+      `if (err instanceof Nervly.RateLimitError) void err.retryAfterMs;\n`,
   );
 
   execFileSync(

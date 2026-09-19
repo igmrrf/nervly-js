@@ -1,16 +1,16 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Nerve } from '../src/index.js';
-import { NerveHttpClient } from '../src/client.js';
+import { Nervly } from '../src/index.js';
+import { NervlyHttpClient } from '../src/client.js';
 import {
-  NerveApiError,
-  NerveAuthenticationError,
-  NerveNotFoundError,
-  NerveRateLimitError,
-  NerveRetryExhaustedError,
-  NerveServerError,
-  NerveValidationError,
-  NerveError,
+  NervlyApiError,
+  NervlyAuthenticationError,
+  NervlyNotFoundError,
+  NervlyRateLimitError,
+  NervlyRetryExhaustedError,
+  NervlyServerError,
+  NervlyValidationError,
+  NervlyError,
 } from '../src/errors.js';
 import type { HealthStatus } from '../src/types.js';
 
@@ -36,13 +36,13 @@ function jsonResponse(status: number, body: unknown, headers: Record<string, str
   });
 }
 
-describe('Nerve Client', () => {
+describe('Nervly Client', () => {
   it('should throw if no API key is provided', () => {
-    assert.throws(() => new Nerve({ apiKey: '' }), /API key/);
+    assert.throws(() => new Nervly({ apiKey: '' }), /API key/);
   });
 
   it('should create client with valid config and default to https://api.nervly.io', () => {
-    const nerve = new Nerve({ apiKey: 'test_key_123' });
+    const nerve = new Nervly({ apiKey: 'test_key_123' });
     assert.ok(nerve);
     assert.ok(nerve.events);
     assert.ok(nerve.email);
@@ -55,7 +55,7 @@ describe('Nerve Client', () => {
   });
 
   it('should expose all resource properties', () => {
-    const nerve = new Nerve({ apiKey: 'test_key' });
+    const nerve = new Nervly({ apiKey: 'test_key' });
     assert.equal(typeof nerve.events.trigger, 'function');
     assert.equal(typeof nerve.events.triggerEmail, 'function');
     assert.equal(typeof nerve.email.send, 'function');
@@ -73,7 +73,7 @@ describe('Nerve Client', () => {
   });
 });
 
-describe('NerveHttpClient — request shape', () => {
+describe('NervlyHttpClient — request shape', () => {
   it('should default to https://api.nervly.io and strip a trailing slash from baseUrl', async () => {
     let capturedUrl = '';
 
@@ -82,7 +82,7 @@ describe('NerveHttpClient — request shape', () => {
         capturedUrl = url;
         return jsonResponse(200, {
           status: 'OK',
-          service: 'nerve-gateway',
+          service: 'nervly-gateway',
           version: '0.1.0',
           environment: 'ci',
           uptime_seconds: 1,
@@ -90,11 +90,11 @@ describe('NerveHttpClient — request shape', () => {
         } satisfies HealthStatus);
       },
       async () => {
-        const slashed = new Nerve({ apiKey: 'k', baseUrl: 'https://example.test/' });
+        const slashed = new Nervly({ apiKey: 'k', baseUrl: 'https://example.test/' });
         await slashed.health.check();
         assert.equal(capturedUrl, 'https://example.test/v1/health');
 
-        const defaulted = new Nerve({ apiKey: 'k' });
+        const defaulted = new Nervly({ apiKey: 'k' });
         await defaulted.health.check();
         assert.equal(capturedUrl, 'https://api.nervly.io/v1/health');
       },
@@ -110,12 +110,12 @@ describe('NerveHttpClient — request shape', () => {
         return jsonResponse(200, {});
       },
       async () => {
-        const client = new NerveHttpClient({ apiKey: 'k', baseUrl: 'https://example.test' });
+        const client = new NervlyHttpClient({ apiKey: 'k', baseUrl: 'https://example.test' });
         await client.get('/v1/health');
       },
     );
 
-    assert.match(capturedUserAgent, /^@nervehq\/sdk\/\d+\.\d+\.\d+/);
+    assert.match(capturedUserAgent, /^@nervly\/sdk\/\d+\.\d+\.\d+/);
   });
 
   it('should omit the body on GET and DELETE', async () => {
@@ -127,7 +127,7 @@ describe('NerveHttpClient — request shape', () => {
         return jsonResponse(200, {});
       },
       async () => {
-        const client = new NerveHttpClient({ apiKey: 'k', baseUrl: 'https://example.test' });
+        const client = new NervlyHttpClient({ apiKey: 'k', baseUrl: 'https://example.test' });
         await client.get('/v1/messages');
         await client.delete('/v1/subscribers/sub_1');
       },
@@ -137,37 +137,37 @@ describe('NerveHttpClient — request shape', () => {
   });
 });
 
-describe('NerveHttpClient — error classification', () => {
+describe('NervlyHttpClient — error classification', () => {
   const cases: Array<{
     status: number;
     body: Record<string, unknown>;
-    expected: new (...args: never[]) => NerveApiError;
+    expected: new (...args: never[]) => NervlyApiError;
     headers?: Record<string, string>;
   }> = [
     {
       status: 400,
       body: { error: 'BAD_REQUEST', message: 'recipient has no contact details', status_code: 400 },
-      expected: NerveValidationError,
+      expected: NervlyValidationError,
     },
     {
       status: 401,
       body: { error: 'UNAUTHORIZED', message: 'invalid api key', status_code: 401 },
-      expected: NerveAuthenticationError,
+      expected: NervlyAuthenticationError,
     },
     {
       status: 404,
       body: { error: 'NOT_FOUND', message: 'event not found', status_code: 404 },
-      expected: NerveNotFoundError,
+      expected: NervlyNotFoundError,
     },
     {
       status: 429,
       body: { error: 'RATE_LIMIT_EXCEEDED', message: 'slow down', status_code: 429 },
-      expected: NerveRateLimitError,
+      expected: NervlyRateLimitError,
     },
     {
       status: 503,
       body: { error: 'DATABASE_UNAVAILABLE', message: 'db down', status_code: 503 },
-      expected: NerveServerError,
+      expected: NervlyServerError,
     },
   ];
 
@@ -176,7 +176,7 @@ describe('NerveHttpClient — error classification', () => {
       await withFetch(
         () => jsonResponse(status, body, headers ?? {}),
         async () => {
-          const client = new NerveHttpClient({
+          const client = new NervlyHttpClient({
             apiKey: 'k',
             baseUrl: 'https://example.test',
             maxRetries: 0,
@@ -188,8 +188,8 @@ describe('NerveHttpClient — error classification', () => {
           );
 
           assert.ok(error instanceof expected, `expected ${expected.name}, got ${error?.name}`);
-          assert.ok(error instanceof NerveApiError);
-          assert.ok(error instanceof NerveError);
+          assert.ok(error instanceof NervlyApiError);
+          assert.ok(error instanceof NervlyError);
           assert.equal(error.statusCode, status);
           assert.equal(error.message, body.message);
         },
@@ -203,7 +203,7 @@ describe('NerveHttpClient — error classification', () => {
         'Retry-After': '7',
       }),
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           maxRetries: 0,
@@ -212,7 +212,7 @@ describe('NerveHttpClient — error classification', () => {
         const error = (await client.get('/v1/messages').then(
           () => null,
           (e: unknown) => e,
-        )) as NerveRateLimitError;
+        )) as NervlyRateLimitError;
 
         assert.equal(error.retryAfterMs, 7000);
       },
@@ -226,7 +226,7 @@ describe('NerveHttpClient — error classification', () => {
           'x-request-id': 'req_abc123',
         }),
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           maxRetries: 0,
@@ -235,7 +235,7 @@ describe('NerveHttpClient — error classification', () => {
         const error = (await client.get('/v1/messages').then(
           () => null,
           (e: unknown) => e,
-        )) as NerveServerError;
+        )) as NervlyServerError;
 
         assert.equal(error.requestId, 'req_abc123');
       },
@@ -250,7 +250,7 @@ describe('NerveHttpClient — error classification', () => {
         throw abort;
       },
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           timeout: 5,
@@ -262,9 +262,9 @@ describe('NerveHttpClient — error classification', () => {
           (e: unknown) => e,
         )) as Error;
 
-        assert.equal(error.name, 'NerveNetworkError');
+        assert.equal(error.name, 'NervlyNetworkError');
         assert.match(error.message, /timed out after 5ms/);
-        assert.ok(!(error instanceof NerveApiError));
+        assert.ok(!(error instanceof NervlyApiError));
       },
     );
   });
@@ -280,7 +280,7 @@ describe('NerveHttpClient — error classification', () => {
           : jsonResponse(200, { status: 'OK' });
       },
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           maxRetries: 2,
@@ -305,7 +305,7 @@ describe('NerveHttpClient — error classification', () => {
         return jsonResponse(503, { error: 'DB_UNAVAILABLE', message: 'try later', status_code: 503 });
       },
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           maxRetries: 1,
@@ -315,13 +315,13 @@ describe('NerveHttpClient — error classification', () => {
         const error = (await client.get('/v1/health').then(
           () => null,
           (e: unknown) => e,
-        )) as NerveRetryExhaustedError;
+        )) as NervlyRetryExhaustedError;
 
-        assert.equal(error.name, 'NerveRetryExhaustedError');
+        assert.equal(error.name, 'NervlyRetryExhaustedError');
         assert.equal(error.attempts, 1);
         // The wrapper keeps the error that exhausted the budget, which is where
         // the status code lives.
-        assert.ok(error.lastError instanceof NerveServerError);
+        assert.ok(error.lastError instanceof NervlyServerError);
         assert.equal(error.lastError.statusCode, 503);
       },
     );
@@ -338,7 +338,7 @@ describe('NerveHttpClient — error classification', () => {
         return jsonResponse(400, { error: 'BAD_REQUEST', message: 'nope', status_code: 400 });
       },
       async () => {
-        const client = new NerveHttpClient({
+        const client = new NervlyHttpClient({
           apiKey: 'k',
           baseUrl: 'https://example.test',
           maxRetries: 3,
@@ -353,6 +353,6 @@ describe('NerveHttpClient — error classification', () => {
   });
 
   it('should require an API key at the transport layer too', () => {
-    assert.throws(() => new NerveHttpClient({ apiKey: '' }), /API key is required/);
+    assert.throws(() => new NervlyHttpClient({ apiKey: '' }), /API key is required/);
   });
 });
