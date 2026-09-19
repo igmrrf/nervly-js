@@ -27,7 +27,7 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       Today's contract proof is spec-based: the runtime path/schema coverage test plus the
       compiled type-level assertions against the generated OpenAPI types. A live Pact run
       against the control plane belongs to a later ticket.
-- [x] Voice channel SDK contract (Ticket 59: `src/resources/voice.ts::VoiceResource` compiles `SendVoiceOptions` into `overrides.voice` with script, `voice_id` and language; the `VoiceOverride`/`VoiceChannel` wire types live in `src/types.ts`; `tests/contract.test.ts` asserts the built payload's properties exist in the OpenAPI `VoiceOverrideDto`/`ProviderOverridesDto.voice` schemas.)
+- [x] Voice channel SDK contract (Ticket 59: `src/resources/voice.ts::VoiceResource` compiles `SendVoiceOptions` into `overrides.voice` with script, `voice_id` and language; the `VoiceOverride` and `Channel` wire types live in `src/types.ts`; `tests/contract.test.ts` asserts the built payload's properties exist in the OpenAPI `VoiceOverrideDto`/`ProviderOverridesDto.voice` schemas.)
 - [x] Type-level tests (expect-type / tsd) for public API surface —
       `tests/types/conformance.types.ts`, compiled by `npm run check:types`. Equal<A, B>
       compares each public type to the generated spec type; verified to fail on renamed,

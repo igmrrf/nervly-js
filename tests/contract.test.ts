@@ -124,8 +124,30 @@ describe('Event Trigger Schema OpenAPI Contract Test', () => {
       );
     }
 
+    // The typed opt-in must actually be emitted. Without these assertions the
+    // key loop below would no-op on an absent `overrides.voice` and the test
+    // would pass even if the SDK stopped emitting voice.
+    assert.ok(payload.overrides, 'voice payload must carry an overrides object');
+    assert.ok(
+      payload.overrides.voice,
+      'voice payload must carry overrides.voice (the typed voice opt-in)',
+    );
+    assert.deepEqual(
+      payload.overrides.voice,
+      { script: 'Your verification code is 4827', voice_id: 'Ada', language: 'en-US' },
+      'overrides.voice must carry the typed script, voice_id and language',
+    );
+
+    const providerOverrideProperties = Object.keys(schemas['ProviderOverridesDto']?.properties || {});
+    assert.ok(
+      providerOverrideProperties.includes('voice'),
+      'ProviderOverridesDto in OpenAPI spec must declare the voice property',
+    );
+
     const voiceOverrideProperties = Object.keys(schemas['VoiceOverrideDto']?.properties || {});
-    for (const key of Object.keys(payload.overrides?.voice ?? {})) {
+    const voiceKeys = Object.keys(payload.overrides.voice);
+    assert.ok(voiceKeys.length > 0, 'overrides.voice must not be empty');
+    for (const key of voiceKeys) {
       assert.ok(
         voiceOverrideProperties.includes(key),
         `Generated voice override property '${key}' does not exist in OpenAPI VoiceOverrideDto schema`,
