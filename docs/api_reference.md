@@ -16,7 +16,7 @@ Status codes shown are what the gateway returns on success.
 import Nervly from '@nervly/sdk';          // default export
 import { Nervly as Named } from '@nervly/sdk'; // or the named one — same class
 
-const nerve = new Nervly({
+const nervly = new Nervly({
   apiKey: process.env.NERVLY_API_KEY!, // required; throws if empty
   baseUrl: 'https://api.nervly.io',  // default
   timeout: 10_000,                    // ms, default
@@ -36,7 +36,7 @@ every request except `health.check()`.
 ### `events.trigger(data, options?) → TriggerEventResponse` — `POST /v1/events/trigger` (200/202)
 
 ```typescript
-const event = await nerve.events.trigger(
+const event = await nervly.events.trigger(
   {
     name: 'payment-received',       // workflow name
     to: { subscriberId: 'user_8f21c', email: 'ada@example.com' },
@@ -62,7 +62,7 @@ critical; `NORMAL`/`LOW` → bulk).
 ### `events.bulkTrigger(data) → BulkTriggerResponse` — `POST /v1/events/bulk` (200)
 
 ```typescript
-const batch = await nerve.events.bulkTrigger({
+const batch = await nervly.events.bulkTrigger({
   events: [
     { name: 'daily.digest', to: { subscriberId: 'usr_1', email: 'u1@example.com' } },
     { name: 'daily.digest', to: { subscriberId: 'usr_2', email: 'u2@example.com' } },
@@ -77,7 +77,7 @@ Events succeed or fail individually: read `failedCount` and the per-event
 ### `events.get(eventId) → MessageDto` — `GET /v1/events/{eventId}` (200)
 
 ```typescript
-const message = await nerve.events.get('evt_018e123456787abc8def0123456789ab');
+const message = await nervly.events.get('evt_018e123456787abc8def0123456789ab');
 // message.status: 'TRIGGERED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'FAILED' | 'SUPPRESSED' | ...
 // message.events: [{ seq, status, provider?, detail?, occurred_at }]
 ```
@@ -94,7 +94,7 @@ Convenience wrapper for email-only sends, kept for backward compatibility.
 ### `email.send(request, options?) → TriggerEventResponse` — `POST /v1/events/trigger` (200/202)
 
 ```typescript
-await nerve.email.send({
+await nervly.email.send({
   to: 'customer@example.com',       // string, or a full Recipient
   subject: 'Your receipt',
   html: '<p>Thanks!</p>',
@@ -118,7 +118,7 @@ it — useful for asserting what will go on the wire.
 ### `voice.send(request, options?) → TriggerEventResponse` — `POST /v1/events/trigger` (200/202)
 
 ```typescript
-await nerve.voice.send({
+await nervly.voice.send({
   to: { subscriberId: 'user_8f21c', phone: '+2348012345678' },  // phone required
   script: 'Your verification code is 4827',                    // required
   voice_id: 'Ada',                                             // optional TTS profile
@@ -147,7 +147,7 @@ and `Channel` names the union `'sms' | 'email' | 'push' | 'whatsapp' | 'voice' |
 ### `messages.list(params?) → ListMessagesResponse` — `GET /v1/messages` (200)
 
 ```typescript
-const page = await nerve.messages.list({
+const page = await nervly.messages.list({
   status: 'DELIVERED',
   channel: 'sms',
   subscriberId: 'user_8f21c',  // sent as `subscriber_id`
@@ -166,7 +166,7 @@ const page = await nerve.messages.list({
 ### `subscribers.delete(subscriberId) → SubscriberErasureResponse` — `DELETE /v1/subscribers/{subscriberId}` (202)
 
 ```typescript
-const erasure = await nerve.subscribers.delete('user_8f21c');
+const erasure = await nervly.subscribers.delete('user_8f21c');
 // { status: 'accepted', subscriberId, message }
 ```
 
@@ -177,7 +177,7 @@ Anonymises the subscriber row and suppresses any delivery queued for it.
 ### `users.updatePreferences(subscriberId, data) → UserPreferencesResponse` — same endpoint
 
 ```typescript
-const prefs = await nerve.users.updatePreferences('user_8f21c', {
+const prefs = await nervly.users.updatePreferences('user_8f21c', {
   channels: { email: true, sms: false, whatsapp: true, push: false },
   categories: { marketing: { email: false, sms: false } },  // takes precedence
 });
@@ -194,7 +194,7 @@ category you send replaces that category's flags wholesale.
 ### `health.check() → HealthStatus` — `GET /v1/health` (200, unauthenticated)
 
 ```typescript
-const health = await nerve.health.check();
+const health = await nervly.health.check();
 // { status, service, version, environment, uptime_seconds, nats_connected }
 ```
 
@@ -210,8 +210,8 @@ published to the broker.
 ### `mcp.callTool(params) → McpResponse` — `POST /v1/mcp` (200)
 
 ```typescript
-const tools = await nerve.mcp.listTools();
-const status = await nerve.mcp.callTool({ name: 'gateway_status' });
+const tools = await nervly.mcp.listTools();
+const status = await nervly.mcp.callTool({ name: 'gateway_status' });
 // { jsonrpc: '2.0', id, result }
 ```
 
@@ -233,7 +233,7 @@ non-2xx status.
 ### `webhooks.verifyAndParse(options) → Promise<WebhookPayload>`
 
 ```typescript
-const payload = await nerve.webhooks.verifyAndParse({
+const payload = await nervly.webhooks.verifyAndParse({
   provider: 'resend',
   payload: req.body,                       // raw string or Buffer — not parsed JSON
   signature: req.headers['x-nervly-signature']!,
@@ -259,7 +259,7 @@ the full hierarchy; the short aliases are the same class objects as their
 import { AuthenticationError, RateLimitError, ApiError, NervlyError } from '@nervly/sdk';
 
 try {
-  await nerve.events.trigger({ name: 'x', to: { subscriberId: 's' } });
+  await nervly.events.trigger({ name: 'x', to: { subscriberId: 's' } });
 } catch (error) {
   if (error instanceof RateLimitError) {
     await sleep(error.retryAfterMs);          // from the Retry-After header

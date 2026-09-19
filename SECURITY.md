@@ -66,7 +66,7 @@ authorised, and we will not pursue or support legal action against you for it.
 ## In scope
 
 - The published `@nervly/sdk` tarball and its ESM/CommonJS builds.
-- Signature verification and webhook parsing (`nerve.webhooks.*`).
+- Signature verification and webhook parsing (`nervly.webhooks.*`).
 - Credential handling: API keys reaching logs, telemetry, errors, or the
   `User-Agent`/query string.
 - The release pipeline: `npm publish` provenance, the tagged release workflow,

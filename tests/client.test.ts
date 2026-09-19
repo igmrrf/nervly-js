@@ -42,34 +42,34 @@ describe('Nervly Client', () => {
   });
 
   it('should create client with valid config and default to https://api.nervly.io', () => {
-    const nerve = new Nervly({ apiKey: 'test_key_123' });
-    assert.ok(nerve);
-    assert.ok(nerve.events);
-    assert.ok(nerve.email);
-    assert.ok(nerve.messages);
-    assert.ok(nerve.subscribers);
-    assert.ok(nerve.users);
-    assert.ok(nerve.health);
-    assert.ok(nerve.mcp);
-    assert.ok(nerve.webhooks);
+    const nervly = new Nervly({ apiKey: 'test_key_123' });
+    assert.ok(nervly);
+    assert.ok(nervly.events);
+    assert.ok(nervly.email);
+    assert.ok(nervly.messages);
+    assert.ok(nervly.subscribers);
+    assert.ok(nervly.users);
+    assert.ok(nervly.health);
+    assert.ok(nervly.mcp);
+    assert.ok(nervly.webhooks);
   });
 
   it('should expose all resource properties', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
-    assert.equal(typeof nerve.events.trigger, 'function');
-    assert.equal(typeof nerve.events.triggerEmail, 'function');
-    assert.equal(typeof nerve.email.send, 'function');
-    assert.equal(typeof nerve.events.bulkTrigger, 'function');
-    assert.equal(typeof nerve.events.get, 'function');
-    assert.equal(typeof nerve.messages.list, 'function');
-    assert.equal(typeof nerve.subscribers.delete, 'function');
-    assert.equal(typeof nerve.subscribers.updatePreferences, 'function');
-    assert.equal(typeof nerve.users.updatePreferences, 'function');
-    assert.equal(typeof nerve.health.check, 'function');
-    assert.equal(typeof nerve.mcp.listTools, 'function');
-    assert.equal(typeof nerve.mcp.callTool, 'function');
-    assert.equal(typeof nerve.webhooks.verifySignature, 'function');
-    assert.equal(typeof nerve.webhooks.parse, 'function');
+    const nervly = new Nervly({ apiKey: 'test_key' });
+    assert.equal(typeof nervly.events.trigger, 'function');
+    assert.equal(typeof nervly.events.triggerEmail, 'function');
+    assert.equal(typeof nervly.email.send, 'function');
+    assert.equal(typeof nervly.events.bulkTrigger, 'function');
+    assert.equal(typeof nervly.events.get, 'function');
+    assert.equal(typeof nervly.messages.list, 'function');
+    assert.equal(typeof nervly.subscribers.delete, 'function');
+    assert.equal(typeof nervly.subscribers.updatePreferences, 'function');
+    assert.equal(typeof nervly.users.updatePreferences, 'function');
+    assert.equal(typeof nervly.health.check, 'function');
+    assert.equal(typeof nervly.mcp.listTools, 'function');
+    assert.equal(typeof nervly.mcp.callTool, 'function');
+    assert.equal(typeof nervly.webhooks.verifySignature, 'function');
+    assert.equal(typeof nervly.webhooks.parse, 'function');
   });
 });
 

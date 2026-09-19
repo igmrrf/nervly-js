@@ -124,7 +124,7 @@ interface Operation {
   headers?: Record<string, string>;
   expectedBody?: unknown;
   response: unknown;
-  run: (nerve: Nervly) => Promise<unknown>;
+  run: (nervly: Nervly) => Promise<unknown>;
 }
 
 const operations: Operation[] = [
@@ -136,8 +136,8 @@ const operations: Operation[] = [
     headers: { 'Idempotency-Key': 'idem-1', 'X-Priority-Override': 'HIGH' },
     expectedBody: triggerInput,
     response: TRIGGER_RESPONSE,
-    run: (nerve) =>
-      nerve.events.trigger(triggerInput, { idempotencyKey: 'idem-1', priority: 'HIGH' }),
+    run: (nervly) =>
+      nervly.events.trigger(triggerInput, { idempotencyKey: 'idem-1', priority: 'HIGH' }),
   },
   {
     name: 'events.triggerEmail',
@@ -146,8 +146,8 @@ const operations: Operation[] = [
     authenticated: true,
     headers: { 'Idempotency-Key': 'idem-legacy', 'X-Priority-Override': 'LOW' },
     response: TRIGGER_RESPONSE,
-    run: (nerve) =>
-      nerve.events.triggerEmail(
+    run: (nervly) =>
+      nervly.events.triggerEmail(
         { to: 'legacy@example.com', subject: 'Hi', text: 'body', provider: 'resend' },
         { idempotencyKey: 'idem-legacy', priority: 'LOW' },
       ),
@@ -159,7 +159,7 @@ const operations: Operation[] = [
     authenticated: true,
     expectedBody: bulkInput,
     response: BULK_RESPONSE,
-    run: (nerve) => nerve.events.bulkTrigger(bulkInput),
+    run: (nervly) => nervly.events.bulkTrigger(bulkInput),
   },
   {
     name: 'events.get (URL-encodes the id)',
@@ -167,7 +167,7 @@ const operations: Operation[] = [
     path: '/v1/events/evt%2F1%202',
     authenticated: true,
     response: MESSAGE,
-    run: (nerve) => nerve.events.get('evt/1 2'),
+    run: (nervly) => nervly.events.get('evt/1 2'),
   },
   {
     name: 'email.send',
@@ -176,8 +176,8 @@ const operations: Operation[] = [
     authenticated: true,
     headers: { 'Idempotency-Key': 'idem-email', 'X-Priority-Override': 'CRITICAL' },
     response: TRIGGER_RESPONSE,
-    run: (nerve) =>
-      nerve.email.send(
+    run: (nervly) =>
+      nervly.email.send(
         {
           to: 'cust@example.com',
           subject: 'Reset',
@@ -197,8 +197,8 @@ const operations: Operation[] = [
       '&from=2026-09-01&to=2026-09-18&limit=5&cursor=cur%2F1',
     authenticated: true,
     response: LIST_RESPONSE,
-    run: (nerve) =>
-      nerve.messages.list({
+    run: (nervly) =>
+      nervly.messages.list({
         status: 'SENT',
         channel: 'sms',
         subscriberId: 'sub/a b',
@@ -214,7 +214,7 @@ const operations: Operation[] = [
     path: '/v1/subscribers/sub%2F1%202',
     authenticated: true,
     response: ERASURE_RESPONSE,
-    run: (nerve) => nerve.subscribers.delete('sub/1 2'),
+    run: (nervly) => nervly.subscribers.delete('sub/1 2'),
   },
   {
     name: 'subscribers.updatePreferences',
@@ -223,7 +223,7 @@ const operations: Operation[] = [
     authenticated: true,
     expectedBody: prefsInput,
     response: PREFS_RESPONSE,
-    run: (nerve) => nerve.subscribers.updatePreferences('sub/1 2', prefsInput),
+    run: (nervly) => nervly.subscribers.updatePreferences('sub/1 2', prefsInput),
   },
   {
     name: 'users.updatePreferences',
@@ -232,7 +232,7 @@ const operations: Operation[] = [
     authenticated: true,
     expectedBody: prefsInput,
     response: PREFS_RESPONSE,
-    run: (nerve) => nerve.users.updatePreferences('sub/1 2', prefsInput),
+    run: (nervly) => nervly.users.updatePreferences('sub/1 2', prefsInput),
   },
   {
     name: 'health.check (unauthenticated)',
@@ -240,7 +240,7 @@ const operations: Operation[] = [
     path: '/v1/health',
     authenticated: false,
     response: HEALTH_RESPONSE,
-    run: (nerve) => nerve.health.check(),
+    run: (nervly) => nervly.health.check(),
   },
   {
     name: 'mcp.listTools',
@@ -249,7 +249,7 @@ const operations: Operation[] = [
     authenticated: true,
     expectedBody: { method: 'tools/list', params: null },
     response: MCP_RESPONSE,
-    run: (nerve) => nerve.mcp.listTools(),
+    run: (nervly) => nervly.mcp.listTools(),
   },
   {
     name: 'mcp.callTool',
@@ -258,7 +258,7 @@ const operations: Operation[] = [
     authenticated: true,
     expectedBody: { method: 'tools/call', params: { name: 'gateway_status' } },
     response: MCP_RESPONSE,
-    run: (nerve) => nerve.mcp.callTool({ name: 'gateway_status' }),
+    run: (nervly) => nervly.mcp.callTool({ name: 'gateway_status' }),
   },
 ];
 
@@ -277,8 +277,8 @@ describe('resource methods — 2xx wire contract', () => {
       await withFetch(
         () => jsonResponse(200, op.response),
         async (requests) => {
-          const nerve = new Nervly({ apiKey: API_KEY, baseUrl: BASE_URL, maxRetries: 0 });
-          const result = await op.run(nerve);
+          const nervly = new Nervly({ apiKey: API_KEY, baseUrl: BASE_URL, maxRetries: 0 });
+          const result = await op.run(nervly);
 
           assert.deepEqual(result, op.response);
           assert.equal(requests.length, 1, 'exactly one request on success');
@@ -313,8 +313,8 @@ describe('resource methods — 2xx wire contract', () => {
     await withFetch(
       () => jsonResponse(200, TRIGGER_RESPONSE),
       async (requests) => {
-        const nerve = new Nervly({ apiKey: API_KEY, baseUrl: BASE_URL });
-        await nerve.events.trigger(triggerInput);
+        const nervly = new Nervly({ apiKey: API_KEY, baseUrl: BASE_URL });
+        await nervly.events.trigger(triggerInput);
         assert.equal(requests[0]!.headers.get('idempotency-key'), null);
         assert.equal(requests[0]!.headers.get('x-priority-override'), null);
       },
@@ -330,13 +330,13 @@ describe('resource methods — 4xx and 5xx', () => {
       await withFetch(
         () => jsonResponse(400, body),
         async (requests) => {
-          const nerve = new Nervly({
+          const nervly = new Nervly({
             apiKey: API_KEY,
             baseUrl: BASE_URL,
             maxRetries: 3,
             retryBaseDelay: 1,
           });
-          const error = await captureError(() => op.run(nerve));
+          const error = await captureError(() => op.run(nervly));
 
           assert.ok(error instanceof NervlyValidationError, `${op.name} 400`);
           assert.equal(error.statusCode, 400);
@@ -353,13 +353,13 @@ describe('resource methods — 4xx and 5xx', () => {
         await withFetch(
           () => jsonResponse(503, body),
           async (requests) => {
-            const nerve = new Nervly({
+            const nervly = new Nervly({
               apiKey: API_KEY,
               baseUrl: BASE_URL,
               maxRetries: 1,
               retryBaseDelay: 1,
             });
-            const error = await captureError(() => op.run(nerve));
+            const error = await captureError(() => op.run(nervly));
 
             assert.ok(error instanceof NervlyRetryExhaustedError, `${op.name} 503`);
             assert.equal(error.attempts, 1);

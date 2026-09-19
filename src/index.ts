@@ -20,10 +20,10 @@ import type { NervlyConfig } from './types.js';
  * ```typescript
  * import Nervly from '@nervly/sdk';
  *
- * const nerve = new Nervly({ apiKey: 'your_api_key' });
+ * const nervly = new Nervly({ apiKey: 'your_api_key' });
  *
  * // Send a transactional email
- * const res = await nerve.email.send({
+ * const res = await nervly.email.send({
  *   to: 'user@example.com',
  *   subject: 'Welcome to Nervly',
  *   html: '<p>Hello!</p>',

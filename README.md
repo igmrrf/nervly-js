@@ -27,7 +27,7 @@ declarations. Node 24+.
 import { Nervly } from '@nervly/sdk';
 
 // Initialize the client
-const nerve = new Nervly({
+const nervly = new Nervly({
   apiKey: 'nervly_sk_live_your_api_key',
   // Optional overrides:
   // baseUrl: 'https://api.nervly.io', // defaults to production https://api.nervly.io
@@ -38,7 +38,7 @@ const nerve = new Nervly({
 async function main() {
   try {
     // Trigger a single event
-    const event = await nerve.events.trigger({
+    const event = await nervly.events.trigger({
       name: 'user.signup',
       to: {
         subscriberId: 'usr_123',
@@ -53,7 +53,7 @@ async function main() {
     console.log('Event triggered:', event.eventId);
 
     // Look up delivery timeline
-    const message = await nerve.events.get(event.eventId);
+    const message = await nervly.events.get(event.eventId);
     console.log('Status:', message.status, 'Attempts:', message.attempts);
   } catch (error) {
     console.error('Failed to trigger event:', error);
@@ -67,13 +67,13 @@ main();
 
 ### Events
 
-#### `nerve.events.trigger(data, options?)`
+#### `nervly.events.trigger(data, options?)`
 
 Trigger a single notification event.
 Maps to `POST /v1/events/trigger`.
 
 ```typescript
-const result = await nerve.events.trigger(
+const result = await nervly.events.trigger(
   {
     name: 'order.shipped',
     to: { subscriberId: 'usr_abc', email: 'customer@example.com' },
@@ -89,13 +89,13 @@ const result = await nerve.events.trigger(
 );
 ```
 
-#### `nerve.events.bulkTrigger(data)`
+#### `nervly.events.bulkTrigger(data)`
 
 Trigger multiple notification events at once.
 Maps to `POST /v1/events/bulk`.
 
 ```typescript
-const result = await nerve.events.bulkTrigger({
+const result = await nervly.events.bulkTrigger({
   events: [
     { name: 'daily.digest', to: { subscriberId: 'usr_1', email: 'u1@nervly.io' }, payload: {} },
     { name: 'daily.digest', to: { subscriberId: 'usr_2', email: 'u2@nervly.io' }, payload: {} },
@@ -104,26 +104,26 @@ const result = await nerve.events.bulkTrigger({
 console.log('Batch Job ID:', result.jobId);
 ```
 
-#### `nerve.events.get(eventId)`
+#### `nervly.events.get(eventId)`
 
 Look up delivery status, attempts, cost, and event timeline for a message.
 Maps to `GET /v1/events/:eventId`.
 
 ```typescript
-const message = await nerve.events.get('evt_018e123456787abc8def0123456789ab');
+const message = await nervly.events.get('evt_018e123456787abc8def0123456789ab');
 console.log('Status:', message.status);
 console.log('Timeline:', message.events);
 ```
 
 ### Messages
 
-#### `nerve.messages.list(params?)`
+#### `nervly.messages.list(params?)`
 
 List messages with optional filters and cursor-based pagination.
 Maps to `GET /v1/messages`.
 
 ```typescript
-const result = await nerve.messages.list({
+const result = await nervly.messages.list({
   status: 'DELIVERED',
   channel: 'sms',
   subscriberId: 'usr_123',
@@ -137,23 +137,23 @@ for (const message of result.messages) {
 
 ### Subscribers
 
-#### `nerve.subscribers.delete(subscriberId)`
+#### `nervly.subscribers.delete(subscriberId)`
 
 Erase a subscriber and delete their personal data (NDPR / right-to-erasure).
 Maps to `DELETE /v1/subscribers/:subscriberId`.
 
 ```typescript
-const res = await nerve.subscribers.delete('usr_123');
+const res = await nervly.subscribers.delete('usr_123');
 console.log('Erasure confirmed:', res.status, res.subscriberId);
 ```
 
-#### `nerve.subscribers.updatePreferences(subscriberId, data)`
+#### `nervly.subscribers.updatePreferences(subscriberId, data)`
 
 Update a subscriber's channel preferences.
 Maps to `PUT /v1/users/:subscriberId/preferences`.
 
 ```typescript
-await nerve.subscribers.updatePreferences('usr_123', {
+await nervly.subscribers.updatePreferences('usr_123', {
   channels: {
     email: true,
     sms: false,
@@ -164,31 +164,31 @@ await nerve.subscribers.updatePreferences('usr_123', {
 
 ### Health
 
-#### `nerve.health.check()`
+#### `nervly.health.check()`
 
 Check the status and subsystem health of the API Gateway.
 Maps to `GET /v1/health`.
 
 ```typescript
-const health = await nerve.health.check();
+const health = await nervly.health.check();
 console.log('API Status:', health.status);
 ```
 
 ### Model Context Protocol (MCP)
 
-#### `nerve.mcp.listTools()` & `nerve.mcp.callTool(params)`
+#### `nervly.mcp.listTools()` & `nervly.mcp.callTool(params)`
 
 Interact with MCP diagnostic tools.
 Maps to `POST /v1/mcp`.
 
 ```typescript
-const tools = await nerve.mcp.listTools();
+const tools = await nervly.mcp.listTools();
 console.log(tools);
 ```
 
 ### Webhooks
 
-#### `nerve.webhooks.verifySignature(options)` & `nerve.webhooks.parse(rawBody)`
+#### `nervly.webhooks.verifySignature(options)` & `nervly.webhooks.parse(rawBody)`
 
 Verify incoming provider webhooks securely via timing-safe HMAC-SHA256.
 
@@ -207,7 +207,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   const secret = process.env.NERVLY_WEBHOOK_SECRET!;
   
   try {
-    const payload = await nerve.webhooks.verifyAndParse({
+    const payload = await nervly.webhooks.verifyAndParse({
       provider: 'nervly',
       payload: req.body,
       signature,
@@ -236,7 +236,7 @@ import {
 } from '@nervly/sdk';
 
 try {
-  await nerve.events.trigger({ /* ... */ });
+  await nervly.events.trigger({ /* ... */ });
 } catch (error) {
   if (error instanceof NervlyAuthenticationError) {
     console.error('Check your API Key');

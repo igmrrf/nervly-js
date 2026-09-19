@@ -107,17 +107,17 @@ try {
   writeFileSync(
     join(scratch, 'consumer-types.mts'),
     `import Nervly, { AuthenticationError, type TriggerEventRequest } from '@nervly/sdk';\n` +
-      `const nerve = new Nervly({ apiKey: 'k' });\n` +
+      `const nervly = new Nervly({ apiKey: 'k' });\n` +
       `const request: TriggerEventRequest = { name: 'x', to: { subscriberId: 's' } };\n` +
-      `void nerve.events.trigger(request);\n` +
+      `void nervly.events.trigger(request);\n` +
       `const err: unknown = new AuthenticationError();\n` +
       `if (err instanceof AuthenticationError) void err.statusCode;\n`,
   );
   writeFileSync(
     join(scratch, 'consumer-types.cts'),
     `import Nervly = require('@nervly/sdk');\n` +
-      `const nerve = new Nervly.Nervly({ apiKey: 'k' });\n` +
-      `void nerve.messages.list();\n` +
+      `const nervly = new Nervly.Nervly({ apiKey: 'k' });\n` +
+      `void nervly.messages.list();\n` +
       `const err: unknown = new Nervly.RateLimitError();\n` +
       `if (err instanceof Nervly.RateLimitError) void err.retryAfterMs;\n`,
   );

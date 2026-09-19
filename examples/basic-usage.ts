@@ -25,7 +25,7 @@ import Nervly, {
 // ─────────────────────────────────────────────────────────────────
 // 1. Initialize the Nervly Client
 // ─────────────────────────────────────────────────────────────────
-const nerve = new Nervly({
+const nervly = new Nervly({
   apiKey: process.env.NERVLY_API_KEY || 'nv_test_1234567890abcdef',
   baseUrl: process.env.NERVLY_BASE_URL || 'http://localhost:8080',
   timeout: 5000,      // 5s request timeout
@@ -41,7 +41,7 @@ async function main() {
   // 2. Health Check (unauthenticated)
   // ─────────────────────────────────────────────────────────────
   console.log('▸ Checking gateway health...');
-  const health = await nerve.health.check();
+  const health = await nervly.health.check();
   console.log(`  Status: ${health.status}`);
   console.log(`  Service: ${health.service} v${health.version}`);
   console.log(`  NATS: ${health.nats_connected ? 'Connected' : 'Disconnected'}\n`);
@@ -50,7 +50,7 @@ async function main() {
   // 3. Trigger a Single Notification Event
   // ─────────────────────────────────────────────────────────────
   console.log('▸ Triggering a single notification event...');
-  const event = await nerve.events.trigger(
+  const event = await nervly.events.trigger(
     {
       name: 'payment_processed',
       to: {
@@ -88,7 +88,7 @@ async function main() {
   // 4. Bulk Trigger — Batch Multiple Events
   // ─────────────────────────────────────────────────────────────
   console.log('▸ Sending bulk notification batch...');
-  const batchJob = await nerve.events.bulkTrigger({
+  const batchJob = await nervly.events.bulkTrigger({
     events: [
       {
         name: 'system_maintenance',
@@ -110,7 +110,7 @@ async function main() {
   // 5. Update User Notification Preferences
   // ─────────────────────────────────────────────────────────────
   console.log('▸ Updating user preferences...');
-  const prefs = await nerve.users.updatePreferences('usr_9983j2', {
+  const prefs = await nervly.users.updatePreferences('usr_9983j2', {
     channels: {
       email: true,
       sms: true,
@@ -130,11 +130,11 @@ async function main() {
   // 6. MCP — Model Context Protocol Tools
   // ─────────────────────────────────────────────────────────────
   console.log('▸ Listing MCP tools...');
-  const mcpTools = await nerve.mcp.listTools();
+  const mcpTools = await nervly.mcp.listTools();
   console.log(`  MCP Response:`, JSON.stringify(mcpTools.result, null, 2));
 
   console.log('\n▸ Calling MCP tool...');
-  const mcpStatus = await nerve.mcp.callTool();
+  const mcpStatus = await nervly.mcp.callTool();
   console.log(`  Gateway Status:`, JSON.stringify(mcpStatus.result, null, 2), '\n');
 
   // ─────────────────────────────────────────────────────────────
@@ -155,7 +155,7 @@ async function main() {
     .digest('hex');
 
   // Verify signature (what you'd do in an Express/Fastify handler)
-  const isValid = nerve.webhooks.verifySignature({
+  const isValid = nervly.webhooks.verifySignature({
     provider: 'termii',
     payload: rawPayload,
     signature: webhookSignature,
@@ -164,7 +164,7 @@ async function main() {
   console.log(`  Signature valid: ${isValid}`);
 
   // Parse the verified payload
-  const parsedEvent = nerve.webhooks.parse(rawPayload);
+  const parsedEvent = nervly.webhooks.parse(rawPayload);
   console.log(`  Status: ${parsedEvent.status}`);
   console.log(`  Channel: ${parsedEvent.channel}`);
   console.log(`  Latency: ${parsedEvent.latency_ms}ms\n`);

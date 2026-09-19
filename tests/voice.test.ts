@@ -22,9 +22,9 @@ async function withFetch(
 
 describe('VoiceResource & Voice helpers', () => {
   it('should expose voice.send and buildTriggerRequest, and a Channel.VOICE value', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
-    assert.equal(typeof nerve.voice.send, 'function');
-    assert.equal(typeof nerve.voice.buildTriggerRequest, 'function');
+    const nervly = new Nervly({ apiKey: 'test_key' });
+    assert.equal(typeof nervly.voice.send, 'function');
+    assert.equal(typeof nervly.voice.buildTriggerRequest, 'function');
     assert.equal(Channel.VOICE, 'voice');
     assert.deepEqual(Object.values(Channel), [
       'sms',
@@ -40,13 +40,13 @@ describe('VoiceResource & Voice helpers', () => {
   });
 
   it('should build a conforming TriggerEventRequest from a string phone recipient', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
+    const nervly = new Nervly({ apiKey: 'test_key' });
     const req: SendVoiceOptions = {
       to: '+2348012345678',
       script: 'Your verification code is 48291',
     };
 
-    const built = nerve.voice.buildTriggerRequest(req);
+    const built = nervly.voice.buildTriggerRequest(req);
     assert.equal(built.name, 'transactional-voice');
     assert.deepEqual(built.to, { subscriberId: '+2348012345678', phone: '+2348012345678' });
     assert.deepEqual(built.payload, {});
@@ -57,9 +57,9 @@ describe('VoiceResource & Voice helpers', () => {
   });
 
   it('should emit only the voice fields the caller supplied', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
+    const nervly = new Nervly({ apiKey: 'test_key' });
 
-    const scriptOnly = nerve.voice.buildTriggerRequest({
+    const scriptOnly = nervly.voice.buildTriggerRequest({
       to: { subscriberId: 'sub_1', phone: '+234800' },
       script: 'Hello',
     });
@@ -67,7 +67,7 @@ describe('VoiceResource & Voice helpers', () => {
     assert.equal('voice_id' in (scriptOnly.overrides?.voice ?? {}), false);
     assert.equal('language' in (scriptOnly.overrides?.voice ?? {}), false);
 
-    const withVoiceId = nerve.voice.buildTriggerRequest({
+    const withVoiceId = nervly.voice.buildTriggerRequest({
       to: { subscriberId: 'sub_1', phone: '+234800' },
       script: 'Hello',
       voice_id: 'Ada',
@@ -75,7 +75,7 @@ describe('VoiceResource & Voice helpers', () => {
     assert.deepEqual(withVoiceId.overrides?.voice, { script: 'Hello', voice_id: 'Ada' });
     assert.equal('language' in (withVoiceId.overrides?.voice ?? {}), false);
 
-    const withLanguage = nerve.voice.buildTriggerRequest({
+    const withLanguage = nervly.voice.buildTriggerRequest({
       to: { subscriberId: 'sub_1', phone: '+234800' },
       script: 'Hello',
       language: 'en-GB',
@@ -85,8 +85,8 @@ describe('VoiceResource & Voice helpers', () => {
   });
 
   it('should coerce object recipients, merge payload and overrides, and reach defaults', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
-    const built = nerve.voice.buildTriggerRequest({
+    const nervly = new Nervly({ apiKey: 'test_key' });
+    const built = nervly.voice.buildTriggerRequest({
       to: { subscriberId: '', phone: '+234800', email: 'e@x.test', deviceTokens: ['tok'] },
       script: 'Code {{code}}',
       voice_id: 'Ada',
@@ -117,8 +117,8 @@ describe('VoiceResource & Voice helpers', () => {
   });
 
   it('should fall back to `unknown` when the object recipient has no identifier', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
-    const built = nerve.voice.buildTriggerRequest({
+    const nervly = new Nervly({ apiKey: 'test_key' });
+    const built = nervly.voice.buildTriggerRequest({
       to: { subscriberId: '' },
       script: 'Hello',
     });
@@ -162,12 +162,12 @@ describe('VoiceResource & Voice helpers', () => {
         });
       },
       async () => {
-        const nerve = new Nervly({
+        const nervly = new Nervly({
           apiKey: 'nv_live_test_voice_key',
           baseUrl: 'https://test-api.nervly.io',
         });
 
-        const result = await nerve.voice.send(
+        const result = await nervly.voice.send(
           {
             to: { subscriberId: 'sub_voice_1', phone: '+2348012345678' },
             script: 'Your verification code is 4, 8, 2, 9, 1',
@@ -214,12 +214,12 @@ describe('VoiceResource & Voice helpers', () => {
         );
       },
       async () => {
-        const nerve = new Nervly({
+        const nervly = new Nervly({
           apiKey: 'nv_live_test_voice_key',
           baseUrl: 'https://test-api.nervly.io',
         });
 
-        await nerve.voice.send({ to: '+2348012345678', script: 'Hello' });
+        await nervly.voice.send({ to: '+2348012345678', script: 'Hello' });
       },
     );
 
@@ -248,12 +248,12 @@ describe('VoiceResource & Voice helpers', () => {
         );
       },
       async () => {
-        const nerve = new Nervly({
+        const nervly = new Nervly({
           apiKey: 'nv_live_test_voice_key',
           baseUrl: 'https://test-api.nervly.io',
         });
 
-        await nerve.voice.send({
+        await nervly.voice.send({
           to: '+2348012345678',
           script: 'Hello',
           idempotencyKey: 'request-idem',

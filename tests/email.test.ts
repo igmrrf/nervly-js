@@ -21,13 +21,13 @@ async function withFetch(
 
 describe('EmailResource & Email Helpers', () => {
   it('should have email.send and events.triggerEmail methods', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
-    assert.equal(typeof nerve.email.send, 'function');
-    assert.equal(typeof nerve.events.triggerEmail, 'function');
+    const nervly = new Nervly({ apiKey: 'test_key' });
+    assert.equal(typeof nervly.email.send, 'function');
+    assert.equal(typeof nervly.events.triggerEmail, 'function');
   });
 
   it('should build conforming TriggerEventRequest from string recipient', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
+    const nervly = new Nervly({ apiKey: 'test_key' });
     const req: SendEmailOptions = {
       to: 'user@example.com',
       subject: 'Verify Your Email',
@@ -36,7 +36,7 @@ describe('EmailResource & Email Helpers', () => {
       sender: 'Nervly <notifications@nervly.io>',
     };
 
-    const built = nerve.email.buildTriggerRequest(req);
+    const built = nervly.email.buildTriggerRequest(req);
     assert.equal(built.name, 'transactional-email');
     assert.deepEqual(built.to, { subscriberId: 'user@example.com', email: 'user@example.com' });
     assert.equal(built.payload?.subject, 'Verify Your Email');
@@ -47,7 +47,7 @@ describe('EmailResource & Email Helpers', () => {
   });
 
   it('should build conforming TriggerEventRequest with ZeptoMail and custom headers', () => {
-    const nerve = new Nervly({ apiKey: 'test_key' });
+    const nervly = new Nervly({ apiKey: 'test_key' });
     const req: SendEmailOptions = {
       to: { subscriberId: 'sub_456', email: 'recipient@domain.com' },
       subject: 'Monthly Invoice',
@@ -62,7 +62,7 @@ describe('EmailResource & Email Helpers', () => {
       },
     };
 
-    const built = nerve.email.buildTriggerRequest(req);
+    const built = nervly.email.buildTriggerRequest(req);
     assert.equal(built.name, 'invoice-receipt');
     assert.equal(built.to.subscriberId, 'sub_456');
     assert.equal(built.to.email, 'recipient@domain.com');
@@ -111,12 +111,12 @@ describe('EmailResource & Email Helpers', () => {
         });
       },
       async () => {
-        const nerve = new Nervly({
+        const nervly = new Nervly({
           apiKey: 'nv_live_test_email_key',
           baseUrl: 'https://test-api.nervly.io',
         });
 
-        const result = await nerve.email.send(
+        const result = await nervly.email.send(
           {
             to: 'customer@example.com',
             subject: 'Password Reset',
@@ -160,12 +160,12 @@ describe('EmailResource & Email Helpers', () => {
         );
       },
       async () => {
-        const nerve = new Nervly({
+        const nervly = new Nervly({
           apiKey: 'nv_live_events_test_key',
           baseUrl: 'https://test-api.nervly.io',
         });
 
-        const response = await nerve.events.triggerEmail({
+        const response = await nervly.events.triggerEmail({
           to: 'staff@example.com',
           subject: 'Weekly Digest',
           text: 'Summary here...',

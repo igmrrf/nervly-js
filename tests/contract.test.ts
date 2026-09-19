@@ -78,8 +78,8 @@ describe('Event Trigger Schema OpenAPI Contract Test', () => {
   });
 
   it('built SDK email payload strictly conforms to OpenAPI TriggerRequest schema', () => {
-    const nerve = new Nervly({ apiKey: 'nv_live_contract_test' });
-    const payload = nerve.email.buildTriggerRequest({
+    const nervly = new Nervly({ apiKey: 'nv_live_contract_test' });
+    const payload = nervly.email.buildTriggerRequest({
       to: { subscriberId: 'sub_test_1', email: 'test@nervly.io' },
       subject: 'Contract Test',
       html: '<p>Contract test html</p>',
@@ -108,8 +108,8 @@ describe('Event Trigger Schema OpenAPI Contract Test', () => {
   });
 
   it('built SDK voice payload strictly conforms to OpenAPI TriggerRequest and VoiceOverrideDto schemas', () => {
-    const nerve = new Nervly({ apiKey: 'nv_live_contract_test' });
-    const payload = nerve.voice.buildTriggerRequest({
+    const nervly = new Nervly({ apiKey: 'nv_live_contract_test' });
+    const payload = nervly.voice.buildTriggerRequest({
       to: { subscriberId: 'sub_voice_1', phone: '+2348012345678' },
       script: 'Your verification code is 4827',
       voice_id: 'Ada',

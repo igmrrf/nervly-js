@@ -128,7 +128,7 @@ function referencedSchemas(operation: Operation): string[] {
 }
 
 describe('SDK OpenAPI Spec Conformance', () => {
-  const nerve = new Nervly({ apiKey: 'nv_live_conformance_test' });
+  const nervly = new Nervly({ apiKey: 'nv_live_conformance_test' });
 
   it('should cover every path and method documented in gateway.json', () => {
     const missingEndpoints: string[] = [];
@@ -144,7 +144,7 @@ describe('SDK OpenAPI Spec Conformance', () => {
         }
 
         assert.equal(
-          typeof accessor(nerve),
+          typeof accessor(nervly),
           'function',
           `SDK method for ${method.toUpperCase()} ${path} is not a function`,
         );

@@ -11,7 +11,7 @@ The **Nervly SDK** (`@nervly/sdk`) is a fully-typed TypeScript client library fo
 | **Type-Safety First** | Every request/response has a strict TypeScript interface. No `any`. |
 | **Zero External Dependencies** | Uses Node.js native `fetch` (Node 18+). No axios, node-fetch, etc. |
 | **Resilient by Default** | Built-in exponential backoff retry for transient failures (429, 5xx). |
-| **Ergonomic API** | Resource-based fluent API: `nerve.events.trigger(...)`, `nerve.users.update(...)` |
+| **Ergonomic API** | Resource-based fluent API: `nervly.events.trigger(...)`, `nervly.users.update(...)` |
 | **Idempotency Built-in** | Auto-generates `Idempotency-Key` UUIDs or accepts user-supplied keys. |
 | **Isomorphic** | Works in Node.js 18+ (primary target). |
 
@@ -47,7 +47,7 @@ The **Nervly SDK** (`@nervly/sdk`) is a fully-typed TypeScript client library fo
 ```typescript
 import Nervly from '@nervly/sdk';
 
-const nerve = new Nervly({
+const nervly = new Nervly({
   apiKey: 'your_api_key',
   baseUrl: 'https://api.nervly.io',  // optional, defaults to production
   timeout: 5000,                     // optional, ms
@@ -58,7 +58,7 @@ const nerve = new Nervly({
 ### 4.2 Events Resource
 ```typescript
 // Single event trigger
-const result = await nerve.events.trigger({
+const result = await nervly.events.trigger({
   name: 'payment_processed',
   to: {
     subscriberId: 'usr_9983j2',
@@ -76,7 +76,7 @@ const result = await nerve.events.trigger({
 });
 
 // Bulk event trigger
-const bulk = await nerve.events.bulkTrigger({
+const bulk = await nervly.events.bulkTrigger({
   events: [
     { name: 'welcome', to: { subscriberId: 'usr_001', email: 'a@b.com' } },
     { name: 'welcome', to: { subscriberId: 'usr_002', email: 'c@d.com' } },
@@ -86,7 +86,7 @@ const bulk = await nerve.events.bulkTrigger({
 
 ### 4.3 Users Resource
 ```typescript
-const prefs = await nerve.users.updatePreferences('usr_9983j2', {
+const prefs = await nervly.users.updatePreferences('usr_9983j2', {
   channels: { email: true, sms: true, push: false, whatsapp: true },
   categories: { marketing: { email: false } },
 });
@@ -94,19 +94,19 @@ const prefs = await nerve.users.updatePreferences('usr_9983j2', {
 
 ### 4.4 Health Resource
 ```typescript
-const health = await nerve.health.check();
+const health = await nervly.health.check();
 ```
 
 ### 4.5 MCP Resource
 ```typescript
-const tools = await nerve.mcp.listTools();
-const status = await nerve.mcp.callTool();
+const tools = await nervly.mcp.listTools();
+const status = await nervly.mcp.callTool();
 ```
 
 ### 4.6 Webhooks Resource
 ```typescript
 // Verify webhook signature
-const isValid = nerve.webhooks.verifySignature({
+const isValid = nervly.webhooks.verifySignature({
   provider: 'termii',
   payload: rawBody,
   signature: req.headers['x-termii-signature'],
@@ -114,25 +114,25 @@ const isValid = nerve.webhooks.verifySignature({
 });
 
 // Parse webhook payload
-const event = nerve.webhooks.parse(rawBody);
+const event = nervly.webhooks.parse(rawBody);
 ```
 
 ## 5. Gateway API Contract Reference
 
 | Method | Endpoint | Auth | SDK Method |
 |---|---|---|---|
-| `GET` | `/health` | No | `nerve.health.check()` |
-| `POST` | `/v1/events/trigger` | Bearer | `nerve.events.trigger(data, opts)` |
-| `POST` | `/v1/events/bulk` | Bearer | `nerve.events.bulkTrigger(data)` |
-| `PUT` | `/v1/users/:id/preferences` | Bearer | `nerve.users.updatePreferences(id, data)` |
-| `POST` | `/v1/mcp` | Bearer | `nerve.mcp.listTools()` / `nerve.mcp.callTool()` |
-| `POST` | `/v1/webhooks/:provider` | Signature | `nerve.webhooks.verifySignature(...)` |
+| `GET` | `/health` | No | `nervly.health.check()` |
+| `POST` | `/v1/events/trigger` | Bearer | `nervly.events.trigger(data, opts)` |
+| `POST` | `/v1/events/bulk` | Bearer | `nervly.events.bulkTrigger(data)` |
+| `PUT` | `/v1/users/:id/preferences` | Bearer | `nervly.users.updatePreferences(id, data)` |
+| `POST` | `/v1/mcp` | Bearer | `nervly.mcp.listTools()` / `nervly.mcp.callTool()` |
+| `POST` | `/v1/webhooks/:provider` | Signature | `nervly.webhooks.verifySignature(...)` |
 
 ## 6. Error Handling Strategy
 
 ```typescript
 try {
-  await nerve.events.trigger({ ... });
+  await nervly.events.trigger({ ... });
 } catch (error) {
   if (error instanceof NervlyAuthenticationError) { /* 401 */ }
   if (error instanceof NervlyRateLimitError) { /* 429, has retryAfter */ }
