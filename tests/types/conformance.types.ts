@@ -17,32 +17,32 @@
  * a test case. `npm run check:types` runs it; `npm test` does not, and should
  * not.
  */
-import type { components } from '../../src/generated/gateway.js';
+import type { components } from "../../src/generated/gateway.js";
 import type {
-  ApiErrorBody,
-  BulkEventResult,
-  BulkTriggerRequest,
-  BulkTriggerResponse,
-  ChannelPreferences,
-  EmailOverride,
-  EventItemDto,
-  HealthStatus,
-  ListMessagesResponse,
-  McpRequest,
-  McpResponse,
-  MessageDto,
-  ProviderOverrides,
-  Recipient,
-  SmsOverride,
-  SubscriberErasureResponse,
-  TriggerEventRequest,
-  TriggerEventResponse,
-  UserPreferencesRequest,
-  UserPreferencesResponse,
-  VoiceOverride,
-  WebhookPayload,
-  WhatsAppOverride,
-} from '../../src/index.js';
+	ApiErrorBody,
+	BulkEventResult,
+	BulkTriggerRequest,
+	BulkTriggerResponse,
+	ChannelPreferences,
+	EmailOverride,
+	EventItemDto,
+	HealthStatus,
+	ListMessagesResponse,
+	McpRequest,
+	McpResponse,
+	MessageDto,
+	ProviderOverrides,
+	Recipient,
+	SmsOverride,
+	SubscriberErasureResponse,
+	TriggerEventRequest,
+	TriggerEventResponse,
+	UserPreferencesRequest,
+	UserPreferencesResponse,
+	VoiceOverride,
+	WebhookPayload,
+	WhatsAppOverride,
+} from "../../src/index.js";
 
 /** Compile-time assertion: the argument must be `true`. */
 type Expect<T extends true> = T;
@@ -53,7 +53,9 @@ type Expect<T extends true> = T;
  * `{ a: string }`.
  */
 type Equal<A, B> =
-  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+	(<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+		? true
+		: false;
 
 /**
  * Replaces one property's type, keeping every other property exactly as the
@@ -63,9 +65,11 @@ type Equal<A, B> =
  * Prefer it to restating a whole schema by hand: a hand-written substitute would
  * silently lose a field the spec gains later.
  */
-type WithProp<T, K extends keyof T, V> = { [P in keyof T]: P extends K ? V : T[P] };
+type WithProp<T, K extends keyof T, V> = {
+	[P in keyof T]: P extends K ? V : T[P];
+};
 
-type Spec = components['schemas'];
+type Spec = components["schemas"];
 
 /*
  * ─── Normalised spec types ─────────────────────────────────────────────────
@@ -81,79 +85,115 @@ type Spec = components['schemas'];
  * ever added to the spec the comparison fails, which is the point: this list is
  * reviewed, not inferred.
  */
-type TriggerRequestFromSpec = WithProp<Spec['TriggerRequest'], 'payload', Record<string, unknown> | null>;
-
-type BulkTriggerRequestFromSpec = WithProp<Spec['BulkTriggerRequest'], 'events', TriggerRequestFromSpec[]>;
-
-type UserPreferencesRequestFromSpec = WithProp<
-  Spec['UserPreferencesRequest'],
-  'categories',
-  Record<string, Record<string, boolean>> | null
+type TriggerRequestFromSpec = WithProp<
+	Spec["TriggerRequest"],
+	"payload",
+	Record<string, unknown> | null
 >;
 
-type McpRequestFromSpec = WithProp<Spec['McpRequest'], 'params', Record<string, unknown> | null>;
+type BulkTriggerRequestFromSpec = WithProp<
+	Spec["BulkTriggerRequest"],
+	"events",
+	TriggerRequestFromSpec[]
+>;
 
-type McpResponseFromSpec = WithProp<Spec['McpResponse'], 'result', unknown>;
+type UserPreferencesRequestFromSpec = WithProp<
+	Spec["UserPreferencesRequest"],
+	"categories",
+	Record<string, Record<string, boolean>> | null
+>;
+
+type McpRequestFromSpec = WithProp<
+	Spec["McpRequest"],
+	"params",
+	Record<string, unknown> | null
+>;
+
+type McpResponseFromSpec = WithProp<Spec["McpResponse"], "result", unknown>;
 
 // ─── Requests ───────────────────────────────────────────────────────────────
 
-export type _TriggerRequest = Expect<Equal<TriggerEventRequest, TriggerRequestFromSpec>>;
-export type _Recipient = Expect<Equal<Recipient, Spec['RecipientDto']>>;
-export type _ProviderOverrides = Expect<Equal<ProviderOverrides, Spec['ProviderOverridesDto']>>;
-export type _EmailOverride = Expect<Equal<EmailOverride, Spec['EmailOverrideDto']>>;
-export type _WhatsAppOverride = Expect<Equal<WhatsAppOverride, Spec['WhatsAppOverrideDto']>>;
-export type _SmsOverride = Expect<Equal<SmsOverride, Spec['SmsOverrideDto']>>;
-export type _VoiceOverride = Expect<Equal<VoiceOverride, Spec['VoiceOverrideDto']>>;
-export type _BulkTriggerRequest = Expect<Equal<BulkTriggerRequest, BulkTriggerRequestFromSpec>>;
-export type _UserPreferencesRequest = Expect<
-  Equal<UserPreferencesRequest, UserPreferencesRequestFromSpec>
+export type _TriggerRequest = Expect<
+	Equal<TriggerEventRequest, TriggerRequestFromSpec>
 >;
-export type _ChannelPreferences = Expect<Equal<ChannelPreferences, Spec['ChannelPreferences']>>;
+export type _Recipient = Expect<Equal<Recipient, Spec["RecipientDto"]>>;
+export type _ProviderOverrides = Expect<
+	Equal<ProviderOverrides, Spec["ProviderOverridesDto"]>
+>;
+export type _EmailOverride = Expect<
+	Equal<EmailOverride, Spec["EmailOverrideDto"]>
+>;
+export type _WhatsAppOverride = Expect<
+	Equal<WhatsAppOverride, Spec["WhatsAppOverrideDto"]>
+>;
+export type _SmsOverride = Expect<Equal<SmsOverride, Spec["SmsOverrideDto"]>>;
+export type _VoiceOverride = Expect<
+	Equal<VoiceOverride, Spec["VoiceOverrideDto"]>
+>;
+export type _BulkTriggerRequest = Expect<
+	Equal<BulkTriggerRequest, BulkTriggerRequestFromSpec>
+>;
+export type _UserPreferencesRequest = Expect<
+	Equal<UserPreferencesRequest, UserPreferencesRequestFromSpec>
+>;
+export type _ChannelPreferences = Expect<
+	Equal<ChannelPreferences, Spec["ChannelPreferences"]>
+>;
 export type _McpRequest = Expect<Equal<McpRequest, McpRequestFromSpec>>;
 
 // ─── Responses ──────────────────────────────────────────────────────────────
 
-export type _TriggerResponse = Expect<Equal<TriggerEventResponse, Spec['TriggerResponse']>>;
-export type _BulkEventResult = Expect<Equal<BulkEventResult, Spec['BulkEventResult']>>;
-export type _BulkTriggerResponse = Expect<Equal<BulkTriggerResponse, Spec['BulkTriggerResponse']>>;
-export type _MessageDto = Expect<Equal<MessageDto, Spec['MessageDto']>>;
-export type _EventItemDto = Expect<Equal<EventItemDto, Spec['EventItemDto']>>;
-export type _ListMessagesResponse = Expect<Equal<ListMessagesResponse, Spec['ListMessagesResponse']>>;
+export type _TriggerResponse = Expect<
+	Equal<TriggerEventResponse, Spec["TriggerResponse"]>
+>;
+export type _BulkEventResult = Expect<
+	Equal<BulkEventResult, Spec["BulkEventResult"]>
+>;
+export type _BulkTriggerResponse = Expect<
+	Equal<BulkTriggerResponse, Spec["BulkTriggerResponse"]>
+>;
+export type _MessageDto = Expect<Equal<MessageDto, Spec["MessageDto"]>>;
+export type _EventItemDto = Expect<Equal<EventItemDto, Spec["EventItemDto"]>>;
+export type _ListMessagesResponse = Expect<
+	Equal<ListMessagesResponse, Spec["ListMessagesResponse"]>
+>;
 export type _SubscriberErasureResponse = Expect<
-  Equal<SubscriberErasureResponse, Spec['SubscriberErasureResponse']>
+	Equal<SubscriberErasureResponse, Spec["SubscriberErasureResponse"]>
 >;
 export type _UserPreferencesResponse = Expect<
-  Equal<UserPreferencesResponse, Spec['UserPreferencesResponse']>
+	Equal<UserPreferencesResponse, Spec["UserPreferencesResponse"]>
 >;
-export type _HealthStatus = Expect<Equal<HealthStatus, Spec['HealthStatus']>>;
+export type _HealthStatus = Expect<Equal<HealthStatus, Spec["HealthStatus"]>>;
 export type _McpResponse = Expect<Equal<McpResponse, McpResponseFromSpec>>;
-export type _WebhookPayload = Expect<Equal<WebhookPayload, Spec['GenericWebhookPayload']>>;
-export type _ApiErrorBody = Expect<Equal<ApiErrorBody, Spec['ErrorResponse']>>;
+export type _WebhookPayload = Expect<
+	Equal<WebhookPayload, Spec["GenericWebhookPayload"]>
+>;
+export type _ApiErrorBody = Expect<Equal<ApiErrorBody, Spec["ErrorResponse"]>>;
 
 // Referencing every assertion in one tuple keeps "declared but never used"
 // from hiding an assertion that was accidentally left out of the list.
 export type ConformanceAssertions = [
-  _TriggerRequest,
-  _Recipient,
-  _ProviderOverrides,
-  _EmailOverride,
-  _WhatsAppOverride,
-  _SmsOverride,
-  _VoiceOverride,
-  _BulkTriggerRequest,
-  _UserPreferencesRequest,
-  _ChannelPreferences,
-  _McpRequest,
-  _TriggerResponse,
-  _BulkEventResult,
-  _BulkTriggerResponse,
-  _MessageDto,
-  _EventItemDto,
-  _ListMessagesResponse,
-  _SubscriberErasureResponse,
-  _UserPreferencesResponse,
-  _HealthStatus,
-  _McpResponse,
-  _WebhookPayload,
-  _ApiErrorBody,
+	_TriggerRequest,
+	_Recipient,
+	_ProviderOverrides,
+	_EmailOverride,
+	_WhatsAppOverride,
+	_SmsOverride,
+	_VoiceOverride,
+	_BulkTriggerRequest,
+	_UserPreferencesRequest,
+	_ChannelPreferences,
+	_McpRequest,
+	_TriggerResponse,
+	_BulkEventResult,
+	_BulkTriggerResponse,
+	_MessageDto,
+	_EventItemDto,
+	_ListMessagesResponse,
+	_SubscriberErasureResponse,
+	_UserPreferencesResponse,
+	_HealthStatus,
+	_McpResponse,
+	_WebhookPayload,
+	_ApiErrorBody,
 ];

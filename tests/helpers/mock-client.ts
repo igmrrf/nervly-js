@@ -1,12 +1,16 @@
-import type { NervlyHttpClient } from '../../src/client.js';
-import type { RequestOptions } from '../../src/types.js';
+import type { NervlyHttpClient } from "../../src/client.js";
+import type { RequestOptions } from "../../src/types.js";
 
 export interface MockHandlers {
-  get?: (path: string) => unknown;
-  post?: (path: string, body?: unknown, headers?: Record<string, string>) => unknown;
-  put?: (path: string, body?: unknown) => unknown;
-  delete?: (path: string) => unknown;
-  request?: (options: RequestOptions) => unknown;
+	get?: (path: string) => unknown;
+	post?: (
+		path: string,
+		body?: unknown,
+		headers?: Record<string, string>,
+	) => unknown;
+	put?: (path: string, body?: unknown) => unknown;
+	delete?: (path: string) => unknown;
+	request?: (options: RequestOptions) => unknown;
 }
 
 /**
@@ -19,14 +23,17 @@ export interface MockHandlers {
  * exactly that drift.
  */
 export function mockClient(handlers: MockHandlers = {}): NervlyHttpClient {
-  return {
-    get: async (path: string) => handlers.get?.(path),
-    post: async (path: string, body?: unknown, headers?: Record<string, string>) =>
-      handlers.post?.(path, body, headers),
-    put: async (path: string, body?: unknown) => handlers.put?.(path, body),
-    delete: async (path: string) => handlers.delete?.(path),
-    request: async (options: RequestOptions) => handlers.request?.(options),
-  } as unknown as NervlyHttpClient;
+	return {
+		get: async (path: string) => handlers.get?.(path),
+		post: async (
+			path: string,
+			body?: unknown,
+			headers?: Record<string, string>,
+		) => handlers.post?.(path, body, headers),
+		put: async (path: string, body?: unknown) => handlers.put?.(path, body),
+		delete: async (path: string) => handlers.delete?.(path),
+		request: async (options: RequestOptions) => handlers.request?.(options),
+	} as unknown as NervlyHttpClient;
 }
 
 /**
@@ -38,15 +45,15 @@ export function mockClient(handlers: MockHandlers = {}): NervlyHttpClient {
  * without weakening the type.
  */
 export function recorder<T>() {
-  const calls: T[] = [];
-  return {
-    calls,
-    push(call: T): void {
-      calls.push(call);
-    },
-    /** The most recent call, or `undefined` if the handler never ran. */
-    get last(): T | undefined {
-      return calls[calls.length - 1];
-    },
-  };
+	const calls: T[] = [];
+	return {
+		calls,
+		push(call: T): void {
+			calls.push(call);
+		},
+		/** The most recent call, or `undefined` if the handler never ran. */
+		get last(): T | undefined {
+			return calls[calls.length - 1];
+		},
+	};
 }

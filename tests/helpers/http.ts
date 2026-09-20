@@ -8,52 +8,66 @@
  */
 
 export interface CapturedRequest {
-  url: string;
-  method: string;
-  headers: Headers;
-  body: string | undefined;
-  signal: AbortSignal | null | undefined;
+	url: string;
+	method: string;
+	headers: Headers;
+	body: string | undefined;
+	signal: AbortSignal | null | undefined;
 }
 
 export function jsonResponse(
-  status: number,
-  body: unknown,
-  headers: Record<string, string> = {},
+	status: number,
+	body: unknown,
+	headers: Record<string, string> = {},
 ): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...headers },
-  });
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { "Content-Type": "application/json", ...headers },
+	});
 }
 
 export async function withFetch(
-  handler: (url: string, init: RequestInit | undefined, request: CapturedRequest) => Response | Promise<Response>,
-  run: (requests: CapturedRequest[]) => Promise<void>,
+	handler: (
+		url: string,
+		init: RequestInit | undefined,
+		request: CapturedRequest,
+	) => Response | Promise<Response>,
+	run: (requests: CapturedRequest[]) => Promise<void>,
 ): Promise<CapturedRequest[]> {
-  const requests: CapturedRequest[] = [];
-  const original = globalThis.fetch;
+	const requests: CapturedRequest[] = [];
+	const original = globalThis.fetch;
 
-  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-    const url =
-      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-    const request: CapturedRequest = {
-      url,
-      method: init?.method ?? 'GET',
-      headers: new Headers(init?.headers),
-      body: init?.body === undefined || init?.body === null ? undefined : String(init.body),
-      signal: init?.signal,
-    };
-    requests.push(request);
-    return handler(url, init, request);
-  }) as typeof globalThis.fetch;
+	globalThis.fetch = (async (
+		input: string | URL | Request,
+		init?: RequestInit,
+	) => {
+		const url =
+			typeof input === "string"
+				? input
+				: input instanceof URL
+					? input.toString()
+					: input.url;
+		const request: CapturedRequest = {
+			url,
+			method: init?.method ?? "GET",
+			headers: new Headers(init?.headers),
+			body:
+				init?.body === undefined || init?.body === null
+					? undefined
+					: String(init.body),
+			signal: init?.signal,
+		};
+		requests.push(request);
+		return handler(url, init, request);
+	}) as typeof globalThis.fetch;
 
-  try {
-    await run(requests);
-  } finally {
-    globalThis.fetch = original;
-  }
+	try {
+		await run(requests);
+	} finally {
+		globalThis.fetch = original;
+	}
 
-  return requests;
+	return requests;
 }
 
 /**
@@ -66,23 +80,27 @@ export async function withFetch(
  * scripted fetch settles in a microtask and `clearTimeout` wins the race.
  */
 export async function withCapturedTimeouts<T>(
-  run: (delays: number[]) => Promise<T>,
-  capMs = 5,
+	run: (delays: number[]) => Promise<T>,
+	capMs = 5,
 ): Promise<T> {
-  const delays: number[] = [];
-  const original = globalThis.setTimeout;
+	const delays: number[] = [];
+	const original = globalThis.setTimeout;
 
-  const patched = (callback: (...args: unknown[]) => void, ms?: number, ...args: unknown[]) => {
-    if (typeof ms === 'number') delays.push(ms);
-    const actual = typeof ms === 'number' ? Math.min(ms, capMs) : ms;
-    return original(callback, actual, ...args);
-  };
+	const patched = (
+		callback: (...args: unknown[]) => void,
+		ms?: number,
+		...args: unknown[]
+	) => {
+		if (typeof ms === "number") delays.push(ms);
+		const actual = typeof ms === "number" ? Math.min(ms, capMs) : ms;
+		return original(callback, actual, ...args);
+	};
 
-  globalThis.setTimeout = patched as unknown as typeof globalThis.setTimeout;
+	globalThis.setTimeout = patched as unknown as typeof globalThis.setTimeout;
 
-  try {
-    return await run(delays);
-  } finally {
-    globalThis.setTimeout = original;
-  }
+	try {
+		return await run(delays);
+	} finally {
+		globalThis.setTimeout = original;
+	}
 }

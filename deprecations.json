@@ -1,17 +1,17 @@
 {
-  "policy": "A symbol is marked @deprecated in the release before its removal and stays exported for at least one minor. It is removed no later than the version named in removeIn. scripts/check-deprecations.mjs fails when a symbol is unregistered, when its source annotation drifts from this file, or when the removal version has been reached and the symbol is still exported.",
-  "symbols": [
-    {
-      "symbol": "EventsResource.triggerEmail",
-      "since": "0.1.0",
-      "removeIn": "0.2.0",
-      "replacement": "EmailResource.send"
-    },
-    {
-      "symbol": "SubscribersResource.updatePreferences",
-      "since": "0.1.0",
-      "removeIn": "0.2.0",
-      "replacement": "UsersResource.updatePreferences"
-    }
-  ]
+	"policy": "A symbol is marked @deprecated in the release before its removal and stays exported for at least one minor. It is removed no later than the version named in removeIn. scripts/check-deprecations.mjs fails when a symbol is unregistered, when its source annotation drifts from this file, or when the removal version has been reached and the symbol is still exported.",
+	"symbols": [
+		{
+			"symbol": "EventsResource.triggerEmail",
+			"since": "0.1.0",
+			"removeIn": "0.2.0",
+			"replacement": "EmailResource.send"
+		},
+		{
+			"symbol": "SubscribersResource.updatePreferences",
+			"since": "0.1.0",
+			"removeIn": "0.2.0",
+			"replacement": "UsersResource.updatePreferences"
+		}
+	]
 }
