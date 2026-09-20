@@ -1,10 +1,11 @@
 name: CI
 
 # Fast build/lint/unit-test for this repo only (Wayfinder repo-hygiene ticket
-# 2 split this out of nervly-base's central ci.yml). Fully self-contained —
-# the SDK's own steps never needed a sibling checkout even centrally.
-# `release.yml` (tag-triggered publish) is separate and unaffected. The
-# genuinely cross-repo gates that touch this repo (docs' portal snippet/
+# 2 split this out of nervly-base's central ci.yml). Checks out nervly-docs
+# as a fixture for its committed OpenAPI spec (check:codegen and
+# check:release, both run by `npm run check`, read it). `release.yml`
+# (tag-triggered publish) is separate and unaffected. The genuinely
+# cross-repo gates that touch this repo (docs' portal snippet/
 # conformance suite, infra-hardening) stay centralized in nervly-base and are
 # unaffected by this file — they still run there on every push, and now also
 # on the repository_dispatch this workflow fires below.
@@ -28,6 +29,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # check-codegen.mjs and check-release.mjs (both run by `npm run check`)
+      # read ../nervly-docs/static/openapi/gateway.json — a real dependency
+      # hidden inside the npm scripts, discovered by an actual CI failure on
+      # this ticket's own feature branch, not by static reading of the job's
+      # steps.
+      - name: Checkout nervly-docs (OpenAPI spec fixture)
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository_owner }}/nervly-docs.git" \
+            ../nervly-docs
       - uses: actions/setup-node@v7
         with:
           node-version: 24
