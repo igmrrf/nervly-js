@@ -1,0 +1,72 @@
+name: CI
+
+# Fast build/lint/unit-test for this repo only (Wayfinder repo-hygiene ticket
+# 2 split this out of nervly-base's central ci.yml). Fully self-contained —
+# the SDK's own steps never needed a sibling checkout even centrally.
+# `release.yml` (tag-triggered publish) is separate and unaffected. The
+# genuinely cross-repo gates that touch this repo (docs' portal snippet/
+# conformance suite, infra-hardening) stay centralized in nervly-base and are
+# unaffected by this file — they still run there on every push, and now also
+# on the repository_dispatch this workflow fires below.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sdk:
+    name: SDK — Typecheck & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # `npm run check` also runs the release-discipline gates (Ticket 20):
+      # changelog/version agreement, the deprecation registry, and the
+      # provenance/audit/SBOM/disclosure-policy wiring.
+      - name: sdk
+        run: |
+          set -euo pipefail
+          npm install
+          npm run check
+          npm test
+      # Supply-chain floor (Ticket 20): the runtime dependency audit and the
+      # release SBOM run on every push, and the tagged release workflow
+      # (.github/workflows/release.yml) re-runs both before publishing.
+      - name: sdk supply-chain gate (audit + SBOM)
+        run: |
+          npm run audit
+          npm run sbom
+      # Packaging gate (Ticket 11): packs the tarball, installs it into a
+      # scratch project, and proves `@nervly/sdk` resolves and type-checks
+      # both as ESM and as CJS. `npm test` already asserted the manifest shape
+      # and the `import`/`require` conditions; this is the end-to-end proof that
+      # the published artifact actually loads through the resolver a consumer
+      # uses rather than through a relative path into dist/.
+      - name: sdk packaging gate (dual ESM/CJS + type resolution)
+        run: npm run check:exports
+      # Wayfinder repo-hygiene ticket 2: tells nervly-base's central workflow
+      # a sibling just pushed, so its cross-repo contract gates run against
+      # this commit instead of waiting for the next push to nervly-base itself
+      # or a full `make push-all`.
+      - name: Notify nervly-base (repository_dispatch)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -sf -X POST \
+            -H "Authorization: token ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository_owner }}/nervly-base/dispatches" \
+            -d '{"event_type":"service-updated","client_payload":{"repo":"nervly-js","ref":"${{ github.sha }}"}}'
