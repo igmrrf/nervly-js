@@ -1,0 +1,13 @@
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if [ -n "$staged" ]; then
+  npx lint-staged
+else
+  npx biome check --write .
+fi
+
+npm run check:types
+npm test
+npm run build
+gitleaks protect --staged
+npm run audit

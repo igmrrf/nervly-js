@@ -1,0 +1,43 @@
+name: CI
+
+# The pre-commit hooks are the actual gate (types, tests, build, secrets,
+# audit) and run on every developer's machine before a commit is made. This
+# workflow does not re-run that chain — it only asserts the hook wiring
+# itself hasn't drifted: that the hook file still exists and that `npm ci`
+# still runs it (via the `prepare` script), so a change can't silently
+# remove local enforcement without anyone noticing in review.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  hooks-drift-gate:
+    name: Pre-commit hook wiring is intact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Assert .husky/pre-commit exists
+        run: |
+          set -euo pipefail
+          if [ ! -f .husky/pre-commit ]; then
+            echo "::error::.husky/pre-commit is missing"
+            exit 1
+          fi
+          echo ".husky/pre-commit is present"
+
+      - name: Assert package.json prepare script installs husky
+        run: |
+          set -euo pipefail
+          prepare="$(node -p "require('./package.json').scripts.prepare")"
+          if [ "$prepare" != "husky" ]; then
+            echo "::error::package.json scripts.prepare is '${prepare}', expected 'husky'"
+            exit 1
+          fi
+          echo "scripts.prepare is 'husky'"
