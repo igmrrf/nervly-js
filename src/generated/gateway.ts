@@ -132,10 +132,10 @@ export interface paths {
         put?: never;
         /**
          * Invoke a Model Context Protocol tool.
-         * @description Lets an AI agent inspect the gateway the same way an operator would. Two
-         *     tools are exposed today: `gateway_status` reports uptime and broker
-         *     connectivity, and `idempotency_inspect` reports how many idempotency keys
-         *     are being tracked.
+         * @description Lets an AI agent inspect the gateway the same way an operator would.
+         *     `tools/list` enumerates the available tools and `tools/call` executes one;
+         *     today the only tool is `gateway_status`, which reports uptime and broker
+         *     connectivity.
          *
          *     Point an MCP-capable client at this endpoint with your API key as a bearer
          *     token to let it answer questions like "is Nervly currently reaching the

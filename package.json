@@ -1,65 +1,69 @@
 {
-  "name": "@nervly/sdk",
-  "version": "0.1.0",
-  "description": "Official TypeScript SDK for Nervly Unified Notification-as-a-Service (NaaS) Platform",
-  "type": "module",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/cjs/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "sideEffects": false,
-  "files": [
-    "dist/esm",
-    "dist/cjs",
-    "README.md",
-    "CHANGELOG.md",
-    "SECURITY.md"
-  ],
-  "publishConfig": {
-    "access": "public",
-    "provenance": true,
-    "registry": "https://registry.npmjs.org/"
-  },
-  "scripts": {
-    "build": "node scripts/build.mjs",
-    "codegen": "openapi-typescript ../nervly-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
-    "check:codegen": "node scripts/check-codegen.mjs",
-    "check:types": "tsc --project tsconfig.check.json",
-    "check:exports": "node scripts/check-exports.mjs",
-    "check:changelog": "node scripts/check-changelog.mjs",
-    "check:deprecations": "node scripts/check-deprecations.mjs",
-    "check:release": "node scripts/check-release.mjs",
-    "audit": "npm audit --omit=dev --audit-level=high",
-    "sbom": "node scripts/sbom.mjs",
-    "check": "npm run check:codegen && npm run check:types && npm run check:changelog && npm run check:deprecations && npm run check:release && npx tsc --noEmit",
-    "verify": "npm run check && npm test",
-    "test": "npm run test:coverage && npm run test:mutation",
-    "test:coverage": "npm run build && tsx --test --experimental-test-coverage --test-coverage-include='src/**/*.ts' --test-coverage-exclude='src/generated/**' --test-coverage-exclude='src/types.ts' --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 tests/*.test.ts",
-    "test:mutation": "node scripts/mutation-test.mjs",
-    "dev": "tsx src/index.ts"
-  },
-  "author": "Nervly Engineering <engineering@ajianlabs.com>",
-  "license": "MIT",
-  "engines": {
-    "node": ">=24.0.0"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "@types/node": "^26.6.1",
-    "openapi-typescript": "^7.13.0",
-    "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
-  }
+	"name": "@nervly/sdk",
+	"version": "0.1.0",
+	"description": "Official TypeScript SDK for Nervly Unified Notification-as-a-Service (NaaS) Platform",
+	"type": "module",
+	"main": "./dist/cjs/index.js",
+	"module": "./dist/esm/index.js",
+	"types": "./dist/cjs/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/esm/index.d.ts",
+				"default": "./dist/esm/index.js"
+			},
+			"require": {
+				"types": "./dist/cjs/index.d.ts",
+				"default": "./dist/cjs/index.js"
+			}
+		},
+		"./package.json": "./package.json"
+	},
+	"sideEffects": false,
+	"files": [
+		"dist/esm",
+		"dist/cjs",
+		"README.md",
+		"CHANGELOG.md",
+		"SECURITY.md"
+	],
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"build": "node scripts/build.mjs",
+		"codegen": "openapi-typescript ../nervly-docs/static/openapi/gateway.json -o src/generated/gateway.ts",
+		"check:codegen": "node scripts/check-codegen.mjs",
+		"check:types": "tsc --project tsconfig.check.json",
+		"check:exports": "node scripts/check-exports.mjs",
+		"check:changelog": "node scripts/check-changelog.mjs",
+		"check:deprecations": "node scripts/check-deprecations.mjs",
+		"check:release": "node scripts/check-release.mjs",
+		"audit": "npm audit --omit=dev --audit-level=high",
+		"sbom": "node scripts/sbom.mjs",
+		"check": "npm run check:codegen && npm run check:types && npm run check:changelog && npm run check:deprecations && npm run check:release && npx tsc --noEmit",
+		"verify": "npm run check && npm test",
+		"test": "npm run test:coverage && npm run test:mutation",
+		"test:coverage": "npm run build && tsx --test --experimental-test-coverage --test-coverage-include='src/**/*.ts' --test-coverage-exclude='src/generated/**' --test-coverage-exclude='src/types.ts' --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 tests/*.test.ts",
+		"test:mutation": "node scripts/mutation-test.mjs",
+		"dev": "tsx src/index.ts",
+		"prepare": "husky"
+	},
+	"author": "Nervly Engineering <engineering@ajianlabs.com>",
+	"license": "MIT",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.14",
+		"@types/node": "^26.6.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.5.1",
+		"openapi-typescript": "^7.13.0",
+		"tsx": "^4.23.13",
+		"typescript": "^5.9.3"
+	}
 }

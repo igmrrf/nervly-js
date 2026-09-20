@@ -1,0 +1,4 @@
+# Synthetic, obviously-fake credentials used as fixtures for tests/no-secrets.test.ts
+# and tests/helpers/secret-scanner.ts, which assert our own secret-detection regexes
+# fire on known token shapes. None of these are real secrets.
+tests/no-secrets.test.ts:stripe-access-token:105

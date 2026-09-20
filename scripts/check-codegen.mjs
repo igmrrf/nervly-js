@@ -10,42 +10,48 @@
  *
  * Mirrors the dashboard's `npm run codegen:check`.
  */
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const specPath = resolve(root, '../nervly-docs/static/openapi/gateway.json');
-const generatedPath = resolve(root, 'src/generated/gateway.ts');
-const tmp = mkdtempSync(join(tmpdir(), 'nervly-js-codegen-'));
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const specPath = resolve(root, "../nervly-docs/static/openapi/gateway.json");
+const generatedPath = resolve(root, "src/generated/gateway.ts");
+const tmp = mkdtempSync(join(tmpdir(), "nervly-js-codegen-"));
 
 try {
-  execFileSync(
-    process.execPath,
-    [
-      resolve(root, 'node_modules/openapi-typescript/bin/cli.js'),
-      specPath,
-      '-o',
-      join(tmp, 'gateway.ts'),
-    ],
-    { cwd: root, stdio: 'inherit' },
-  );
+	execFileSync(
+		process.execPath,
+		[
+			resolve(root, "node_modules/openapi-typescript/bin/cli.js"),
+			specPath,
+			"-o",
+			join(tmp, "gateway.ts"),
+		],
+		{ cwd: root, stdio: "inherit" },
+	);
 
-  const fresh = readFileSync(join(tmp, 'gateway.ts'), 'utf-8');
-  const committed = readFileSync(generatedPath, 'utf-8');
+	const fresh = readFileSync(join(tmp, "gateway.ts"), "utf-8");
+	const committed = readFileSync(generatedPath, "utf-8");
 
-  if (fresh !== committed) {
-    console.error('');
-    console.error('  Generated gateway types are stale.');
-    console.error('  The committed OpenAPI spec and src/generated/gateway.ts disagree.');
-    console.error('  Run "npm run codegen" in nervly-js and commit the result.');
-    console.error('');
-    process.exit(1);
-  }
+	if (fresh !== committed) {
+		console.error("");
+		console.error("  Generated gateway types are stale.");
+		console.error(
+			"  The committed OpenAPI spec and src/generated/gateway.ts disagree.",
+		);
+		console.error(
+			'  Run "npm run codegen" in nervly-js and commit the result.',
+		);
+		console.error("");
+		process.exit(1);
+	}
 
-  console.log('✓ src/generated/gateway.ts matches nervly-docs/static/openapi/gateway.json');
+	console.log(
+		"✓ src/generated/gateway.ts matches nervly-docs/static/openapi/gateway.json",
+	);
 } finally {
-  rmSync(tmp, { recursive: true, force: true });
+	rmSync(tmp, { recursive: true, force: true });
 }
