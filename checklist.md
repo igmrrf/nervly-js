@@ -1,7 +1,27 @@
 # nervly-sdk Checklist
 
 TypeScript `@nervly/sdk` client library (npm). Primary responsibility: **API Stability & Contract Correctness**.
-Parent checklist: [`../checklist.md`](../checklist.md)
+Parent checklist: [`../nervly-base/checklist.md`](../nervly-base/checklist.md)
+
+## Promises
+
+Commitments this SDK is accountable for keeping, lifted verbatim from
+[`promises.md`](../promises.md). Section numbers point at the inventory, which is
+canonical; this table is the per-package reference.
+
+| § | Promise | Where | Class |
+|---|---|---|---|
+| 1.8 | "Strictly-typed SDKs, with Node available today and the rest of the set rolling out. Protobuf or JSON. A local CLI with environment detection, secret management, and webhook forwarding. An MCP endpoint so your AI coding agent can read schemas, write integration code, and run sandbox tests — safely." | Home — developers copy | Capability |
+| 1.8 | SDK language tags: Node (available); Python, Go, Java, PHP, .NET tagged "COMING SOON" | Home — developers SDK tags | Capability |
+| 1.8 | "→ 202 Accepted · { eventId, status: \"QUEUED\" }" and "202 Accepted · { \"eventId\": \"evt_...\", \"status\": \"QUEUED\" }" | Home — developers code samples | Capability |
+| 2.1 | Free features: "SDKs, CLI and MCP endpoint" | Pricing — Free tier features | Commercial |
+| 7 | Resolved claim: "Strictly-typed SDKs in six languages" claimed six while Node shipped; the unshipped languages are now tagged "coming soon" | § 7 — claims to watch | — |
+
+Also involved, owned jointly: 1.8 code samples reflect the `nervly-gate` 202
+contract; the published compatibility matrix is reconciled with
+`nervly-docs`. Backing tests: `tests/api-stability.test.ts`,
+`tests/contract.test.ts`, `tests/types/conformance.types.ts`; release gates in
+`scripts/check-release` / `check:deprecations` / `check:changelog`.
 
 ## Tests
 - [x] Unit tests on all public methods, retries, error mapping — 295 tests across
@@ -78,8 +98,12 @@ Parent checklist: [`../checklist.md`](../checklist.md)
       inside the tarball, and `npm run check:release` asserts its required sections exist.
 
 ## Documentation (external)
-- [ ] README quickstart matches `nervly-docs` — checked in ticket 12, which owns the
-      customer-facing portal. The README was corrected here where it described methods that
-      do not exist (and now carries the "webhooks are not sent yet" warning).
+- [ ] README quickstart matches `nervly-docs` — **no automated gate exists** for this: the
+      two quickstarts are reconciled by hand, not diffed in CI, so the box stays unchecked.
+      The README was corrected here in ticket 12 (which owns the customer-facing portal)
+      where it described methods that do not exist, and it now carries the "webhooks are
+      not sent yet" warning. Making this a checked box requires a cross-repo gate that
+      compares the README snippet against the committed docs quickstart; that gate is not
+      present in `nervly-js/.github/workflows/ci.yml` or `make docs-check`.
 - [x] Examples (`examples/`) tested in CI — `examples/**/*` is inside `tsconfig.check.json`,
       so `npm run check:types` fails when an example stops type-checking against the API.
