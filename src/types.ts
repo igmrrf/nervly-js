@@ -327,7 +327,10 @@ export interface McpResponse {
 	id: JsonRpcId;
 }
 
-/** Every tool the gateway's MCP catalog advertises. */
+/**
+ * Every tool the gateway's MCP catalog can advertise. `send_notification`
+ * requires the `write` scope, so a read-only key's `tools/list` omits it.
+ */
 export type McpToolName =
 	| "gateway_status"
 	| "idempotency_inspect"

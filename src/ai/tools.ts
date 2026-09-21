@@ -12,6 +12,10 @@
  * dependencies and consumers stay on whichever provider version they already
  * ship. The input/output types are pinned against the generated OpenAPI
  * contract by `tests/types/conformance.types.ts`.
+ *
+ * The catalog here is the full, read-write catalog. A key issued with only the
+ * `read` scope does not receive `send_notification` from `tools/list`, so an
+ * agent bound to a read-only key should not be offered it.
  */
 import type { NervlyHttpClient } from "../client.js";
 import type {
@@ -161,6 +165,9 @@ const MESSAGING_CHANNEL_SCHEMA = {
  * The provider-neutral catalog. Mirrors `tool_catalog()` in
  * `nervly-gate/src/handlers/mcp.rs` field for field; a divergence is a bug on
  * whichever side moved first.
+ *
+ * This is the full catalog a read-write key sees. A read-only key receives the
+ * same list without `send_notification`.
  */
 export const NERVLY_AI_TOOL_DEFINITIONS: ReadonlyArray<
 	NervlyAiToolDefinition<never, never>
