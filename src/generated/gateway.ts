@@ -132,14 +132,20 @@ export interface paths {
         put?: never;
         /**
          * Invoke a Model Context Protocol tool.
-         * @description Lets an AI agent inspect the gateway the same way an operator would.
-         *     `tools/list` enumerates the available tools and `tools/call` executes one;
-         *     today the only tool is `gateway_status`, which reports uptime and broker
-         *     connectivity.
+         * @description Lets an AI agent operate the gateway the way an operator would: inspect
+         *     health, send a notification, query delivery state, list workspace templates
+         *     and check subscriber channel eligibility.
+         *
+         *     `tools/list` enumerates the catalog with each tool's JSON Schema, and
+         *     `tools/call` executes one by name. A body that is not valid JSON is a
+         *     JSON-RPC `-32700` parse error and a missing or non-string `method` is a
+         *     `-32600` invalid request, both carried in a `200` response as the protocol
+         *     requires; unsupported methods and invalid parameters likewise return a
+         *     JSON-RPC 2.0 error object. A missing or invalid API key still returns `401`
+         *     before the handler runs.
          *
          *     Point an MCP-capable client at this endpoint with your API key as a bearer
-         *     token to let it answer questions like "is Nervly currently reaching the
-         *     broker?" without giving it shell access.
+         *     token. Every tool is confined to the workspace that owns the key.
          */
         post: operations["invoke-mcp-tool"];
         delete?: never;
@@ -477,6 +483,31 @@ export interface components {
              */
             version: string;
         };
+        /** @description A JSON-RPC 2.0 error object. */
+        JsonRpcError: {
+            /**
+             * Format: int64
+             * @description Numeric error code.
+             * @example -32602
+             */
+            code: number;
+            /** @description Optional structured detail, e.g. the offending parameter. */
+            data?: Record<string, never> | null;
+            /**
+             * @description Short human-readable description.
+             * @example Invalid params
+             */
+            message: string;
+        };
+        /**
+         * @description A JSON-RPC 2.0 correlation id: a string or an integer, echoed back verbatim,
+         *     or `null` when a parse error leaves no id to echo.
+         *
+         *     The spec forbids fractional numbers, so an `i64` is the numeric arm. A
+         *     client that sends `"id": "abc"` gets `"abc"` back rather than an extractor
+         *     rejection.
+         */
+        JsonRpcId: number | string | null;
         /** @description Paginated list of messages. */
         ListMessagesResponse: {
             /** @description Messages matching filters. */
@@ -484,32 +515,39 @@ export interface components {
             /** @description Cursor for fetching the next page, or omitted if at the end. */
             next_cursor?: string | null;
         };
-        /** @description A JSON-RPC style MCP call. */
+        /** @description A JSON-RPC 2.0 request envelope. */
         McpRequest: {
+            id?: null | components["schemas"]["JsonRpcId"];
             /**
              * @description MCP method to invoke. `tools/list` enumerates the available tools;
-             *     `tools/call` executes one. Unknown methods return an error object
-             *     rather than a non-200 status.
-             * @example tools/list
+             *     `tools/call` executes one.
+             * @example tools/call
              */
             method: string;
-            /** @description Method arguments. Shape depends on `method`. */
+            /** @description Method arguments. For `tools/call` this is `{"name": ..., "arguments": ...}`. */
             params?: Record<string, never> | null;
         };
-        /** @description A JSON-RPC style MCP response. */
+        /**
+         * @description A JSON-RPC 2.0 response envelope.
+         *
+         *     Exactly one of `result` or `error` is present. Protocol-level failures are
+         *     still HTTP `200`, as JSON-RPC requires; only a missing or invalid bearer
+         *     token produces a non-2xx status.
+         */
         McpResponse: {
+            error?: null | components["schemas"]["JsonRpcError"];
             /**
-             * Format: int64
-             * @description Correlation id.
+             * @description Echo of the request id (a string or integer), `1` when the request
+             *     omitted one, or `null` when the body was not parseable JSON.
              */
-            id: number;
+            id: components["schemas"]["JsonRpcId"];
             /**
              * @description Protocol version. Always `2.0`.
              * @example 2.0
              */
             jsonrpc: string;
-            /** @description Method result. Shape depends on the method that was invoked. */
-            result: Record<string, never>;
+            /** @description Tool result on success. */
+            result?: Record<string, never> | null;
         };
         /** @description A recorded message in the platform. */
         MessageDto: {
@@ -1106,7 +1144,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Tool result, or an error object for unsupported methods */
+            /** @description Tool result, or a JSON-RPC 2.0 error object */
             200: {
                 headers: {
                     [name: string]: unknown;

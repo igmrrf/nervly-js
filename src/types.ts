@@ -304,16 +304,48 @@ export interface HealthStatus {
 
 // --- MCP ---
 //
-// Mirrors OpenAPI `McpRequest` / `McpResponse`.
+// Mirrors OpenAPI `McpRequest` / `McpResponse` / `JsonRpcError`.
 export interface McpRequest {
 	method: string;
 	params?: Record<string, unknown> | null;
+	id?: JsonRpcId | null;
+}
+
+/** A JSON-RPC 2.0 correlation id: a string, an integer, or `null` on a parse error. */
+export type JsonRpcId = string | number | null;
+
+export interface JsonRpcError {
+	code: number;
+	message: string;
+	data?: Record<string, unknown> | null;
 }
 
 export interface McpResponse {
 	jsonrpc: string;
-	result: unknown;
-	id: number;
+	result?: unknown;
+	error?: JsonRpcError | null;
+	id: JsonRpcId;
+}
+
+/** Every tool the gateway's MCP catalog advertises. */
+export type McpToolName =
+	| "gateway_status"
+	| "idempotency_inspect"
+	| "send_notification"
+	| "check_delivery_status"
+	| "list_templates"
+	| "verify_subscriber_channel";
+
+/** The JSON-Schema-typed description of one MCP tool, as returned by `tools/list`. */
+export interface McpToolDefinition {
+	name: McpToolName | string;
+	description: string;
+	inputSchema: {
+		type: "object";
+		properties: Record<string, unknown>;
+		required?: string[];
+		additionalProperties?: boolean;
+	};
 }
 
 // --- Webhooks ---

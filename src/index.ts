@@ -86,6 +86,38 @@ export class Nervly {
 // Default export
 export default Nervly;
 
+export type {
+	AnthropicTool,
+	JsonSchemaObject,
+	MessagingChannel,
+	NervlyAiToolDefinition,
+	NervlyAiToolkit,
+	NervlyChannelEvaluation,
+	NervlyCheckDeliveryInput,
+	NervlyCheckDeliveryOutput,
+	NervlyDeliveryEvent,
+	NervlyGatewayStatusInput,
+	NervlyGatewayStatusOutput,
+	NervlyIdempotencyInspectInput,
+	NervlyIdempotencyInspectOutput,
+	NervlyListTemplatesInput,
+	NervlyListTemplatesOutput,
+	NervlySendNotificationInput,
+	NervlySendNotificationOutput,
+	NervlyTemplateSummary,
+	NervlyVerifySubscriberInput,
+	NervlyVerifySubscriberOutput,
+	OpenAIFunctionTool,
+	VercelAITool,
+} from "./ai/tools.js";
+// AI tool-calling definitions for OpenAI Function Calling, Anthropic Tool Use
+// and the Vercel AI SDK Core. See `src/ai/tools.js`.
+export {
+	createNervlyAiToolkit,
+	NERVLY_AI_TOOL_DEFINITIONS,
+	toAnthropicTools,
+	toOpenAITools,
+} from "./ai/tools.js";
 // Named re-exports for convenience
 export { NervlyHttpClient } from "./client.js";
 // Re-export all errors — both the long names and their short aliases. Both
@@ -135,10 +167,14 @@ export type {
 	EventItemDto,
 	HealthStatus,
 	HttpMethod,
+	JsonRpcError,
+	JsonRpcId,
 	ListMessagesParams,
 	ListMessagesResponse,
 	McpRequest,
 	McpResponse,
+	McpToolDefinition,
+	McpToolName,
 	MessageDto,
 	NervlyConfig,
 	Priority,

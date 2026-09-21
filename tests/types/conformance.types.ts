@@ -27,10 +27,15 @@ import type {
 	EmailOverride,
 	EventItemDto,
 	HealthStatus,
+	JsonRpcError,
 	ListMessagesResponse,
 	McpRequest,
 	McpResponse,
 	MessageDto,
+	NervlyCheckDeliveryOutput,
+	NervlySendNotificationInput,
+	NervlySendNotificationOutput,
+	NervlyVerifySubscriberOutput,
 	ProviderOverrides,
 	Recipient,
 	SmsOverride,
@@ -109,7 +114,46 @@ type McpRequestFromSpec = WithProp<
 	Record<string, unknown> | null
 >;
 
-type McpResponseFromSpec = WithProp<Spec["McpResponse"], "result", unknown>;
+type JsonRpcErrorFromSpec = WithProp<
+	Spec["JsonRpcError"],
+	"data",
+	Record<string, unknown> | null
+>;
+
+type McpResponseFromSpec = WithProp<
+	WithProp<Spec["McpResponse"], "result", unknown>,
+	"error",
+	JsonRpcErrorFromSpec | null
+>;
+
+/**
+ * The `send_notification` MCP tool input, restated from the `TriggerRequest`
+ * contract. `priority` and `idempotencyKey` are HTTP-header concepts in the
+ * REST API that become call parameters inside a tool call; everything else is
+ * the trigger body verbatim.
+ */
+type SendNotificationInputFromSpec = {
+	name: TriggerRequestFromSpec["name"];
+	to: Spec["RecipientDto"];
+	payload?: TriggerRequestFromSpec["payload"];
+	overrides?: Spec["ProviderOverridesDto"] | null;
+	category?: TriggerRequestFromSpec["category"];
+	priority?: "CRITICAL" | "HIGH" | "NORMAL" | "LOW" | null;
+	idempotencyKey?: string | null;
+};
+
+/** The `check_delivery_status` MCP tool output, restated from `MessageDto`. */
+type CheckDeliveryOutputFromSpec = Omit<Spec["MessageDto"], "events"> & {
+	normalized_code: string;
+	events: Array<{
+		seq: number;
+		status: string;
+		provider?: string | null;
+		detail?: unknown;
+		normalized_code: string;
+		occurred_at: string;
+	}>;
+};
 
 // ─── Requests ───────────────────────────────────────────────────────────────
 
@@ -165,10 +209,30 @@ export type _UserPreferencesResponse = Expect<
 >;
 export type _HealthStatus = Expect<Equal<HealthStatus, Spec["HealthStatus"]>>;
 export type _McpResponse = Expect<Equal<McpResponse, McpResponseFromSpec>>;
+export type _JsonRpcError = Expect<Equal<JsonRpcError, JsonRpcErrorFromSpec>>;
 export type _WebhookPayload = Expect<
 	Equal<WebhookPayload, Spec["GenericWebhookPayload"]>
 >;
 export type _ApiErrorBody = Expect<Equal<ApiErrorBody, Spec["ErrorResponse"]>>;
+
+// ─── AI tool-calling (MCP) ──────────────────────────────────────────────────
+//
+// The AI tool definitions are only trustworthy if their typed inputs are the
+// OpenAPI contract rather than a hand-copied lookalike. `send_notification`
+// must accept exactly a `TriggerRequest`, and `check_delivery_status` and
+// `verify_subscriber_channel` must speak `MessageDto` and `ChannelPreferences`.
+export type _NervlySendNotificationInput = Expect<
+	Equal<NervlySendNotificationInput, SendNotificationInputFromSpec>
+>;
+export type _NervlySendNotificationOutput = Expect<
+	Equal<NervlySendNotificationOutput, Spec["TriggerResponse"]>
+>;
+export type _NervlyCheckDeliveryOutput = Expect<
+	Equal<NervlyCheckDeliveryOutput, CheckDeliveryOutputFromSpec>
+>;
+export type _NervlyVerifyChannels = Expect<
+	Equal<NervlyVerifySubscriberOutput["channels"], Spec["ChannelPreferences"]>
+>;
 
 // Referencing every assertion in one tuple keeps "declared but never used"
 // from hiding an assertion that was accidentally left out of the list.
@@ -194,6 +258,11 @@ export type ConformanceAssertions = [
 	_UserPreferencesResponse,
 	_HealthStatus,
 	_McpResponse,
+	_JsonRpcError,
 	_WebhookPayload,
 	_ApiErrorBody,
+	_NervlySendNotificationInput,
+	_NervlySendNotificationOutput,
+	_NervlyCheckDeliveryOutput,
+	_NervlyVerifyChannels,
 ];

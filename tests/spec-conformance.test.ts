@@ -93,6 +93,7 @@ const MODELLED_SCHEMAS = new Set([
 	"EventItemDto",
 	"GenericWebhookPayload",
 	"HealthStatus",
+	"JsonRpcError",
 	"ListMessagesResponse",
 	"McpRequest",
 	"McpResponse",
