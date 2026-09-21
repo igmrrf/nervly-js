@@ -5,9 +5,10 @@ Parent checklist: [`../nervly-base/checklist.md`](../nervly-base/checklist.md)
 
 ## Promises
 
-Commitments this SDK is accountable for keeping, lifted verbatim from
-[`promises.md`](../promises.md). Section numbers point at the inventory, which is
-canonical; this table is the per-package reference.
+Commitments this SDK is accountable for keeping, lifted verbatim from the promise
+inventory (indexed in
+[`../nervly-base/checklist.md`](../nervly-base/checklist.md)). Section numbers
+resolve in each app's Promises table; this table is the per-package reference.
 
 | § | Promise | Where | Class |
 |---|---|---|---|
