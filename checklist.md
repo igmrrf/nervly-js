@@ -44,10 +44,35 @@ contract; the published compatibility matrix is reconciled with
       test to fail. Last run killed 15/15 (100%); the report is committed at
       [`docs/mutation-report.json`](docs/mutation-report.json) and the table is in
       [`docs/testing_and_conformance.md`](docs/testing_and_conformance.md) §4.
-- [ ] Contract tests against live `nervly-control-plane` (Pact or similar) — *not this ticket.*
-      Today's contract proof is spec-based: the runtime path/schema coverage test plus the
-      compiled type-level assertions against the generated OpenAPI types. A live Pact run
-      against the control plane belongs to a later ticket.
+- [x] Live contract suite against a running gateway router — ticket 27's user
+      ruling (2026-09-21): the live contract is SDK ↔ the live *gateway*
+      (`@nervly/sdk`'s base URL is `api.nervly.io`; it never addresses the
+      control plane — that premise was corrected on both checklists), and
+      **Pact is explicitly declined** for this surface: one consumer, nine
+      operations, and a repo convention of spec-anchored contract checks in CI
+      plus a real journey test for the live path — Pact's broker/verifier
+      workflow buys nothing a booted gateway in CI does not prove. `npm run
+      test:live` (`tests/live-contract.test.ts`, `make test-live`) uses the
+      SDK's **real `fetch`** — no recording fetch, no mocks — against a running
+      gateway (`NERVLY_BASE_URL` + `NERVLY_API_KEY`) and is falsifiable on the
+      wire: an invalid key must map to `NervlyAuthenticationError` (401), a
+      valid trigger must return the promised `202 { eventId, status: "QUEUED" }`
+      shape, one status poll must return the `MessageDto` fields the SDK
+      declares, and one MCP `tools/list` must answer JSON-RPC 2.0 with a tool
+      catalogue. The root orchestration CI's `sdk-live-contract` job boots the
+      full mTLS stack (postgres, redis, NATS, control plane, gateway), issues a
+      key via `control-plane bootstrap-internal`, and runs it; this repo's own
+      CI keeps the stubbed suite, where the live suite skips loudly without the
+      env vars and the cross-repo job fails if that skip reason appears in its
+      log (fail-on-skip discipline, like the e2e job's `--- SKIP` gate).
+      **Narrowed live scope — the five uncovered operations stay spec-level:**
+      `POST /v1/events/bulk`, `GET /v1/messages`,
+      `DELETE /v1/subscribers/{subscriberId}`,
+      `PUT /v1/users/{subscriberId}/preferences` and the inbound
+      `POST /v1/webhooks/{provider}` (providers calling us) are covered by
+      `tests/spec-conformance.test.ts`, `tests/types/conformance.types.ts` and
+      `check:codegen`; they are not exercised live. `GET /v1/health` is live
+      only as the CI job's boot assertion, not in this suite.
 - [x] Voice channel SDK contract (Ticket 59: `src/resources/voice.ts::VoiceResource` compiles `SendVoiceOptions` into `overrides.voice` with script, `voice_id` and language; the `VoiceOverride` and `Channel` wire types live in `src/types.ts`; `tests/contract.test.ts` asserts the built payload's properties exist in the OpenAPI `VoiceOverrideDto`/`ProviderOverridesDto.voice` schemas.)
 - [x] Type-level tests (expect-type / tsd) for public API surface —
       `tests/types/conformance.types.ts`, compiled by `npm run check:types`. Equal<A, B>
@@ -99,12 +124,26 @@ contract; the published compatibility matrix is reconciled with
       inside the tarball, and `npm run check:release` asserts its required sections exist.
 
 ## Documentation (external)
-- [ ] README quickstart matches `nervly-docs` — **no automated gate exists** for this: the
-      two quickstarts are reconciled by hand, not diffed in CI, so the box stays unchecked.
-      The README was corrected here in ticket 12 (which owns the customer-facing portal)
-      where it described methods that do not exist, and it now carries the "webhooks are
-      not sent yet" warning. Making this a checked box requires a cross-repo gate that
-      compares the README snippet against the committed docs quickstart; that gate is not
-      present in `nervly-js/.github/workflows/ci.yml` or `make docs-check`.
+- [x] README quickstart matches `nervly-docs` — closed by ticket 27's sibling
+      ruling: a separate, smaller gate (this repo's own CI), not the same fix as
+      the live contract test (the root cross-repo job). `npm run check:readme`
+      (`make readme`, wired into `.github/workflows/ci.yml` next to the other
+      `check:` gates) does both halves, following the proven
+      `nervly-docs/scripts/check-quickstart.mjs` pattern: (i) every
+      `typescript` fenced block in README.md is extracted into
+      `docs/readme-snippets/` and type-checked against the SDK sources through
+      `tsconfig.check.json` — the same mechanism `examples/**` already get, so
+      a snippet naming a method, field or option the SDK does not ship fails
+      the build; the one placeholder fence (`{ /* ... */ }`) is skipped by
+      name; (ii) the README's documented base URL, `@nervly/sdk` version pins
+      and Node floor, plus the "does not send outbound delivery webhooks yet"
+      warning, must agree with the committed portal content
+      (`content/quickstart.md`, `content/reference/sdk.md`, and the
+      outbound-webhooks roadmap in `content/guides/delivery-receipts.md`) — the
+      same string-level agreement `check-sdk-version.mjs` enforces on the
+      portal side. Both halves verified falsifiable: a renamed README method
+      (`events.fetch`) and a drifted base URL each fail the gate. The README
+      still carries the "webhooks are not sent yet" warning, and the gate fails
+      if the portal's roadmap ever flips while the warning stays stale.
 - [x] Examples (`examples/`) tested in CI — `examples/**/*` is inside `tsconfig.check.json`,
       so `npm run check:types` fails when an example stops type-checking against the API.

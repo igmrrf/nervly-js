@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .security-reports/
+docs/readme-snippets/
 *.tsbuildinfo
 *.log
 .DS_Store

@@ -1,7 +1,16 @@
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"noEmit": true
+		"noEmit": true,
+		"paths": {
+			"@nervly/sdk": ["./src/index.ts"]
+		}
 	},
-	"include": ["src/**/*", "tests/**/*", "examples/**/*", "scripts/**/*"]
+	"include": [
+		"src/**/*",
+		"tests/**/*",
+		"examples/**/*",
+		"scripts/**/*",
+		"docs/readme-snippets/**/*"
+	]
 }

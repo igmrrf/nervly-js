@@ -9,7 +9,7 @@
 # `make test-unit` and `make test-mutation` run them individually.
 
 .PHONY: help deps install build codegen check-codegen check-types check changelog deprecations \
-	release exports test test-unit test-coverage test-mutation audit sbom verify ci dev hooks clean
+	release exports readme test test-unit test-coverage test-mutation test-live audit sbom verify ci dev hooks clean
 
 help:
 	@echo "nervly-js (SDK) commands:"
@@ -21,8 +21,10 @@ help:
 	@echo "  make test-unit      - unit tests with the 80%% coverage floor"
 	@echo "  make test-mutation  - seeded mutation test"
 	@echo "  make exports        - dual ESM/CJS packaging gate"
+	@echo "  make readme         - README gate (snippets type-check + docs agreement)"
 	@echo "  make audit          - npm audit (runtime deps, high+)"
 	@echo "  make sbom           - generate the release SBOM"
+	@echo "  make test-live      - live contract suite (needs NERVLY_BASE_URL/NERVLY_API_KEY)"
 	@echo "  make verify         - check + test"
 	@echo "  make ci             - local mirror of this repo's CI job"
 	@echo "  make dev            - run the SDK dev entrypoint"
@@ -67,6 +69,9 @@ release:
 exports:
 	npm run check:exports
 
+readme:
+	npm run check:readme
+
 check:
 	npm run check
 
@@ -81,6 +86,11 @@ test-coverage: test-unit
 test-mutation:
 	npm run test:mutation
 
+# The live contract suite (root CI's sdk-live-contract job runs it against a
+# booted stack). Locally: point NERVLY_BASE_URL at a running gateway.
+test-live:
+	npm run test:live
+
 audit:
 	npm run audit
 
@@ -90,7 +100,7 @@ sbom:
 verify:
 	npm run verify
 
-ci: check test audit sbom exports
+ci: check test audit sbom exports readme
 	@echo "==> nervly-js CI steps complete."
 
 dev:

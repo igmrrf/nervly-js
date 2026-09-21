@@ -61,6 +61,14 @@ jobs:
           npm install
           npm run check
           npm test
+      # README-as-tested gate (checklist.md Documentation#01): the README's
+      # typescript snippets are extracted and type-checked against the SDK
+      # sources through tsconfig.check.json (like examples/**), and its
+      # documented base URL / version / webhooks warning must agree with the
+      # nervly-docs content — the sibling checkout above is the fixture for
+      # both halves.
+      - name: sdk README gate (snippets + docs agreement)
+        run: npm run check:readme
       # Supply-chain floor (Ticket 20): the runtime dependency audit and the
       # release SBOM run on every push, and the tagged release workflow
       # (.github/workflows/release.yml) re-runs both before publishing.
