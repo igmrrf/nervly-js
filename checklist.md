@@ -25,7 +25,7 @@ contract; the published compatibility matrix is reconciled with
 `scripts/check-release` / `check:deprecations` / `check:changelog`.
 
 ## Tests
-- [x] Unit tests on all public methods, retries, error mapping — 295 tests across
+- [x] Unit tests on all public methods, retries, error mapping — 331 tests across
       `tests/*.test.ts`; every resource method over 2xx/4xx/5xx, both retry paths
       (success after a 503, exhaustion), immediate failure on 401/403/422, all
       status→error mappings, exponential backoff + jitter boundaries, real
@@ -34,7 +34,11 @@ contract; the published compatibility matrix is reconciled with
       runs the suite under Node's V8 coverage scoped to `src/**/*.ts` with
       `--test-coverage-include-all` (type-only `src/types.ts` and
       `src/generated/**` excluded), and fails below 80% line, branch, or function
-      coverage. Last run: 99.44% lines, 94.71% branches, 100% functions.
+      coverage. Last run (2026-09-22, conformance audit): 89.45% lines, 93.55%
+      branches, 100% functions — the drop from the previously recorded 99.44/94.71
+      is the AI tool-calling module (`src/ai/tools.ts`, 71.86% lines: its
+      type-only surface is covered by `check:types`, not runtime tests) landing
+      after the last recorded run, still above the 80% floor.
       `npm test` runs this gate, so the CI step that runs `npm test` fails when
       coverage drops.
 - [x] Mutation testing — `npm run test:mutation` (`scripts/mutation-test.mjs`)
@@ -71,8 +75,12 @@ contract; the published compatibility matrix is reconciled with
       `PUT /v1/users/{subscriberId}/preferences` and the inbound
       `POST /v1/webhooks/{provider}` (providers calling us) are covered by
       `tests/spec-conformance.test.ts`, `tests/types/conformance.types.ts` and
-      `check:codegen`; they are not exercised live. `GET /v1/health` is live
-      only as the CI job's boot assertion, not in this suite.
+      `check:codegen`; they are not exercised live.       only as the CI job's boot assertion, not in this suite. Re-executed
+      2026-09-22 by the nervly-js conformance audit against a locally booted
+      mTLS stack (gateway image from `nervly-gate` 3cfc7f9, control plane from
+      `nervly-control` 80c531c, TLS-only Postgres/Redis/NATS, `bootstrap-internal`
+      key): 4/4 wire legs pass, 0 skip, and the MCP `tools/list` leg returned
+      the six-tool catalogue verbatim.
 - [x] Voice channel SDK contract (Ticket 59: `src/resources/voice.ts::VoiceResource` compiles `SendVoiceOptions` into `overrides.voice` with script, `voice_id` and language; the `VoiceOverride` and `Channel` wire types live in `src/types.ts`; `tests/contract.test.ts` asserts the built payload's properties exist in the OpenAPI `VoiceOverrideDto`/`ProviderOverridesDto.voice` schemas.)
 - [x] Type-level tests (expect-type / tsd) for public API surface —
       `tests/types/conformance.types.ts`, compiled by `npm run check:types`. Equal<A, B>

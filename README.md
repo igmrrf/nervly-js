@@ -178,7 +178,7 @@ console.log('API Status:', health.status);
 
 #### `nervly.mcp.listTools()` & `nervly.mcp.callTool(params)`
 
-Interact with MCP diagnostic tools.
+Call the gateway's MCP tools (diagnostics and `send_notification`).
 Maps to `POST /v1/mcp`.
 
 ```typescript
