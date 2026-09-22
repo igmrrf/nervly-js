@@ -75,8 +75,9 @@ contract; the published compatibility matrix is reconciled with
       `PUT /v1/users/{subscriberId}/preferences` and the inbound
       `POST /v1/webhooks/{provider}` (providers calling us) are covered by
       `tests/spec-conformance.test.ts`, `tests/types/conformance.types.ts` and
-      `check:codegen`; they are not exercised live.       only as the CI job's boot assertion, not in this suite. Re-executed
-      2026-09-22 by the nervly-js conformance audit against a locally booted
+      `check:codegen`; they are not exercised live. `GET /v1/health` is
+      exercised live only as the CI job's boot assertion, not in this suite.
+      Re-executed 2026-09-22 by the nervly-js conformance audit against a locally booted
       mTLS stack (gateway image from `nervly-gate` 3cfc7f9, control plane from
       `nervly-control` 80c531c, TLS-only Postgres/Redis/NATS, `bootstrap-internal`
       key): 4/4 wire legs pass, 0 skip, and the MCP `tools/list` leg returned
