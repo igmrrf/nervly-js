@@ -193,10 +193,18 @@ console.log(tools);
 Verify incoming provider webhooks securely via timing-safe HMAC-SHA256.
 
 > [!NOTE]
-> **Nervly does not send outbound delivery webhooks yet.** Poll
+> **Nervly does not send direct outbound delivery webhooks yet.** Poll
 > `events.get(eventId)` or `messages.list()` for delivery state. These helpers
-> ship ahead of the feature so integrations written today keep working when it
-> lands; nothing will arrive at your endpoint until then.
+> ship ahead of direct delivery so integrations written today keep working when
+> it lands; nothing will arrive at your endpoint until then.
+>
+> At launch, real delivery events reach your machine through the local CLI's
+> forwarding tunnel — `nervly forward webhooks --to <url>` (part of
+> `@nervly/cli`) dials out to a Nervly-operated relay, receives the delivery
+> events, and re-signs them locally with the secret in your CLI secret store.
+> The tunnel is a consumer of the delivery stream, not a second webhook
+> product; the helpers below verify its locally re-signed payloads the same way
+> they will verify direct outbound webhooks.
 
 ```typescript
 import express from 'express';

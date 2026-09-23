@@ -171,6 +171,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/relay/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledges one relay event, removing it from the workspace's buffer.
+         * @description The tunnel calls this after it has handed the event to the local receiver,
+         *     which is what makes redelivery at-least-once rather than at-most-once: an
+         *     event whose acknowledgement never arrives stays buffered and is re-sent on
+         *     the next reconnect. Scoped to the caller's workspace, so a tunnel can never
+         *     acknowledge another workspace's event.
+         */
+        post: operations["relay_ack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relay/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accepts a recorded delivery event into the workspace's relay buffer.
+         * @description This is the event-posting path the platform's delivery pipeline writes to:
+         *     the worker posts each recorded delivery-ledger row here, and a connected
+         *     tunnel for the same workspace receives it. The hop is internal and
+         *     authenticated by the shared `X-Nervly-Relay-Secret` header, not a workspace
+         *     API key — the caller is the platform, not a tenant. The `workspace_id` in
+         *     the body is therefore trusted from the authenticated pipeline, and the
+         *     buffer is keyed by it.
+         *
+         *     Idempotent on `delivery_id`: a pipeline retry after an ambiguous response
+         *     does not enqueue a second copy.
+         */
+        post: operations["relay_ingest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relay/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reports the caller's workspace relay delivery state.
+         * @description Answers "is the relay healthy for me": how many recorded delivery events
+         *     are buffered and awaiting a tunnel, and the pinned window and poll cadence
+         *     the tunnel operates under.
+         */
+        get: operations["relay_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relay/tunnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The authenticated, workspace-scoped tunnel a CLI dials out to.
+         * @description The CLI opens a long-lived Server-Sent Events connection authenticated with
+         *     the resolved environment's API key. The gateway streams recorded delivery
+         *     events for **that workspace only** as `delivery` frames, each carrying its
+         *     `delivery_id` as the SSE event id. The CLI acknowledges each frame with
+         *     [`relay_ack`]. A tunnel opened with workspace A's key can never observe
+         *     workspace B's events — the buffer is read under A's workspace key.
+         *
+         *     Events posted while no tunnel is connected are buffered and replayed on the
+         *     next connection inside the pinned redelivery window; the relay never
+         *     synthesizes an event and never mints a platform-signed outbound scheme.
+         */
+        get: operations["relay_tunnel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/subscribers/{subscriberId}": {
         parameters: {
             query?: never;
@@ -686,6 +790,80 @@ export interface components {
              * @example user_8f21c
              */
             subscriberId: string;
+        };
+        /** @description The tunnel's acknowledgement of one delivered event. */
+        RelayAckRequest: {
+            /** @description The `delivery_id` of the event being acknowledged. */
+            delivery_id: string;
+        };
+        /** @description Response to a successful acknowledgement. */
+        RelayAckResponse: {
+            /** @description Always `true` on a 200. */
+            acked: boolean;
+        };
+        /**
+         * @description A recorded delivery-ledger event travelling the relay.
+         *
+         *     This is the tunnel's wire payload: the CLI hands the exact `detail` body to
+         *     the developer's local receiver, re-signed locally (the relay never mints a
+         *     platform-signed outbound scheme). It carries the delivery ledger's status
+         *     and metadata, never the recipient — the same posture the delivery ledger
+         *     holds.
+         */
+        RelayEvent: {
+            /** @description Channel the attempt used, when known (`sms`, `email`, …). */
+            channel?: string | null;
+            /**
+             * @description Stable idempotency id for this ledger event, chosen by the delivery
+             *     pipeline. A redelivered POST with the same id is a no-op.
+             */
+            delivery_id: string;
+            /** @description The ledger row's `detail` object, carried verbatim. */
+            detail?: Record<string, never>;
+            /** @description The trigger event's id (`evt_…`), the ledger's `event_id`. */
+            event_id: string;
+            /**
+             * Format: date-time
+             * @description When the ledger row was recorded.
+             */
+            occurred_at: string;
+            /** @description Provider that produced the outcome, when known. */
+            provider?: string | null;
+            /** @description Delivery status: `DELIVERED`, `FAILED` or `SUPPRESSED`. */
+            status: string;
+            /**
+             * Format: uuid
+             * @description Workspace the ledger row belongs to. The tunnel is scoped to it.
+             */
+            workspace_id: string;
+        };
+        /** @description Response to an accepted relay event. */
+        RelayIngestResponse: {
+            /** @description Always `true` on a 202: the event is durably buffered. */
+            accepted: boolean;
+            /**
+             * @description `true` when an event with the same delivery id was already buffered
+             *     (a pipeline retry); the buffer is unchanged.
+             */
+            duplicate: boolean;
+        };
+        /** @description The per-workspace delivery state a tunnel can inspect. */
+        RelayStatusResponse: {
+            /**
+             * Format: int64
+             * @description Events currently buffered for the caller's workspace and not yet acked.
+             */
+            buffered: number;
+            /**
+             * Format: int64
+             * @description How often a connected tunnel polls the buffer, in milliseconds.
+             */
+            poll_interval_ms: number;
+            /**
+             * Format: int64
+             * @description The pinned redelivery window, in seconds.
+             */
+            redelivery_window_seconds: number;
         };
         /** @description Per-request overrides for the SMS channel. */
         SmsOverrideDto: {
@@ -1240,6 +1418,151 @@ export interface operations {
             };
         };
     };
+    relay_ack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelayAckRequest"];
+            };
+        };
+        responses: {
+            /** @description Event acknowledged and removed from the buffer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelayAckResponse"];
+                };
+            };
+            /** @description Missing or invalid API key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    relay_ingest: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Shared secret authenticating the platform's delivery pipeline. */
+                "X-Nervly-Relay-Secret": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelayEvent"];
+            };
+        };
+        responses: {
+            /** @description Event durably buffered for the workspace's tunnel. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelayIngestResponse"];
+                };
+            };
+            /** @description Malformed event body. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Missing or invalid relay ingest secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Relay ingest is not configured on this deployment. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    relay_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The workspace's relay delivery state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelayStatusResponse"];
+                };
+            };
+            /** @description Missing or invalid API key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    relay_tunnel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A Server-Sent Events stream of delivery events for the authenticated workspace. Each `delivery` frame's `id` is the event's `delivery_id`, acknowledged via POST /v1/relay/ack. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description Missing or invalid API key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     "erase-subscriber": {
         parameters: {
             query?: never;
@@ -1382,8 +1705,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Encoding or broker failure */
+            /** @description Protobuf or JSON encoding failure */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Broker unavailable or the receipt could not be published; the provider should retry */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

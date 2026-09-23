@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-23T01:42:56.730Z",
+  "generatedAt": "2026-09-23T12:22:21.904Z",
   "runner": "node:test via tsx (targeted condition inversion)",
   "tool": "scripts/mutation-test.mjs",
   "total": 15,

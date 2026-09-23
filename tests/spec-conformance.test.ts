@@ -73,6 +73,28 @@ const NOT_CALLED_BY_SDK: Record<string, string> = {
 };
 
 /**
+ * Operations the gateway serves that are deliberately **not an SDK surface**.
+ *
+ * The hosted webhook relay/tunnel (ticket 69) is the transport `@nervly/cli`
+ * uses for `nervly forward webhooks`; it is consumed by the CLI, never by
+ * `@nervly/sdk`, and `POST /v1/relay/events` is the platform's internal
+ * delivery-pipeline ingest. The SDK therefore neither calls them nor models
+ * their request/response bodies, and the conformance tests below must not
+ * demand a client method for them. An entry that the SDK later starts calling,
+ * or that leaves the spec, fails the guard test.
+ */
+const NOT_AN_SDK_SURFACE: Record<string, string> = {
+	"GET /v1/relay/tunnel":
+		"hosted CLI relay tunnel; consumed by @nervly/cli, not the SDK",
+	"POST /v1/relay/ack":
+		"hosted CLI relay acknowledgement; consumed by @nervly/cli, not the SDK",
+	"GET /v1/relay/status":
+		"hosted CLI relay status; consumed by @nervly/cli, not the SDK",
+	"POST /v1/relay/events":
+		"internal delivery-pipeline ingest; not a customer-facing API surface",
+};
+
+/**
  * Every OpenAPI component the SDK declares a TypeScript equivalent for.
  *
  * `tests/types/conformance.types.ts` proves each of these matches the generated
@@ -146,6 +168,7 @@ describe("SDK OpenAPI Spec Conformance", () => {
 		for (const [path, methods] of Object.entries(openApiSpec.paths)) {
 			for (const method of HTTP_METHODS) {
 				if (!(method in methods)) continue;
+				if (NOT_AN_SDK_SURFACE[`${method.toUpperCase()} ${path}`]) continue;
 
 				const accessor = CONFORMANCE_MAP[path]?.[method];
 				if (!accessor) {
@@ -196,7 +219,7 @@ describe("SDK OpenAPI Spec Conformance", () => {
 				if (!operation) continue;
 
 				const key = `${method.toUpperCase()} ${path}`;
-				if (NOT_CALLED_BY_SDK[key]) continue;
+				if (NOT_CALLED_BY_SDK[key] || NOT_AN_SDK_SURFACE[key]) continue;
 
 				for (const schema of referencedSchemas(operation)) {
 					if (!MODELLED_SCHEMAS.has(schema)) {
@@ -233,6 +256,27 @@ describe("SDK OpenAPI Spec Conformance", () => {
 			assert.ok(
 				mapped,
 				`${key} is skipped for schema coverage but is not in CONFORMANCE_MAP`,
+			);
+		}
+
+		// The same guard for the not-an-SDK-surface list: every entry must still
+		// exist in the spec, and must not be an operation the SDK calls (an
+		// entry that became a real SDK surface is a stale excuse).
+		for (const key of Object.keys(NOT_AN_SDK_SURFACE)) {
+			const [method, path] = key.split(" ");
+			const operation =
+				openApiSpec.paths[path ?? ""]?.[(method ?? "").toLowerCase()];
+			assert.ok(
+				operation,
+				`${key} is listed in NOT_AN_SDK_SURFACE but is not in the spec`,
+			);
+
+			const mapped =
+				CONFORMANCE_MAP[path ?? ""]?.[(method ?? "").toLowerCase()];
+			assert.equal(
+				mapped,
+				undefined,
+				`${key} is listed in NOT_AN_SDK_SURFACE but the SDK maps it in CONFORMANCE_MAP`,
 			);
 		}
 	});

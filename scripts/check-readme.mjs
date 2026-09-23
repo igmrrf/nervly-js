@@ -242,22 +242,37 @@ if (sdkPage !== null) {
 	);
 }
 
-// The "webhooks are not sent yet" warning must still be true on both sides:
-// the README carries it, and the portal still documents outbound webhooks as
-// outside the launch surface. When the portal flips to shipping webhooks, the
-// README warning is stale and this gate fails until both tell the same story.
-if (!/does not send outbound delivery webhooks yet/.test(readme)) {
+// The outbound-webhook story must be true on both sides and tell one story.
+// Since ticket 69 the hosted CLI relay/tunnel delivers real delivery events at
+// v1, so the old blanket "Nervly does not send outbound delivery webhooks yet"
+// wording is stale: **direct** outbound webhooks remain outside the launch
+// surface (Month 6+), and both the README and the portal must name the
+// launch-scope tunnel. When either side flips, this gate fails until both
+// agree again.
+if (!/does not send direct outbound delivery webhooks yet/.test(readme)) {
 	findings.push(
-		"README no longer carries the 'does not send outbound delivery webhooks yet' warning",
+		"README no longer carries the 'does not send direct outbound delivery webhooks yet' warning",
+	);
+}
+if (!/nervly forward webhooks/.test(readme)) {
+	findings.push(
+		"README does not name the launch-scope CLI tunnel ('nervly forward webhooks'); the README and portal must tell one story about outbound delivery",
 	);
 }
 if (deliveryReceipts !== null || messageStatus !== null) {
 	const deferred = (text) =>
 		text !== null &&
 		text.includes("not** part of the launch surface");
+	const namesTunnel = (text) =>
+		text !== null && text.includes("nervly forward webhooks");
 	if (!deferred(deliveryReceipts) && !deferred(messageStatus)) {
 		findings.push(
-			"nervly-docs no longer documents outbound webhooks as outside the launch surface; the README's warning must be reconciled with it",
+			"nervly-docs no longer documents direct outbound webhooks as outside the launch surface; the README's warning must be reconciled with it",
+		);
+	}
+	if (!namesTunnel(deliveryReceipts) && !namesTunnel(messageStatus)) {
+		findings.push(
+			"nervly-docs no longer names the launch-scope CLI tunnel ('nervly forward webhooks'); the README's tunnel note must be reconciled with it",
 		);
 	}
 }
