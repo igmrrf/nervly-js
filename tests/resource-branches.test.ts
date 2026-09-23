@@ -277,8 +277,8 @@ describe("EventsResource.trigger — header branches", () => {
 	});
 });
 
-describe("McpResource.callTool — branch", () => {
-	it("sends params: null when called without arguments", async () => {
+describe("McpResource.callTool — params contract", () => {
+	it("forwards the caller's tool-call params rather than coercing them to null", async () => {
 		const captured = recorder<Record<string, unknown>>();
 
 		const mcp = new McpResource(
@@ -290,8 +290,14 @@ describe("McpResource.callTool — branch", () => {
 			}),
 		);
 
-		await mcp.callTool();
+		await mcp.callTool({ name: "gateway_status", arguments: {} });
 		assert.equal(captured.last?.method, "tools/call");
-		assert.equal(captured.last?.params, null);
+		// A null params is rejected by the gateway's tools/call handler with
+		// JSON-RPC -32602, so the SDK must never synthesize one.
+		assert.notEqual(captured.last?.params, null);
+		assert.deepEqual(captured.last?.params, {
+			name: "gateway_status",
+			arguments: {},
+		});
 	});
 });

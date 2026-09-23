@@ -145,11 +145,11 @@ type-only files `src/types.ts` and `src/generated/gateway.ts` are excluded —
 they have no runtime statements to cover. The thresholds are aggregate, so a
 single tiny unimported module can be visible in the report yet not enough to
 push the total below 80%; the include-all flag is what guarantees visibility
-rather than silence. The last verified run (331 tests, 2026-09-22):
+rather than silence. The last verified run (333 tests, 2026-09-23):
 
 | Metric | Result | Threshold |
 | --- | --- | --- |
-| Lines | 89.45% | 80% |
+| Lines | 89.55% | 80% |
 | Branches | 93.55% | 80% |
 | Functions | 100.00% | 80% |
 
@@ -160,6 +160,15 @@ for `src/types.ts` and `src/generated/**`, so its runtime half — the catalog,
 the strict-schema transforms and the toolkit factory — shows up in the
 aggregate), and it sits above the floor without weakening any other file's
 signal.
+
+`tests/example-wire.test.ts` pins the runnable example (`examples/basic-usage.ts`)
+at the wire level rather than the type level: it boots a real `node:http` stub,
+drives the example's exported `runBasicUsage`, and asserts the captured MCP
+`tools/call` body's `params` is `{ name: "gateway_status", arguments: {} }` (a
+`params: null` regression fails it) and that `signatureValid` is a boolean (a
+dropped `await` on `verifySignature` fails it). It never skips, so it runs in
+`npm test`; the same call is re-proved against a booted gateway by
+`tests/live-contract.test.ts` when its env is present.
 
 `tests/http-contract.test.ts` is what lifts the branch signal: it drives the
 real `NervlyHttpClient` against a scripted `fetch` for every public method
