@@ -596,8 +596,11 @@ export interface components {
             events?: components["schemas"]["EventItemDto"][] | null;
             /**
              * Format: int32
-             * @description Priority level (0 = Critical, 1 = High, 2 = Normal, 3 = Low).
-             * @example 1
+             * @description Priority level as the Protobuf `Priority` smallint that the trigger
+             *     handler writes into `messages.priority` (`1 = CRITICAL`, `2 = HIGH`,
+             *     `3 = NORMAL`, `4 = LOW`; `0` is `UNSPECIFIED`, matching
+             *     `packages/proto/proto/event.proto`).
+             * @example 3
              */
             priority: number;
             /**
