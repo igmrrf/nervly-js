@@ -27,6 +27,9 @@
  *   2. valid trigger → the promised `202 { eventId, status: "QUEUED" }` shape
  *   3. one status poll → `GET /v1/events/{eventId}` (`MessageDto` on the wire)
  *   4. one MCP `tools/list` call → JSON-RPC `2.0` tool catalogue
+ *   5. one MCP `tools/call` gateway_status call → JSON-RPC `2.0`, no error
+ *      (the example's exact call; a `params:null` regression fails here)
+ *   6. `await verifySignature` → a real boolean
  *
  * The remaining five operations (`POST /v1/events/bulk`, `GET /v1/messages`,
  * `DELETE /v1/subscribers/{subscriberId}`, `PUT /v1/users/{subscriberId}/preferences`,
@@ -39,7 +42,9 @@
  */
 
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import { describe, it } from "node:test";
+import { GATEWAY_STATUS_TOOL_CALL } from "../examples/basic-usage.js";
 import { Nervly, NervlyAuthenticationError } from "../src/index.js";
 
 const BASE_URL = process.env.NERVLY_BASE_URL;
@@ -187,5 +192,65 @@ describe("SDK live contract — real fetch against a running gateway", {
 				`tool ${String(tool.name)} must declare an input schema`,
 			);
 		}
+	});
+
+	it("calls the example's MCP gateway_status tool and gets no JSON-RPC error", async () => {
+		// The example's exact call (`examples/basic-usage.ts`): `tools/call`
+		// with `{ name: "gateway_status", arguments: {} }`. A `params:null`
+		// regression is rejected by the gateway with -32602 and fails here.
+		const response = await nervly.mcp.callTool(GATEWAY_STATUS_TOOL_CALL);
+
+		assert.equal(
+			response.jsonrpc,
+			"2.0",
+			"MCP tools/call must answer as JSON-RPC 2.0 on the wire",
+		);
+		assert.ok(
+			response.error == null,
+			`tools/call gateway_status must not fail: ${JSON.stringify(response.error)}`,
+		);
+		const result = response.result as { service?: unknown } | undefined;
+		assert.equal(
+			result?.service,
+			"nervly-gateway",
+			`gateway_status must report the running service, got ${JSON.stringify(response.result)}`,
+		);
+	});
+
+	it("awaits webhook signature verification and receives a real boolean", async () => {
+		const secret = "whsec_live_contract_probe";
+		const payload = JSON.stringify({
+			message_id: "msg_live_contract",
+			status: "delivered",
+			channel: "sms",
+		});
+		const signature = createHmac("sha256", secret)
+			.update(payload)
+			.digest("hex");
+
+		const valid = await nervly.webhooks.verifySignature({
+			provider: "termii",
+			payload,
+			signature,
+			secret,
+		});
+		assert.equal(
+			typeof valid,
+			"boolean",
+			"verifySignature must resolve to a boolean, not a pending Promise",
+		);
+		assert.equal(valid, true, "the matching HMAC must verify as true");
+
+		const tampered = await nervly.webhooks.verifySignature({
+			provider: "termii",
+			payload,
+			signature: "0".repeat(64),
+			secret,
+		});
+		assert.equal(
+			tampered,
+			false,
+			"a wrong same-length HMAC must verify as false",
+		);
 	});
 });

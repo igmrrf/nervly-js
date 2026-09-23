@@ -10,9 +10,16 @@
  * - MCP tool inspection
  * - Webhook signature verification
  * - Error handling
+ *
+ * The operations live in the exported {@link runBasicUsage} function so a test
+ * can drive them against a stub gateway and assert what actually goes on the
+ * wire (`tests/example-wire.test.ts`); running the file directly still performs
+ * the documented `npx tsx examples/basic-usage.ts` journey.
  */
 
 import { createHmac } from "node:crypto";
+import { realpathSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import Nervly, {
 	NervlyApiError,
 	NervlyAuthenticationError,
@@ -22,17 +29,43 @@ import Nervly, {
 	NervlyValidationError,
 } from "../src/index.js";
 
-// ─────────────────────────────────────────────────────────────────
-// 1. Initialize the Nervly Client
-// ─────────────────────────────────────────────────────────────────
-const nervly = new Nervly({
-	apiKey: process.env.NERVLY_API_KEY || "nv_test_1234567890abcdef",
-	baseUrl: process.env.NERVLY_BASE_URL || "http://localhost:8080",
-	timeout: 5000, // 5s request timeout
-	maxRetries: 3, // retry up to 3 times on transient failures
-});
+/**
+ * The exact `tools/call` params the example documents for `gateway_status`.
+ * Exported so the tests pin the example's wire call rather than a paraphrase.
+ */
+export const GATEWAY_STATUS_TOOL_CALL: {
+	name: string;
+	arguments: Record<string, unknown>;
+} = {
+	name: "gateway_status",
+	arguments: {},
+};
 
-async function main() {
+/** What {@link runBasicUsage} read back from the gateway, for test assertions. */
+export interface BasicUsageResult {
+	healthStatus: string;
+	eventId: string;
+	batchJobId: string;
+	subscriberId: string;
+	mcpGatewayStatus: unknown;
+	signatureValid: boolean;
+}
+
+function createClient(): Nervly {
+	return new Nervly({
+		apiKey: process.env.NERVLY_API_KEY || "nv_test_1234567890abcdef",
+		baseUrl: process.env.NERVLY_BASE_URL || "http://localhost:8080",
+		timeout: 5000, // 5s request timeout
+		maxRetries: 3, // retry up to 3 times on transient failures
+	});
+}
+
+/**
+ * Run every documented operation against `nervly`. Throws on a genuine
+ * failure — including a JSON-RPC error the gateway returns inside an HTTP 200
+ * — so the caller exits non-zero instead of printing a success banner.
+ */
+export async function runBasicUsage(nervly: Nervly): Promise<BasicUsageResult> {
 	console.log("╔══════════════════════════════════════════╗");
 	console.log("║       @nervly/sdk  —  Basic Usage         ║");
 	console.log("╚══════════════════════════════════════════╝\n");
@@ -136,7 +169,18 @@ async function main() {
 	console.log(`  MCP Response:`, JSON.stringify(mcpTools.result, null, 2));
 
 	console.log("\n▸ Calling MCP tool...");
-	const mcpStatus = await nervly.mcp.callTool();
+	// `tools/call` requires `{ name, arguments }`; the gateway rejects a null
+	// params with JSON-RPC -32602. The SDK's callTool signature now requires it.
+	const mcpStatus = await nervly.mcp.callTool(GATEWAY_STATUS_TOOL_CALL);
+	if (mcpStatus.error) {
+		// A JSON-RPC error arrives inside an HTTP 200. Surface it so the process
+		// exits non-zero instead of printing a success banner over a failure.
+		throw new NervlyApiError(
+			200,
+			"MCP_JSONRPC_ERROR",
+			`MCP tools/call failed with JSON-RPC ${mcpStatus.error.code}: ${mcpStatus.error.message}`,
+		);
+	}
 	console.log(
 		`  Gateway Status:`,
 		JSON.stringify(mcpStatus.result, null, 2),
@@ -160,8 +204,9 @@ async function main() {
 		.update(rawPayload)
 		.digest("hex");
 
-	// Verify signature (what you'd do in an Express/Fastify handler)
-	const isValid = nervly.webhooks.verifySignature({
+	// Verify signature (what you'd do in an Express/Fastify handler).
+	// `verifySignature` is async — without `await` this logs `[object Promise]`.
+	const isValid = await nervly.webhooks.verifySignature({
 		provider: "termii",
 		payload: rawPayload,
 		signature: webhookSignature,
@@ -176,12 +221,25 @@ async function main() {
 	console.log(`  Latency: ${parsedEvent.latency_ms}ms\n`);
 
 	console.log("✓ All operations completed successfully!");
+
+	return {
+		healthStatus: health.status,
+		eventId: event.eventId,
+		batchJobId: batchJob.jobId,
+		subscriberId: prefs.subscriberId,
+		mcpGatewayStatus: mcpStatus.result,
+		signatureValid: isValid,
+	};
+}
+
+async function main(): Promise<void> {
+	await runBasicUsage(createClient());
 }
 
 // ─────────────────────────────────────────────────────────────────
 // Error Handling
 // ─────────────────────────────────────────────────────────────────
-main().catch((error) => {
+function reportError(error: unknown): void {
 	console.error("\n╔══════════════════════════════════════════╗");
 	console.error("║          Error Occurred                   ║");
 	console.error("╚══════════════════════════════════════════╝\n");
@@ -208,4 +266,14 @@ main().catch((error) => {
 	}
 
 	process.exit(1);
-});
+}
+
+// Only run when this file is the entry point (`npx tsx examples/basic-usage.ts`),
+// so importing it from a test does not fire requests or call `process.exit`.
+const invokedDirectly =
+	process.argv[1] !== undefined &&
+	import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+
+if (invokedDirectly) {
+	main().catch(reportError);
+}

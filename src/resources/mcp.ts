@@ -16,13 +16,21 @@ export class McpResource {
 	}
 
 	/**
-	 * Call an MCP tool to inspect gateway status.
+	 * Call an MCP tool.
 	 * Maps to: POST /v1/mcp with method='tools/call'
+	 *
+	 * `params` is required: the gateway's `tools/call` handler deserializes
+	 * `{ name, arguments }` and rejects a null params with JSON-RPC `-32602`,
+	 * so a no-argument call is never valid. Typing it as required makes the
+	 * former `callTool()` footgun a compile error.
 	 */
-	async callTool(params?: unknown): Promise<McpResponse> {
+	async callTool(params: {
+		name: string;
+		arguments?: Record<string, unknown>;
+	}): Promise<McpResponse> {
 		return this.client.post<McpResponse>("/v1/mcp", {
 			method: "tools/call",
-			params: params ?? null,
+			params,
 		});
 	}
 }
