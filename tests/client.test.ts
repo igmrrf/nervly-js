@@ -88,7 +88,9 @@ describe("NervlyHttpClient — request shape", () => {
 					status: "OK",
 					service: "nervly-gateway",
 					version: "0.1.0",
+					deployment: "sandbox",
 					environment: "ci",
+					key_mode: "test",
 					uptime_seconds: 1,
 					nats_connected: true,
 				} satisfies HealthStatus);

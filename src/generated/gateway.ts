@@ -554,10 +554,23 @@ export interface components {
         /** @description Point-in-time snapshot of gateway health and its broker connection. */
         HealthStatus: {
             /**
+             * @description Stable identity of this deployment (`DEPLOYMENT_ID`). Distinguishes a
+             *     sandbox deployment from the primary gateway when both report
+             *     `environment=production`; asserted by the sandbox boot check.
+             * @example sandbox
+             */
+            deployment: string;
+            /**
              * @description Deployment environment: `development`, `staging` or `production`.
              * @example production
              */
             environment: string;
+            /**
+             * @description Which API-key mode segment this deployment accepts: `any`, `live` or
+             *     `test` (`GATEWAY_KEY_MODE`). A sandbox reports `test`.
+             * @example any
+             */
+            key_mode: string;
             /**
              * @description Whether the gateway currently holds a NATS JetStream connection. When
              *     `false`, accepted events are buffered rather than published.

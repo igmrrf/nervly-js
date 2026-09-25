@@ -259,8 +259,24 @@ for (const mutation of MUTATIONS) {
 const killedCount = MUTATIONS.length - survived;
 const score = Number(((killedCount / MUTATIONS.length) * 100).toFixed(1));
 
+let generatedAt = new Date().toISOString();
+try {
+	const prev = JSON.parse(readFileSync(REPORT, "utf8"));
+	if (
+		prev.total === MUTATIONS.length &&
+		prev.killed === killedCount &&
+		prev.survived === survived &&
+		prev.score === score &&
+		JSON.stringify(prev.mutants) === JSON.stringify(results)
+	) {
+		generatedAt = prev.generatedAt ?? generatedAt;
+	}
+} catch {
+	// Use fresh timestamp if report does not exist or cannot be parsed
+}
+
 const report = {
-	generatedAt: new Date().toISOString(),
+	generatedAt,
 	runner: "node:test via tsx (targeted condition inversion)",
 	tool: "scripts/mutation-test.mjs",
 	total: MUTATIONS.length,

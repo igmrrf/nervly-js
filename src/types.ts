@@ -294,12 +294,14 @@ export interface UserPreferencesResponse {
 //
 // Mirrors OpenAPI `HealthStatus`.
 export interface HealthStatus {
-	status: string;
-	service: string;
-	version: string;
+	deployment: string;
 	environment: string;
-	uptime_seconds: number;
+	key_mode: string;
 	nats_connected: boolean;
+	service: string;
+	status: string;
+	uptime_seconds: number;
+	version: string;
 }
 
 // --- MCP ---

@@ -56,7 +56,8 @@ const SKIPPED_FENCES = [
 		// `nervly.events.trigger({ /* ... */ })` passes a placeholder object
 		// the real request schema would reject as incomplete.
 		marker: "{ /* ... */ }",
-		reason: "placeholder argument ({ /* ... */ }) — an illustrative catch, not a runnable call",
+		reason:
+			"placeholder argument ({ /* ... */ }) — an illustrative catch, not a runnable call",
 	},
 ];
 
@@ -83,12 +84,15 @@ for (const line of readme.split("\n")) {
 }
 
 if (fences.length === 0) {
-	findings.push("README.md contains no typescript fences — the quickstart is not checked content");
+	findings.push(
+		"README.md contains no typescript fences — the quickstart is not checked content",
+	);
 }
 
 // `@nervly/sdk` resolves to the real sources through the paths mapping in
 // tsconfig.check.json; snippets type-check against src/, not the built dist.
-const NERVLY_CLIENT_DECL = "declare const nervly: import('@nervly/sdk').Nervly;\n";
+const NERVLY_CLIENT_DECL =
+	"declare const nervly: import('@nervly/sdk').Nervly;\n";
 
 const EXPRESS_SHIM = `// Ambient declaration for the README's webhook fence. The fence drives the
 // consumer's own server; only its SDK-facing calls are contract-checked here.
@@ -136,12 +140,17 @@ for (const [index, fenceBody] of fences.entries()) {
 	// await in scripts; the empty export makes every extracted file an ESM
 	// module so the README's await-at-the-top-level style type-checks as-is.
 	parts.push("export {};\n");
-	writeFileSync(join(SNIPPET_DIR, `snippet-${String(index + 1).padStart(2, "0")}.ts`), parts.join("\n"));
+	writeFileSync(
+		join(SNIPPET_DIR, `snippet-${String(index + 1).padStart(2, "0")}.ts`),
+		parts.join("\n"),
+	);
 	written += 1;
 }
 
 if (written === 0 && fences.length > 0) {
-	findings.push("every README typescript fence was skipped; no snippet is checked content");
+	findings.push(
+		"every README typescript fence was skipped; no snippet is checked content",
+	);
 }
 
 try {
@@ -157,7 +166,11 @@ try {
 	const out = [error.stdout, error.stderr].filter(Boolean).join("\n");
 	findings.push(
 		"README snippets fail type-checking against the SDK (docs/readme-snippets/ kept for inspection):\n" +
-			out.split("\n").filter((line) => line.includes("snippet-")).join("\n").trim(),
+			out
+				.split("\n")
+				.filter((line) => line.includes("snippet-"))
+				.join("\n")
+				.trim(),
 	);
 }
 
@@ -187,8 +200,9 @@ if (sdkPage !== null) {
 	// quickstart actually documents on the wire.
 	const docsApiUrl = quickstart?.match(/https:\/\/[a-z0-9.-]+\/v1\//)?.[0];
 	const readmeBaseUrl =
-		readme.match(/\|\s*`baseUrl`\s*\|\s*`string`\s*\|\s*`(https?:\/\/[^`]+)`/)?.[1] ??
-		readme.match(/(https:\/\/[a-z0-9.-]+)/)?.[1];
+		readme.match(
+			/\|\s*`baseUrl`\s*\|\s*`string`\s*\|\s*`(https?:\/\/[^`]+)`/,
+		)?.[1] ?? readme.match(/(https:\/\/[a-z0-9.-]+)/)?.[1];
 	if (!docsApiUrl || !readmeBaseUrl) {
 		findings.push(
 			"could not extract the documented base URL from the README and nervly-docs quickstart",
@@ -261,8 +275,7 @@ if (!/nervly forward webhooks/.test(readme)) {
 }
 if (deliveryReceipts !== null || messageStatus !== null) {
 	const deferred = (text) =>
-		text !== null &&
-		text.includes("not** part of the launch surface");
+		text !== null && text.includes("not** part of the launch surface");
 	const namesTunnel = (text) =>
 		text !== null && text.includes("nervly forward webhooks");
 	if (!deferred(deliveryReceipts) && !deferred(messageStatus)) {
