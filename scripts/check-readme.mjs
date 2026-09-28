@@ -32,7 +32,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -222,7 +222,7 @@ if (sdkPage !== null) {
 	const pkgVersion = JSON.parse(
 		readFileSync(join(ROOT, "package.json"), "utf8"),
 	).version;
-	for (const [label, text, file] of [
+	for (const [, text, file] of [
 		["README", readme, "README.md"],
 		["docs sdk reference", sdkPage, "content/reference/sdk.md"],
 	]) {

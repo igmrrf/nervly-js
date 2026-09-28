@@ -19,7 +19,7 @@ import { SDK_VERSION } from "./version.js";
  * Handles authentication, retries with exponential backoff + jitter,
  * request timeouts via AbortController, and error classification.
  *
- * Uses native `fetch` — requires Node.js >= 18.
+ * Uses native `fetch`.
  */
 export class NervlyHttpClient {
 	private readonly apiKey: string;
