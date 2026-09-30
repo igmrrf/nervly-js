@@ -97,22 +97,48 @@ export class NervlyIdempotencyError extends NervlyApiError {
 }
 
 /**
- * 429 Too Many Requests — the per-subscriber rate limit was exceeded.
+ * Structured fields a {@link NervlyRateLimitError} parses from the response.
+ */
+export interface RateLimitErrorDetails {
+	/** Which limit was hit — the body's `purpose` on a `429`. */
+	purpose?: string;
+	/**
+	 * Advisory remaining budget from the draft-11 `RateLimit` header. Never a
+	 * reason to gate a request: the counter is fixed-window and not atomic with
+	 * the response.
+	 */
+	remaining?: number;
+	/** Advisory quota from the draft-11 `RateLimit-Policy` header. */
+	limit?: number;
+}
+
+/**
+ * 429 Too Many Requests — a rate limit was exceeded.
  *
- * `retryAfterMs` carries the `Retry-After` header, in milliseconds, when the
- * gateway sent one.
+ * `retryAfterMs` is derived from the `Retry-After` header, the body's
+ * `retry_after_seconds`, or the 1000 ms default, in that order. `purpose`
+ * names *which* limit was hit; `remaining`/`limit` are the advisory budget from
+ * the draft-11 `RateLimit`/`RateLimit-Policy` headers when the origin sends
+ * them.
  */
 export class NervlyRateLimitError extends NervlyApiError {
 	public readonly retryAfterMs: number;
+	public readonly purpose?: string;
+	public readonly remaining?: number;
+	public readonly limit?: number;
 
 	constructor(
 		message: string = "Rate limit exceeded",
 		retryAfterMs: number = 1000,
 		requestId?: string,
+		details?: RateLimitErrorDetails,
 	) {
 		super(429, "RATE_LIMIT_EXCEEDED", message, requestId);
 		this.name = "NervlyRateLimitError";
 		this.retryAfterMs = retryAfterMs;
+		this.purpose = details?.purpose;
+		this.remaining = details?.remaining;
+		this.limit = details?.limit;
 	}
 }
 

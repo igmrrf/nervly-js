@@ -249,7 +249,12 @@ try {
   if (error instanceof NervlyAuthenticationError) {
     console.error('Check your API Key');
   } else if (error instanceof NervlyRateLimitError) {
-    console.error('Rate limit reached. Retry after ms:', error.retryAfterMs);
+    // `purpose` names which limit was hit; `remaining`/`limit` are advisory
+    // budget from the draft-11 RateLimit headers, never a reason to gate a call.
+    console.error(
+      `Rate limit (${error.purpose ?? 'unknown'}) reached. Retry after ms:`,
+      error.retryAfterMs
+    );
   } else if (error instanceof NervlyApiError) {
     console.error('API Error:', error.statusCode, error.message);
   } else if (error instanceof NervlyError) {

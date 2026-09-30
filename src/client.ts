@@ -202,11 +202,17 @@ export class NervlyHttpClient {
 			case 409:
 				throw new NervlyIdempotencyError(message, requestId);
 			case 429: {
-				const retryAfter = response.headers.get("retry-after");
-				const retryAfterMs = retryAfter
-					? parseInt(retryAfter, 10) * 1000
-					: 1000;
-				throw new NervlyRateLimitError(message, retryAfterMs, requestId);
+				const { remaining, limit } = parseRateLimitHeaders(response.headers);
+				throw new NervlyRateLimitError(
+					message,
+					resolveRetryAfterMs(response.headers, errorBody),
+					requestId,
+					{
+						purpose: errorBody.purpose ?? undefined,
+						remaining,
+						limit,
+					},
+				);
 			}
 			case 500:
 			case 502:
@@ -250,4 +256,73 @@ export class NervlyHttpClient {
 	private sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
+}
+
+/**
+ * Milliseconds to wait before retrying a `429`: the `Retry-After` header, then
+ * the body's `retry_after_seconds`, then the 1000 ms default.
+ */
+function resolveRetryAfterMs(
+	headers: Headers,
+	errorBody: Partial<ApiErrorBody>,
+): number {
+	const headerSeconds = Number.parseInt(headers.get("retry-after") ?? "", 10);
+	const bodySeconds = errorBody.retry_after_seconds;
+	const seconds = Number.isFinite(headerSeconds)
+		? headerSeconds
+		: typeof bodySeconds === "number" && Number.isFinite(bodySeconds)
+			? bodySeconds
+			: undefined;
+	return seconds === undefined ? 1000 : seconds * 1000;
+}
+
+/**
+ * Parse the draft-11 `RateLimit` (remaining `r`) and `RateLimit-Policy` (quota
+ * `q`) headers. Each is a structured-field `List` that may name several
+ * policies; the SDK surfaces the first value, advisory only.
+ */
+function parseRateLimitHeaders(headers: Headers): {
+	remaining?: number;
+	limit?: number;
+} {
+	return {
+		remaining: firstListParam(headers.get("ratelimit"), "r"),
+		limit: firstListParam(headers.get("ratelimit-policy"), "q"),
+	};
+}
+
+/** The first integer `key=value` parameter named `key` across a structured-field list. */
+function firstListParam(value: string | null, key: string): number | undefined {
+	if (!value) return undefined;
+	for (const item of splitStructuredList(value)) {
+		for (const part of item.split(";").slice(1)) {
+			const [name, raw] = part.split("=");
+			if (name?.trim() !== key || raw === undefined) continue;
+			const parsed = Number.parseInt(raw.trim(), 10);
+			if (Number.isFinite(parsed)) return parsed;
+		}
+	}
+	return undefined;
+}
+
+/** Split a structured-field `List` on top-level commas, ignoring quoted strings. */
+function splitStructuredList(value: string): string[] {
+	const items: string[] = [];
+	let current = "";
+	let quoted = false;
+	for (const char of value) {
+		if (char === '"') {
+			quoted = !quoted;
+			current += char;
+			continue;
+		}
+		if (char === "," && !quoted) {
+			items.push(current);
+			current = "";
+			continue;
+		}
+		current += char;
+	}
+	items.push(current);
+	return items;
 }

@@ -1,3 +1,5 @@
+import type { components } from "./generated/gateway.js";
+
 // --- Client Configuration ---
 export interface NervlyConfig {
 	apiKey: string;
@@ -72,6 +74,16 @@ export interface EmailOverride {
 	sender?: string | null;
 	provider?: EmailProvider | null;
 	customHeaders?: Record<string, string> | null;
+	/** Canonical From address; preferred over the deprecated `sender`. */
+	from?: string | null;
+	/** Optional display name paired with `from`. */
+	from_name?: string | null;
+	/** Canonical reply-to address. */
+	reply_to?: string | null;
+	/** Canonical carbon-copy recipients. */
+	cc?: string[] | null;
+	/** Canonical blind-carbon-copy recipients. */
+	bcc?: string[] | null;
 }
 
 export interface WhatsAppOverride {
@@ -87,6 +99,10 @@ export interface WhatsAppOverride {
 
 export interface SmsOverride {
 	sender?: string | null;
+	/** Canonical Sender ID; preferred over the deprecated `sender`. */
+	sender_id?: string | null;
+	/** Optional provider routing hint honoured by the downstream carrier. */
+	route?: string | null;
 }
 
 export interface VoiceOverride {
@@ -104,6 +120,8 @@ export interface VoiceOverride {
 	 * BCP-47 language tag for the voice profile.
 	 */
 	language?: string | null;
+	/** Canonical per-message voice caller identity (provider-gated to Infobip). */
+	caller_id?: string | null;
 }
 
 export interface ProviderOverrides {
@@ -375,12 +393,13 @@ export interface WebhookVerifyOptions {
 
 // --- API Error ---
 //
-// Mirrors OpenAPI `ErrorResponse`.
-export interface ApiErrorBody {
-	error: string;
-	message: string;
-	status_code: number;
-}
+// Derived from the generated OpenAPI contract rather than hand-copied, so the
+// body cannot drift from `ErrorResponse`. `purpose` names which limit a `429`
+// hit (absent on a fail-closed store fault); `retry_after_seconds` mirrors the
+// `Retry-After` header for body-only consumers. Both are optional.
+export type RateLimitPurpose = components["schemas"]["RateLimitPurpose"];
+
+export type ApiErrorBody = components["schemas"]["ErrorResponse"];
 
 // --- HTTP Client types ---
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

@@ -120,6 +120,7 @@ export {
 } from "./ai/tools.js";
 // Named re-exports for convenience
 export { NervlyHttpClient } from "./client.js";
+export type { RateLimitErrorDetails } from "./errors.js";
 // Re-export all errors — both the long names and their short aliases. Both
 // spellings are the same class object, so `instanceof` works either way.
 export {
@@ -179,6 +180,7 @@ export type {
 	NervlyConfig,
 	Priority,
 	ProviderOverrides,
+	RateLimitPurpose,
 	Recipient,
 	RequestOptions,
 	SendEmailOptions,

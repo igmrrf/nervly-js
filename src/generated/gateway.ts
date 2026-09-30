@@ -450,15 +450,38 @@ export interface components {
         };
         /** @description Per-request overrides for the email channel. */
         EmailOverrideDto: {
+            /**
+             * @description Canonical blind-carbon-copy recipients. Count-capped, each address
+             *     syntactically validated like `reply_to`.
+             */
+            bcc?: string[] | null;
+            /**
+             * @description Canonical carbon-copy recipients. Count-capped, each address
+             *     syntactically validated like `reply_to`.
+             */
+            cc?: string[] | null;
             /** @description Additional SMTP headers to attach, such as `Reply-To`. */
             customHeaders?: {
                 [key: string]: string;
             } | null;
             /**
+             * @description Canonical From address for this message (e.g. `billing@yourcompany.com`).
+             *
+             *     Preferred over the deprecated umbrella `sender`: the gateway resolves
+             *     `from ?? sender` and dual-writes the effective value onto both proto
+             *     tags during the transition window. Shape-checked on ingress; whether the
+             *     workspace actually owns the address is decided by the worker.
+             */
+            from?: string | null;
+            /** @description Optional display name paired with `from` (e.g. "Nervly Billing"). */
+            from_name?: string | null;
+            /**
              * @description Preferred or forced email provider for this event (e.g. "resend", "zeptomail").
              * @example resend
              */
             provider?: string | null;
+            /** @description Canonical reply-to address. A single, syntactically valid address. */
+            reply_to?: string | null;
             /**
              * @description Replace the configured From address for this event only.
              * @example billing@yourcompany.com
@@ -478,6 +501,13 @@ export interface components {
              * @example Client ingestion rate limit exceeded
              */
             message: string;
+            purpose?: null | components["schemas"]["RateLimitPurpose"];
+            /**
+             * Format: int64
+             * @description Integer mirror of the `Retry-After` header, for clients that only
+             *     surface the payload. The header stays authoritative.
+             */
+            retry_after_seconds?: number | null;
             /**
              * Format: int32
              * @description The HTTP status, repeated in the body for clients that only surface
@@ -779,6 +809,17 @@ export interface components {
             whatsapp?: null | components["schemas"]["WhatsAppOverrideDto"];
         };
         /**
+         * @description The closed set of purposes a real rate-limit hit can name (spec §4.2).
+         *
+         *     A `429` always carries exactly one of these so a caller can tell a **budget**
+         *     (`workspace`/`monthly_quota`) from a **derived abuse cap** (`subscriber`)
+         *     from an **admission/anti-enumeration** limit (`ip`/`email`/`api_key`/
+         *     `session`) without parsing prose. A fail-closed store fault (`503`) carries
+         *     none.
+         * @enum {string}
+         */
+        RateLimitPurpose: "workspace" | "subscriber" | "monthly_quota" | "ip" | "email" | "api_key" | "session";
+        /**
          * @description Who the notification is for, and how each channel can reach them.
          *
          *     Only `subscriberId` is required. The contact fields you supply determine
@@ -880,6 +921,8 @@ export interface components {
         };
         /** @description Per-request overrides for the SMS channel. */
         SmsOverrideDto: {
+            /** @description Optional provider routing hint honoured by the downstream carrier. */
+            route?: string | null;
             /**
              * @description Replace the resolved Sender ID for this event only. Falls back to the
              *     tenant's provider credential, then "Nervly", when omitted. Nigerian NCC
@@ -887,6 +930,14 @@ export interface components {
              * @example YourBrand
              */
             sender?: string | null;
+            /**
+             * @description Canonical Sender ID for this event only.
+             *
+             *     Preferred over the deprecated umbrella `sender`: the gateway resolves
+             *     `sender_id ?? sender` and dual-writes the effective value onto both
+             *     proto tags during the transition window.
+             */
+            sender_id?: string | null;
         };
         /** @description Response confirming that an erasure request was accepted. */
         SubscriberErasureResponse: {
@@ -1051,6 +1102,11 @@ export interface components {
          */
         VoiceOverrideDto: {
             /**
+             * @description Canonical voice caller identity (provider-gated to Infobip). Voice never
+             *     had an umbrella `sender`; this is the only per-message caller binding.
+             */
+            caller_id?: string | null;
+            /**
              * @description BCP-47 language tag for the voice profile.
              * @example en-US
              */
@@ -1128,6 +1184,10 @@ export interface operations {
             /** @description Batch processed — inspect `failedCount` and `events` for per-event outcomes */
             200: {
                 headers: {
+                    /** @description IETF draft-11 remaining budget and reset for each ingest policy. Advisory only. */
+                    RateLimit?: string;
+                    /** @description IETF draft-11 policy for each ingest tier (workspace, subscriber, monthly quota). */
+                    "RateLimit-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1146,6 +1206,17 @@ export interface operations {
             /** @description Missing or invalid API key */
             401: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate-limit store unavailable (fail-closed) or broker unavailable. `error` is `RATE_LIMIT_STORE_UNAVAILABLE` for a store fault; the body carries no `purpose`. */
+            503: {
+                headers: {
+                    /** @description Seconds to wait before retrying. Mandatory on every 503. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1175,6 +1246,10 @@ export interface operations {
             /** @description Idempotent replay — the original response, replayed verbatim */
             200: {
                 headers: {
+                    /** @description IETF draft-11 remaining budget and reset for each ingest policy. Advisory only. */
+                    RateLimit?: string;
+                    /** @description IETF draft-11 policy for each ingest tier (workspace, subscriber, monthly quota). */
+                    "RateLimit-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1184,6 +1259,10 @@ export interface operations {
             /** @description Event accepted and queued for delivery */
             202: {
                 headers: {
+                    /** @description IETF draft-11 remaining budget and reset for each ingest policy. Advisory only. */
+                    RateLimit?: string;
+                    /** @description IETF draft-11 policy for each ingest tier (workspace, subscriber, monthly quota). */
+                    "RateLimit-Policy"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1208,9 +1287,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Rate limit exceeded (workspace quota or per-subscriber abuse cap) */
+            /** @description Rate limit exceeded (workspace RPS, per-subscriber abuse cap or monthly quota). The body's `purpose` names which limit was hit. */
             429: {
                 headers: {
+                    /** @description IETF draft-11 remaining budget and reset for each ingest policy. Advisory only. */
+                    RateLimit?: string;
+                    /** @description IETF draft-11 policy for each ingest tier (workspace, subscriber, monthly quota). */
+                    "RateLimit-Policy"?: string;
+                    /** @description Seconds to wait before retrying. Mandatory on every 429. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1220,6 +1305,17 @@ export interface operations {
             /** @description Encoding or broker failure */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate-limit store unavailable (fail-closed) or broker unavailable. `error` is `RATE_LIMIT_STORE_UNAVAILABLE` for a store fault; the body carries no `purpose`. */
+            503: {
+                headers: {
+                    /** @description Seconds to wait before retrying. Mandatory on every 503. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {

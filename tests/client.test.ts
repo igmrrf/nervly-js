@@ -266,6 +266,165 @@ describe("NervlyHttpClient — error classification", () => {
 		);
 	});
 
+	describe("rate-limit response contract", () => {
+		/** Drives a real 429 through `handleErrorResponse` and returns the error. */
+		async function rateLimitError(
+			body: Record<string, unknown>,
+			headers: Record<string, string> = {},
+		): Promise<NervlyRateLimitError> {
+			let captured: NervlyRateLimitError | undefined;
+
+			await withFetch(
+				() => jsonResponse(429, body, headers),
+				async () => {
+					const client = new NervlyHttpClient({
+						apiKey: "k",
+						baseUrl: "https://example.test",
+						maxRetries: 0,
+					});
+
+					const error = await client.get("/v1/messages").then(
+						() => null,
+						(e: unknown) => e as Error,
+					);
+
+					assert.ok(error instanceof NervlyRateLimitError);
+					captured = error;
+				},
+			);
+
+			return captured as NervlyRateLimitError;
+		}
+
+		it("carries the body's purpose on a 429", async () => {
+			const error = await rateLimitError({
+				error: "RATE_LIMIT_EXCEEDED",
+				message: "subscriber abuse cap exceeded",
+				status_code: 429,
+				purpose: "subscriber",
+			});
+
+			assert.equal(error.purpose, "subscriber");
+		});
+
+		it("honours a body retry_after_seconds when Retry-After is absent", async () => {
+			const error = await rateLimitError({
+				error: "RATE_LIMIT_EXCEEDED",
+				message: "slow down",
+				status_code: 429,
+				purpose: "workspace",
+				retry_after_seconds: 3,
+			});
+
+			assert.equal(error.retryAfterMs, 3000);
+		});
+
+		it("prefers the Retry-After header over the body's retry_after_seconds", async () => {
+			const error = await rateLimitError(
+				{
+					error: "RATE_LIMIT_EXCEEDED",
+					message: "slow down",
+					status_code: 429,
+					retry_after_seconds: 9,
+				},
+				{ "Retry-After": "5" },
+			);
+
+			assert.equal(error.retryAfterMs, 5000);
+		});
+
+		it("falls back to the 1000ms default when neither retry hint is present", async () => {
+			const error = await rateLimitError({
+				error: "RATE_LIMIT_EXCEEDED",
+				message: "slow down",
+				status_code: 429,
+			});
+
+			assert.equal(error.retryAfterMs, 1000);
+		});
+
+		it("parses the draft-11 RateLimit and RateLimit-Policy headers", async () => {
+			const error = await rateLimitError(
+				{
+					error: "RATE_LIMIT_EXCEEDED",
+					message: "slow down",
+					status_code: 429,
+					purpose: "workspace",
+				},
+				{
+					RateLimit: '"workspace";r=42;t=1, "subscriber";r=3;t=1',
+					"RateLimit-Policy": '"workspace";q=100;w=1, "subscriber";q=10;w=1',
+				},
+			);
+
+			assert.equal(error.remaining, 42);
+			assert.equal(error.limit, 100);
+		});
+
+		it("leaves remaining/limit undefined when the draft-11 headers are absent", async () => {
+			const error = await rateLimitError({
+				error: "RATE_LIMIT_EXCEEDED",
+				message: "slow down",
+				status_code: 429,
+			});
+
+			assert.equal(error.remaining, undefined);
+			assert.equal(error.limit, undefined);
+		});
+
+		it("ignores malformed draft-11 header values", async () => {
+			const error = await rateLimitError(
+				{
+					error: "RATE_LIMIT_EXCEEDED",
+					message: "slow down",
+					status_code: 429,
+				},
+				{
+					RateLimit: '"workspace";r;t=1',
+					"RateLimit-Policy": '"workspace";q=not-a-number',
+				},
+			);
+
+			assert.equal(error.remaining, undefined);
+			assert.equal(error.limit, undefined);
+		});
+
+		it("keeps a 503 RATE_LIMIT_STORE_UNAVAILABLE on the retryable-5xx branch", async () => {
+			let attempts = 0;
+
+			await withFetch(
+				() => {
+					attempts += 1;
+					return jsonResponse(503, {
+						error: "RATE_LIMIT_STORE_UNAVAILABLE",
+						message: "rate limit service unavailable",
+						status_code: 503,
+					});
+				},
+				async () => {
+					const client = new NervlyHttpClient({
+						apiKey: "k",
+						baseUrl: "https://example.test",
+						maxRetries: 1,
+						retryBaseDelay: 1,
+					});
+
+					const error = (await client.get("/v1/events").then(
+						() => null,
+						(e: unknown) => e,
+					)) as NervlyRetryExhaustedError;
+
+					assert.equal(error.name, "NervlyRetryExhaustedError");
+					assert.equal(error.attempts, 1);
+					assert.ok(error.lastError instanceof NervlyServerError);
+					assert.equal(error.lastError.statusCode, 503);
+				},
+			);
+
+			assert.equal(attempts, 2);
+		});
+	});
+
 	it("should carry the request id when the gateway sends one", async () => {
 		await withFetch(
 			() =>
