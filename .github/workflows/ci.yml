@@ -7,8 +7,8 @@ name: CI
 # (tag-triggered publish) is separate and unaffected. The genuinely
 # cross-repo gates that touch this repo (docs' portal snippet/
 # conformance suite, infra-hardening) stay centralized in nervly-base and are
-# unaffected by this file — they still run there on every push, and now also
-# on the repository_dispatch this workflow fires below.
+# unaffected by this file — a manual run of this workflow can still trigger
+# them via the repository_dispatch below.
 #
 # The pre-commit hooks are the actual gate (types, tests, build, secrets,
 # audit) and run on every developer's machine before a commit is made. The
@@ -18,8 +18,6 @@ name: CI
 # silently remove local enforcement without anyone noticing in review.
 
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -84,12 +82,12 @@ jobs:
       # uses rather than through a relative path into dist/.
       - name: sdk packaging gate (dual ESM/CJS + type resolution)
         run: npm run check:exports
-      # Wayfinder repo-hygiene ticket 2: tells nervly-base's central workflow
-      # a sibling just pushed, so its cross-repo contract gates run against
-      # this commit instead of waiting for the next push to nervly-base itself
-      # or a full `make push-all`.
+      # Wayfinder repo-hygiene ticket 2: after a manual run of this workflow,
+      # tells nervly-base's central workflow to run its cross-repo contract
+      # gates against this commit instead of waiting for the next manual run
+      # there or a full `make push-all`.
       - name: Notify nervly-base (repository_dispatch)
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
         run: |
@@ -98,7 +96,7 @@ jobs:
             -H "Authorization: token ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository_owner }}/nervly-base/dispatches" \
-            -d '{"event_type":"service-updated","client_payload":{"repo":"nervly-js","ref":"${{ github.sha }}"}}'
+            -d '{"event_type":"service-updated","client_payload":{"repo":"nervly-js","ref":"${{ github.ref_name }}"}}'
 
   hooks-drift-gate:
     name: Pre-commit hook wiring is intact
