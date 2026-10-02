@@ -93,6 +93,14 @@ export interface EmailOverride {
 
 export interface WhatsAppOverride {
 	/**
+	 * Canonical per-message WhatsApp sender in E.164 (e.g. `+2348012345678`).
+	 *
+	 * Anti-spoof: it may name only a WhatsApp identity the workspace has
+	 * configured; whether the workspace actually owns the number is decided by
+	 * the worker (`SENDER_NOT_ALLOWED`).
+	 */
+	from?: string | null;
+	/**
 	 * Name of the pre-approved Meta Cloud API template to send.
 	 *
 	 * The wire field is snake_case (`template_name`), matching the gateway's

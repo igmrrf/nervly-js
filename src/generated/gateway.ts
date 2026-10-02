@@ -1164,6 +1164,16 @@ export interface components {
         /** @description Per-request overrides for the WhatsApp channel. */
         WhatsAppOverrideDto: {
             /**
+             * @description Canonical per-message WhatsApp sender in E.164 (e.g. `+2348012345678`).
+             *
+             *     Anti-spoof: it may name only a WhatsApp identity the workspace has
+             *     configured; whether the workspace actually owns the number is decided
+             *     by the worker (`SENDER_NOT_ALLOWED`). Ingress shape-checks the E.164
+             *     form only.
+             * @example +2348012345678
+             */
+            from?: string | null;
+            /**
              * @description BCP-47 language tag for template resolution.
              * @example en_US
              */
