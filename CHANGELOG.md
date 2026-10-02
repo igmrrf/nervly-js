@@ -7,6 +7,7 @@ All notable changes to `@nervly/sdk` are documented here. The format follows [Ke
 ### Added
 
 - Voice channel support: the `Channel` const/type (`Channel.VOICE`), the `VoiceOverride` wire type (`script`, `voice_id`, `language`), `ProviderOverrides.voice`, and a typed `voice.send` resource with `SendVoiceOptions` / `VoiceSendRequest`.
+- Sender-identity management: the `nervly.senders` resource (`list`, `get`, `create`, `addBinding`, `verifyBinding`, `removeBinding`, `remove`) against the control plane's public `/v1/senders` API, the `managementUrl` config option (default `https://console.nervly.io`), and the exported `SenderIdentity`, `SenderBinding`, `SenderChannel`, `IdentityUnit`, `VerificationSource`, `VerificationState`, `DnsRecord`, `CreateSenderInput`, `CreateBindingInput`, `SenderBindingResult`, `CreateSenderResponse`, `VerifyBindingResponse`, `ListSendersParams` and `ListSendersResponse` types.
 
 ## [0.1.0] - 2026-09-17
 

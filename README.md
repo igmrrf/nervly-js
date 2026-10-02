@@ -162,6 +162,37 @@ await nervly.subscribers.updatePreferences('usr_123', {
 });
 ```
 
+### Sender identities
+
+#### `nervly.senders` — `list`, `get`, `create`, `addBinding`, `verifyBinding`, `removeBinding`, `remove`
+
+Manage sender identities and their per-provider bindings. This resource talks to
+the control-plane management API (`managementUrl`, default
+`https://console.nervly.io`) on the same API key; `baseUrl` and every gateway
+call are untouched.
+
+```typescript
+const created = await nervly.senders.create({
+  provider: 'resend',
+  value: 'hello@acme.com',
+  display_name: 'Acme',
+  identity_unit: 'domain',
+});
+console.log('Identity:', created.sender.identity_id, created.binding.verification_state);
+
+const verified = await nervly.senders.verifyBinding(
+  created.sender.identity_id,
+  'resend',
+  'domain',
+);
+console.log('Verified:', verified.binding.verification_state);
+
+const page = await nervly.senders.list({ channel: 'email', limit: 25 });
+for (const sender of page.senders) {
+  console.log(sender.sender_value, sender.bindings.length);
+}
+```
+
 ### Health
 
 #### `nervly.health.check()`
@@ -269,14 +300,15 @@ Every status-specific class also has a short alias — `AuthenticationError`,
 `ServerError` — which is the same class object, so `instanceof` works either
 way. `NervlyApiError.errorType` carries the gateway's machine-readable code and
 `requestId` the `x-request-id` header, both worth logging. See
-[`docs/api_reference.md`](docs/api_reference.md) §9.
+[`docs/api_reference.md`](docs/api_reference.md) §11.
 
 ## Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `apiKey` | `string` | **Required** | Your API Key for Nervly. |
-| `baseUrl` | `string` | `https://api.nervly.io` | The base URL for the API. |
+| `baseUrl` | `string` | `https://api.nervly.io` | The base URL for the gateway API. |
+| `managementUrl` | `string` | `https://console.nervly.io` | The base URL for the control-plane management API (`nervly.senders`). |
 | `maxRetries` | `number` | `3` | Number of retries on transient errors. |
 | `timeout` | `number` | `10000` | Timeout in milliseconds. |
 | `retryBaseDelay` | `number` | `1000` | Initial exponential backoff delay in ms. |

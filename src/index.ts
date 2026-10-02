@@ -1,9 +1,10 @@
-import { NervlyHttpClient } from "./client.js";
+import { DEFAULT_MANAGEMENT_URL, NervlyHttpClient } from "./client.js";
 import { EmailResource } from "./resources/email.js";
 import { EventsResource } from "./resources/events.js";
 import { HealthResource } from "./resources/health.js";
 import { McpResource } from "./resources/mcp.js";
 import { MessagesResource } from "./resources/messages.js";
+import { SendersResource } from "./resources/senders.js";
 import { SubscribersResource } from "./resources/subscribers.js";
 import { UsersResource } from "./resources/users.js";
 import { VoiceResource } from "./resources/voice.js";
@@ -63,6 +64,14 @@ export class Nervly {
 	/** Webhooks resource — verify signatures and parse delivery receipts. */
 	public readonly webhooks: WebhooksResource;
 
+	/**
+	 * Sender identities resource — manage sender identities and their
+	 * per-provider bindings. It talks to the control-plane management API
+	 * (`config.managementUrl`, default `https://console.nervly.io`), not the
+	 * gateway, so nothing here changes where delivery calls go.
+	 */
+	public readonly senders: SendersResource;
+
 	constructor(config: NervlyConfig) {
 		if (!config.apiKey) {
 			throw new Error(
@@ -71,6 +80,13 @@ export class Nervly {
 		}
 
 		this.client = new NervlyHttpClient(config);
+		// The management surface is a separate origin on the same credential:
+		// same key, timeout, retries, AbortController and error classification,
+		// different base URL. It never overrides `baseUrl`.
+		const managementClient = new NervlyHttpClient({
+			...config,
+			baseUrl: config.managementUrl ?? DEFAULT_MANAGEMENT_URL,
+		});
 		this.events = new EventsResource(this.client);
 		this.email = new EmailResource(this.client);
 		this.voice = new VoiceResource(this.client);
@@ -80,6 +96,7 @@ export class Nervly {
 		this.health = new HealthResource(this.client);
 		this.mcp = new McpResource(this.client);
 		this.webhooks = new WebhooksResource();
+		this.senders = new SendersResource(managementClient);
 	}
 }
 
@@ -119,7 +136,7 @@ export {
 	toOpenAITools,
 } from "./ai/tools.js";
 // Named re-exports for convenience
-export { NervlyHttpClient } from "./client.js";
+export { DEFAULT_MANAGEMENT_URL, NervlyHttpClient } from "./client.js";
 export type { RateLimitErrorDetails } from "./errors.js";
 // Re-export all errors — both the long names and their short aliases. Both
 // spellings are the same class object, so `instanceof` works either way.
@@ -150,6 +167,7 @@ export { EventsResource } from "./resources/events.js";
 export { HealthResource } from "./resources/health.js";
 export { McpResource } from "./resources/mcp.js";
 export { MessagesResource } from "./resources/messages.js";
+export { SendersResource } from "./resources/senders.js";
 export { SubscribersResource } from "./resources/subscribers.js";
 export { UsersResource } from "./resources/users.js";
 export { VoiceResource } from "./resources/voice.js";
@@ -161,17 +179,24 @@ export type {
 	BulkTriggerRequest,
 	BulkTriggerResponse,
 	ChannelPreferences,
+	CreateBindingInput,
+	CreateSenderInput,
+	CreateSenderResponse,
 	DeliveryStatus,
+	DnsRecord,
 	EmailOverride,
 	EmailProvider,
 	EmailSendRequest,
 	EventItemDto,
 	HealthStatus,
 	HttpMethod,
+	IdentityUnit,
 	JsonRpcError,
 	JsonRpcId,
 	ListMessagesParams,
 	ListMessagesResponse,
+	ListSendersParams,
+	ListSendersResponse,
 	McpRequest,
 	McpResponse,
 	McpToolDefinition,
@@ -184,6 +209,10 @@ export type {
 	Recipient,
 	RequestOptions,
 	SendEmailOptions,
+	SenderBinding,
+	SenderBindingResult,
+	SenderChannel,
+	SenderIdentity,
 	SendVoiceOptions,
 	SmsOverride,
 	SubscriberErasureResponse,
@@ -192,6 +221,9 @@ export type {
 	TriggerEventResponse,
 	UserPreferencesRequest,
 	UserPreferencesResponse,
+	VerificationSource,
+	VerificationState,
+	VerifyBindingResponse,
 	VoiceOverride,
 	VoiceSendRequest,
 	WebhookPayload,

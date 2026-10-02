@@ -1,12 +1,13 @@
 # nervly-sdk API Reference
 
-Programmatic interface for `@nervly/sdk`. Every method below maps to exactly one
-operation in [`gateway.json`](../../nervly-docs/static/openapi/gateway.json); the
-mapping is asserted by `tests/spec-conformance.test.ts`, and the request/response
-shapes are asserted against the generated spec by
-`tests/types/conformance.types.ts`.
+Programmatic interface for `@nervly/sdk`. Every gateway method below maps to
+exactly one operation in
+[`gateway.json`](../../nervly-docs/static/openapi/gateway.json); the mapping is
+asserted by `tests/spec-conformance.test.ts`, and the request/response shapes are
+asserted against the generated spec by `tests/types/conformance.types.ts`. The
+sender-identity methods in §7 call the control plane's `/v1/senders` instead.
 
-Status codes shown are what the gateway returns on success.
+Status codes shown are what the origin returns on success.
 
 ---
 
@@ -189,7 +190,91 @@ category you send replaces that category's flags wholesale.
 
 ---
 
-## 7. Health
+## 7. Sender identities (management API)
+
+Every method below calls the **control plane**, not the gateway: the resource
+runs on a second client whose origin is `config.managementUrl` (default
+`https://console.nervly.io`). `baseUrl` and every gateway resource are
+untouched, and the same API key authenticates both. Sender management requires
+the key's `write` scope for mutations and `read` for reads.
+
+### `senders.list(params?) → ListSendersResponse` — `GET /v1/senders` (200)
+
+```typescript
+const page = await nervly.senders.list({
+  channel: 'email',
+  provider: 'resend',
+  limit: 25,                    // default 50, server cap 100
+  cursor: page.next_cursor ?? undefined,
+});
+// page: { senders: SenderIdentity[], next_cursor?: string | null }
+```
+
+### `senders.get(identityId) → SenderIdentity` — `GET /v1/senders/{identityId}` (200)
+
+```typescript
+const sender = await nervly.senders.get('b3f0c1a2-…');
+// sender.bindings: SenderBinding[]
+```
+
+### `senders.create(input) → CreateSenderResponse` — `POST /v1/senders` (201)
+
+```typescript
+const created = await nervly.senders.create({
+  provider: 'resend',
+  value: 'hello@acme.com',
+  display_name: 'Acme',        // email-only
+  identity_unit: 'domain',     // derived from value/channel when omitted
+  verify_with: 'provider',     // or 'nervly'
+});
+// created: { sender, binding, dns }
+```
+
+Repeating the same `(value, provider, identity_unit)` reuses the identity and
+binding rather than creating duplicates.
+
+### `senders.addBinding(identityId, input) → CreateSenderResponse` — `POST /v1/senders/{identityId}/bindings` (201)
+
+```typescript
+await nervly.senders.addBinding('b3f0c1a2-…', {
+  provider: 'postmark',
+  identity_unit: 'address',
+});
+```
+
+### `senders.verifyBinding(identityId, provider, identityUnit) → VerifyBindingResponse` — `POST /v1/senders/{identityId}/bindings/{provider}/{identityUnit}/verify` (200)
+
+```typescript
+const verified = await nervly.senders.verifyBinding('b3f0c1a2-…', 'resend', 'domain');
+// verified: { binding, dns, last_error? }
+```
+
+`identity_unit` is required: a domain and an address binding can coexist on one
+provider, so an absent or unknown unit is a `400` rather than a fallback.
+
+### `senders.removeBinding(identityId, provider, identityUnit) → { status }` — `DELETE /v1/senders/{identityId}/bindings/{provider}/{identityUnit}` (200)
+
+```typescript
+await nervly.senders.removeBinding('b3f0c1a2-…', 'resend', 'domain');
+// { status: 'deleted' }
+```
+
+### `senders.remove(identityId) → { status }` — `DELETE /v1/senders/{identityId}` (200)
+
+```typescript
+await nervly.senders.remove('b3f0c1a2-…');
+// { status: 'deleted' }; cascades every binding under the identity
+```
+
+Failures reuse the error classes in §11 unchanged: `400` →
+`NervlyValidationError`, `401` → `NervlyAuthenticationError`, `404` →
+`NervlyNotFoundError`, `409` → `NervlyIdempotencyError`, `403`/`503` →
+`NervlyApiError` (the `503` is a `NervlyServerError`). The control-plane machine
+code rides on `errorType`.
+
+---
+
+## 8. Health
 
 ### `health.check() → HealthStatus` — `GET /v1/health` (200, unauthenticated)
 
@@ -203,7 +288,7 @@ published to the broker.
 
 ---
 
-## 8. Model Context Protocol
+## 9. Model Context Protocol
 
 ### `mcp.listTools() → McpResponse` — `POST /v1/mcp` (200)
 
@@ -220,7 +305,7 @@ non-2xx status.
 
 ---
 
-## 9. Webhooks
+## 10. Webhooks
 
 > **Nervly does not send outbound delivery webhooks yet.** Poll `events.get()` or
 > `messages.list()` for delivery state. These helpers ship ahead of the feature
@@ -249,7 +334,7 @@ fails — handle it as a 400 to your own caller.
 
 ---
 
-## 10. Errors
+## 11. Errors
 
 Every failure is a `NervlyError`. See [`architecture.md`](architecture.md) §4 for
 the full hierarchy; the short aliases are the same class objects as their

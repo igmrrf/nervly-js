@@ -50,8 +50,10 @@ contract; the published compatibility matrix is reconciled with
       [`docs/testing_and_conformance.md`](docs/testing_and_conformance.md) §4.
 - [x] Live contract suite against a running gateway router — ticket 27's user
       ruling (2026-09-21): the live contract is SDK ↔ the live *gateway*
-      (`@nervly/sdk`'s base URL is `api.nervly.io`; it never addresses the
-      control plane — that premise was corrected on both checklists), and
+      (`@nervly/sdk`'s `baseUrl` is `api.nervly.io`; the delivery surface never
+      addresses the control plane — since ticket 24 the SDK also carries a
+      second, explicit control-plane management client (`managementUrl`, the
+      `nervly.senders` resource), which does not change the gateway contract), and
       **Pact is explicitly declined** for this surface: one consumer, nine
       operations, and a repo convention of spec-anchored contract checks in CI
       plus a real journey test for the live path — Pact's broker/verifier

@@ -14,6 +14,12 @@ import type { ApiErrorBody, NervlyConfig, RequestOptions } from "./types.js";
 import { SDK_VERSION } from "./version.js";
 
 /**
+ * Default origin of the control-plane management API the `senders` resource
+ * calls. `config.baseUrl` is the gateway and is untouched by this.
+ */
+export const DEFAULT_MANAGEMENT_URL = "https://console.nervly.io";
+
+/**
  * Low-level HTTP transport client for the Nervly Gateway API.
  *
  * Handles authentication, retries with exponential backoff + jitter,

@@ -4,6 +4,12 @@ import type { components } from "./generated/gateway.js";
 export interface NervlyConfig {
 	apiKey: string;
 	baseUrl?: string; // defaults to 'https://api.nervly.io'
+	/**
+	 * Base URL of the control-plane management API the `senders` resource
+	 * calls. Defaults to `https://console.nervly.io`; `baseUrl` and every
+	 * gateway resource are untouched by it.
+	 */
+	managementUrl?: string;
 	timeout?: number; // ms, defaults to 10000
 	maxRetries?: number; // defaults to 3
 	retryBaseDelay?: number; // ms, defaults to 1000
@@ -272,6 +278,115 @@ export interface ListMessagesParams {
 
 export interface ListMessagesResponse {
 	messages: MessageDto[];
+	next_cursor?: string | null;
+}
+
+// --- Sender identities (public management API) ---
+//
+// Mirrors the control plane's `/v1/senders` wire contract (ticket 23 §3),
+// snake_case on the wire like the rest of the API. These are management-plane
+// objects: they are served by `https://console.nervly.io`, not the gateway.
+
+export type SenderChannel = "email" | "sms" | "voice";
+
+export type IdentityUnit = "domain" | "address" | "sender_id" | "caller_id";
+
+export type VerificationSource = "byo" | "platform";
+
+export type VerificationState =
+	| "pending"
+	| "verified"
+	| "failed"
+	| "self_declared";
+
+/** One provider's verification of one identity unit. */
+export interface SenderBinding {
+	provider: string;
+	channel: SenderChannel;
+	identity_unit: IdentityUnit;
+	unit_value: string;
+	verification_source: VerificationSource;
+	verification_state: VerificationState;
+	verified_at: string | null;
+	last_checked_at: string | null;
+	failure_reason: string | null;
+}
+
+/** A sender identity with its nested per-provider bindings. */
+export interface SenderIdentity {
+	/** Control-plane UUID, opaque; there is no new id scheme. */
+	identity_id: string;
+	channel: SenderChannel;
+	/** From Address, Sender ID or Caller ID. */
+	sender_value: string;
+	/** Email-only display name, otherwise null. */
+	display_name: string | null;
+	created_at: string;
+	updated_at: string;
+	bindings: SenderBinding[];
+}
+
+/** A provider DNS record to add. Empty when the provider exposes none. */
+export interface DnsRecord {
+	type: string;
+	name: string;
+	value: string;
+}
+
+/** The result of binding and re-checking: the binding plus provider records. */
+export interface SenderBindingResult {
+	binding: SenderBinding;
+	dns: DnsRecord[];
+}
+
+/** Body for `senders.create`. */
+export interface CreateSenderInput {
+	provider: string;
+	/** From address, sender id or caller id; the identity literal. */
+	value: string;
+	/** Email-only display name. */
+	display_name?: string;
+	/** Optional; derived from the value and channel when omitted. */
+	identity_unit?: IdentityUnit;
+	/** Optional; validated against the provider's supported channels. */
+	channel?: SenderChannel;
+	/** Who verifies the binding; defaults to the credential actually used. */
+	verify_with?: "nervly" | "provider";
+}
+
+/** Body for `senders.addBinding`. */
+export interface CreateBindingInput {
+	provider: string;
+	/** Optional; derived from the identity value and channel when omitted. */
+	identity_unit?: IdentityUnit;
+	/** Who verifies the binding; defaults to the credential actually used. */
+	verify_with?: "nervly" | "provider";
+}
+
+/** Returned by both create paths (`senders.create` and `senders.addBinding`). */
+export interface CreateSenderResponse {
+	sender: SenderIdentity;
+	binding: SenderBinding;
+	dns: DnsRecord[];
+}
+
+/** Returned by `senders.verifyBinding`. */
+export interface VerifyBindingResponse extends SenderBindingResult {
+	/** The provider error or prompt when the re-check could not verify. */
+	last_error?: string;
+}
+
+export interface ListSendersParams {
+	/** Page size; defaults to 50, capped at 100 by the server. */
+	limit?: number;
+	/** Opaque cursor from a previous page's `next_cursor`. */
+	cursor?: string;
+	channel?: SenderChannel;
+	provider?: string;
+}
+
+export interface ListSendersResponse {
+	senders: SenderIdentity[];
 	next_cursor?: string | null;
 }
 
