@@ -359,6 +359,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/webhooks/{provider}/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a provider delivery receipt for a routed platform child.
+         * @description The per-child callback URL is
+         *     `https://api.nervly.io/v1/webhooks/{provider}/{token}` where the token is
+         *     the immutable `platform_provider_accounts.id`. The callback is verified
+         *     against **that child's** platform-scoped signing secret (never the
+         *     deployment-wide platform secret, never another workspace's), and where the
+         *     payload echoes a provider-native child id it is cross-checked against the
+         *     routed account. An unknown token, a token for another provider, a non-ready
+         *     account, a native-id mismatch or a missing/undecryptable child secret is
+         *     refused fail-closed, alerted and quarantined — never adopted and never
+         *     attributed to the platform account.
+         */
+        post: operations["receive-child-delivery-receipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1824,6 +1853,93 @@ export interface operations {
                 };
             };
             /** @description Broker unavailable or the receipt could not be published; the provider should retry */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    "receive-child-delivery-receipt": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description HMAC-SHA256 of the raw request body, keyed with the child's webhook secret */
+                "X-Termii-Signature"?: string | null;
+                /** @description Twilio request signature, computed over the full URL including the token path segment. Required in production. */
+                "X-Twilio-Signature"?: string | null;
+                /** @description Resend / Svix unique message ID */
+                "svix-id"?: string | null;
+                /** @description Resend / Svix epoch timestamp in seconds */
+                "svix-timestamp"?: string | null;
+                /** @description Resend / Svix HMAC-SHA256 signature */
+                "svix-signature"?: string | null;
+                /** @description ZeptoMail producer signature token */
+                "producer-signature"?: string | null;
+            };
+            path: {
+                /** @description Provider slug; must be a native-child provider (`postmark`, `zeptomail`, `sendgrid`, `twilio`, `infobip`) */
+                provider: string;
+                /** @description The immutable platform child account id (`platform_provider_accounts.id`) */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenericWebhookPayload"];
+            };
+        };
+        responses: {
+            /** @description Receipt accepted and published to telemetry */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookResponse"];
+                };
+            };
+            /** @description Child secret is missing or the signature did not verify */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The callback's native child id does not match the routed account */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unknown token, wrong provider, or a non-ready child */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Protobuf or JSON encoding failure */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The child account store is unreachable or the broker is unavailable; the provider should retry */
             503: {
                 headers: {
                     [name: string]: unknown;

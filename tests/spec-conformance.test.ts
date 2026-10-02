@@ -55,6 +55,9 @@ const CONFORMANCE_MAP: Record<string, Record<string, SdkMethodAccessor>> = {
 	"/v1/webhooks/{provider}": {
 		post: (c) => c.webhooks.verifySignature,
 	},
+	"/v1/webhooks/{provider}/{token}": {
+		post: (c) => c.webhooks.verifySignature,
+	},
 };
 
 /**
@@ -70,6 +73,8 @@ const CONFORMANCE_MAP: Record<string, Record<string, SdkMethodAccessor>> = {
 const NOT_CALLED_BY_SDK: Record<string, string> = {
 	"POST /v1/webhooks/{provider}":
 		"inbound provider receipt; the SDK verifies signatures locally",
+	"POST /v1/webhooks/{provider}/{token}":
+		"inbound token-scoped provider receipt; the SDK verifies signatures locally",
 };
 
 /**
