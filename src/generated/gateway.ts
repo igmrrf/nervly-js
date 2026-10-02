@@ -496,10 +496,10 @@ export interface components {
             /**
              * @description Canonical From address for this message (e.g. `billing@yourcompany.com`).
              *
-             *     Preferred over the deprecated umbrella `sender`: the gateway resolves
-             *     `from ?? sender` and dual-writes the effective value onto both proto
-             *     tags during the transition window. Shape-checked on ingress; whether the
-             *     workspace actually owns the address is decided by the worker.
+             *     This is the only email sender field on the wire: the deprecated umbrella
+             *     `sender` spelling was removed with proto tag 1 reserved (ticket 32).
+             *     Shape-checked on ingress; whether the workspace actually owns the
+             *     address is decided by the worker.
              */
             from?: string | null;
             /** @description Optional display name paired with `from` (e.g. "Nervly Billing"). */
@@ -511,11 +511,6 @@ export interface components {
             provider?: string | null;
             /** @description Canonical reply-to address. A single, syntactically valid address. */
             reply_to?: string | null;
-            /**
-             * @description Replace the configured From address for this event only.
-             * @example billing@yourcompany.com
-             */
-            sender?: string | null;
         };
         /** @description The JSON body returned for every non-2xx response. */
         ErrorResponse: {
@@ -953,18 +948,12 @@ export interface components {
             /** @description Optional provider routing hint honoured by the downstream carrier. */
             route?: string | null;
             /**
-             * @description Replace the resolved Sender ID for this event only. Falls back to the
-             *     tenant's provider credential, then "Nervly", when omitted. Nigerian NCC
-             *     rules reject or rewrite unregistered alphanumeric Sender IDs.
-             * @example YourBrand
-             */
-            sender?: string | null;
-            /**
              * @description Canonical Sender ID for this event only.
              *
-             *     Preferred over the deprecated umbrella `sender`: the gateway resolves
-             *     `sender_id ?? sender` and dual-writes the effective value onto both
-             *     proto tags during the transition window.
+             *     This is the only SMS sender field on the wire: the deprecated umbrella
+             *     `sender` spelling was removed with proto tag 1 reserved (ticket 32).
+             *     Nigerian NCC rules reject or rewrite unregistered alphanumeric Sender
+             *     IDs.
              */
             sender_id?: string | null;
         };

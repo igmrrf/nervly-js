@@ -37,7 +37,7 @@ describe("EmailResource & Email Helpers", () => {
 			subject: "Verify Your Email",
 			html: "<p>Click here to verify</p>",
 			provider: "resend",
-			sender: "Nervly <notifications@nervly.io>",
+			from: "Nervly <notifications@nervly.io>",
 		};
 
 		const built = nervly.email.buildTriggerRequest(req);
@@ -50,7 +50,7 @@ describe("EmailResource & Email Helpers", () => {
 		assert.equal(built.payload?.html, "<p>Click here to verify</p>");
 		assert.equal(built.overrides?.email?.provider, "resend");
 		assert.equal(
-			built.overrides?.email?.sender,
+			built.overrides?.email?.from,
 			"Nervly <notifications@nervly.io>",
 		);
 		assert.equal(built.category, "transactional");
@@ -65,7 +65,7 @@ describe("EmailResource & Email Helpers", () => {
 			name: "invoice-receipt",
 			category: "billing",
 			provider: "zeptomail",
-			sender: "Billing <billing@nervly.io>",
+			from: "Billing <billing@nervly.io>",
 			customHeaders: {
 				"Reply-To": "support@nervly.io",
 				"X-Invoice-Id": "inv_9981",
@@ -79,7 +79,7 @@ describe("EmailResource & Email Helpers", () => {
 		assert.equal(built.payload?.subject, "Monthly Invoice");
 		assert.equal(built.payload?.body, "Here is your monthly invoice.");
 		assert.equal(built.overrides?.email?.provider, "zeptomail");
-		assert.equal(built.overrides?.email?.sender, "Billing <billing@nervly.io>");
+		assert.equal(built.overrides?.email?.from, "Billing <billing@nervly.io>");
 		assert.deepEqual(built.overrides?.email?.customHeaders, {
 			"Reply-To": "support@nervly.io",
 			"X-Invoice-Id": "inv_9981",
@@ -132,7 +132,7 @@ describe("EmailResource & Email Helpers", () => {
 						subject: "Password Reset",
 						html: "<p>Reset token</p>",
 						provider: "resend",
-						sender: "Security <security@nervly.io>",
+						from: "Security <security@nervly.io>",
 					},
 					{
 						idempotencyKey: "idem_email_001",

@@ -79,7 +79,7 @@ const result = await nervly.events.trigger(
     to: { subscriberId: 'usr_abc', email: 'customer@example.com' },
     payload: { trackingUrl: 'https://...' },
     overrides: {
-      email: { sender: 'orders@nervly.io' }
+      email: { from: 'orders@nervly.io' }
     }
   },
   {

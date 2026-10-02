@@ -81,10 +81,10 @@ export class EventsResource {
 			? { ...request.overrides.email }
 			: undefined;
 
-		if (request.sender || request.provider || request.customHeaders) {
+		if (request.from || request.provider || request.customHeaders) {
 			emailOverride = {
 				...(emailOverride || {}),
-				...(request.sender ? { sender: request.sender } : {}),
+				...(request.from ? { from: request.from } : {}),
 				...(request.provider ? { provider: request.provider } : {}),
 				...(request.customHeaders
 					? { customHeaders: request.customHeaders }

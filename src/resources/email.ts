@@ -17,7 +17,7 @@ export class EmailResource {
 	 * Maps to: POST /v1/events/trigger configured for the email channel.
 	 *
 	 * Normalizes string or object recipients, combines template variables,
-	 * configures provider overrides (sender, provider, customHeaders),
+	 * configures provider overrides (from, provider, customHeaders),
 	 * and dispatches the event through the Nervly Gateway data plane.
 	 *
 	 * @param request - Transactional email details and options
@@ -81,10 +81,10 @@ export class EmailResource {
 			? { ...request.overrides.email }
 			: undefined;
 
-		if (request.sender || request.provider || request.customHeaders) {
+		if (request.from || request.provider || request.customHeaders) {
 			emailOverride = {
 				...(emailOverride || {}),
-				...(request.sender ? { sender: request.sender } : {}),
+				...(request.from ? { from: request.from } : {}),
 				...(request.provider ? { provider: request.provider } : {}),
 				...(request.customHeaders
 					? { customHeaders: request.customHeaders }

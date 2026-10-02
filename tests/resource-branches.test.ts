@@ -46,11 +46,11 @@ describe("EmailResource.buildTriggerRequest — branches", () => {
 			html: "<p>hi</p>",
 			name: "custom-name",
 			category: "custom-category",
-			sender: "sender@x.test",
+			from: "from@x.test",
 			provider: "resend",
 			customHeaders: { "X-Trace": "abc" },
 			overrides: {
-				email: { sender: "original@x.test" },
+				email: { from: "original@x.test" },
 				extraParams: { tenant: "t1" },
 			},
 		});
@@ -68,7 +68,7 @@ describe("EmailResource.buildTriggerRequest — branches", () => {
 		});
 		// request-level fields win over the same keys inside `overrides.email`.
 		assert.deepEqual(built.overrides?.email, {
-			sender: "sender@x.test",
+			from: "from@x.test",
 			provider: "resend",
 			customHeaders: { "X-Trace": "abc" },
 		});
@@ -141,14 +141,14 @@ describe("EmailResource.buildTriggerRequest — branches", () => {
 		});
 	});
 
-	it("keeps only sender when that is the sole email override field", () => {
+	it("keeps only from when that is the sole email override field", () => {
 		const built = email().buildTriggerRequest({
 			to: { subscriberId: "s" },
 			subject: "S",
-			sender: "from@x.test",
+			from: "from@x.test",
 		});
 
-		assert.deepEqual(built.overrides, { email: { sender: "from@x.test" } });
+		assert.deepEqual(built.overrides, { email: { from: "from@x.test" } });
 	});
 });
 

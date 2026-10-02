@@ -100,7 +100,7 @@ export async function runBasicUsage(nervly: Nervly): Promise<BasicUsageResult> {
 			},
 			overrides: {
 				email: {
-					sender: "finance@corporation.com",
+					from: "finance@corporation.com",
 					customHeaders: { "zoho-enczapikey": "secret-token-bypass" },
 				},
 				whatsapp: {

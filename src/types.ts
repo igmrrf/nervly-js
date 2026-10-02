@@ -77,10 +77,9 @@ export interface Recipient {
 // Mirrors OpenAPI `EmailOverrideDto`, `WhatsAppOverrideDto`, `SmsOverrideDto`
 // and `ProviderOverridesDto`.
 export interface EmailOverride {
-	sender?: string | null;
 	provider?: EmailProvider | null;
 	customHeaders?: Record<string, string> | null;
-	/** Canonical From address; preferred over the deprecated `sender`. */
+	/** Canonical From address; the only email sender field on the wire. */
 	from?: string | null;
 	/** Optional display name paired with `from`. */
 	from_name?: string | null;
@@ -104,8 +103,7 @@ export interface WhatsAppOverride {
 }
 
 export interface SmsOverride {
-	sender?: string | null;
-	/** Canonical Sender ID; preferred over the deprecated `sender`. */
+	/** Canonical Sender ID; the only SMS sender field on the wire. */
 	sender_id?: string | null;
 	/** Optional provider routing hint honoured by the downstream carrier. */
 	route?: string | null;
@@ -151,7 +149,8 @@ export interface SendEmailOptions {
 	name?: string;
 	category?: string;
 	payload?: Record<string, unknown>;
-	sender?: string;
+	/** Canonical From address; compiled to `overrides.email.from`. */
+	from?: string;
 	provider?: EmailProvider;
 	customHeaders?: Record<string, string>;
 	overrides?: ProviderOverrides;

@@ -44,8 +44,8 @@ const event = await nervly.events.trigger(
     payload: { amount: '24500.00' }, // template variables ({{amount}})
     category: 'receipts',            // matched against subscriber preferences
     overrides: {
-      email: { sender: 'billing@yourcompany.com', provider: 'resend' },
-      sms: { sender: 'Nervly' },
+      email: { from: 'billing@yourcompany.com', provider: 'resend' },
+      sms: { sender_id: 'Nervly' },
       whatsapp: { template_name: 'order_shipped_v3', language: 'en_US' },
       extraParams: { custom_key: 'value' },
     },
@@ -102,7 +102,7 @@ await nervly.email.send({
   text: 'Thanks!',                  // optional plain-text alternative
   category: 'transactional',
   provider: 'resend',               // shorthand for overrides.email.provider
-  sender: 'Billing <billing@example.com>',
+  from: 'Billing <billing@example.com>',
   customHeaders: { 'Reply-To': 'support@example.com' },
   idempotencyKey: 'tx_1',
   priority: 'HIGH',

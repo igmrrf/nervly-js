@@ -4,6 +4,14 @@ All notable changes to `@nervly/sdk` are documented here. The format follows [Ke
 
 ## [Unreleased]
 
+### Changed
+
+- The email helper's from-address option is now `from` (was `sender`): `SendEmailOptions.from` and `EmailOverride.from` compile to the canonical `overrides.email.from` wire field. The SDK emits no other email sender spelling.
+
+### Removed
+
+- The deprecated umbrella `sender` property from `EmailOverride` and `SmsOverride` wire types, and the `SendEmailOptions.sender` convenience option. The gateway removed the proto field (tag 1 reserved, ticket 32); the canonical fields are `from`/`from_name` (email) and `sender_id` (SMS).
+
 ### Added
 
 - Voice channel support: the `Channel` const/type (`Channel.VOICE`), the `VoiceOverride` wire type (`script`, `voice_id`, `language`), `ProviderOverrides.voice`, and a typed `voice.send` resource with `SendVoiceOptions` / `VoiceSendRequest`.

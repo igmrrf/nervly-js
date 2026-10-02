@@ -27,7 +27,7 @@ describe("Event Trigger Schema OpenAPI Contract Test", () => {
 
 	const schemas = openApiSpec.components.schemas;
 
-	it("OpenAPI schema must declare EmailOverrideDto with sender and provider", () => {
+	it("OpenAPI schema must declare EmailOverrideDto with from and provider", () => {
 		const emailOverride = schemas["EmailOverrideDto"];
 		assert.ok(
 			emailOverride,
@@ -38,13 +38,38 @@ describe("Event Trigger Schema OpenAPI Contract Test", () => {
 			"EmailOverrideDto must have properties",
 		);
 
-		const expectedProperties = ["sender", "provider", "customHeaders"];
+		const expectedProperties = ["from", "provider", "customHeaders"];
 		for (const prop of expectedProperties) {
 			assert.ok(
 				prop in emailOverride.properties,
 				`EmailOverrideDto in OpenAPI spec missing expected property: ${prop}`,
 			);
 		}
+		assert.ok(
+			!("sender" in emailOverride.properties),
+			"EmailOverrideDto must not carry the removed umbrella `sender` field",
+		);
+	});
+
+	it("OpenAPI schema must declare SmsOverrideDto with sender_id and route only", () => {
+		const smsOverride = schemas["SmsOverrideDto"];
+		assert.ok(
+			smsOverride,
+			"SmsOverrideDto schema must be present in OpenAPI spec",
+		);
+		assert.ok(smsOverride.properties, "SmsOverrideDto must have properties");
+
+		const expectedProperties = ["sender_id", "route"];
+		for (const prop of expectedProperties) {
+			assert.ok(
+				prop in smsOverride.properties,
+				`SmsOverrideDto in OpenAPI spec missing expected property: ${prop}`,
+			);
+		}
+		assert.ok(
+			!("sender" in smsOverride.properties),
+			"SmsOverrideDto must not carry the removed umbrella `sender` field",
+		);
 	});
 
 	it("OpenAPI schema must declare ProviderOverridesDto with email, whatsapp, sms, voice, and extraParams", () => {
@@ -123,7 +148,7 @@ describe("Event Trigger Schema OpenAPI Contract Test", () => {
 			subject: "Contract Test",
 			html: "<p>Contract test html</p>",
 			provider: "resend",
-			sender: "Nervly <test@nervly.io>",
+			from: "Nervly <test@nervly.io>",
 			category: "notifications",
 		});
 
