@@ -49,7 +49,7 @@ jobs:
             ../nervly-docs
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
       # `npm run check` also runs the release-discipline gates (Ticket 20):
       # changelog/version agreement, the deprecation registry, and the
       # provenance/audit/SBOM/disclosure-policy wiring.
@@ -106,7 +106,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Assert .husky/pre-commit exists
         run: |
