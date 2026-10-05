@@ -60,7 +60,9 @@ is visible in review rather than implicit in a lockfile.
 Publishing is automated by
 [`.github/workflows/release.yml`](../.github/workflows/release.yml), triggered by
 a `v*` tag. The steps below are what that workflow runs, and what you reproduce
-locally before tagging.
+locally before tagging. The operational runbook — one-time prerequisites,
+repository secrets, published-release verification, and failure recovery — is
+[`steps.md`](../steps.md).
 
 1. Verify the contract and the build in one pass:
    ```bash

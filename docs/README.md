@@ -28,3 +28,5 @@ which is strictly customer-facing (ADR-012).
 - Generated types: [`src/generated/gateway.ts`](../src/generated/gateway.ts) — produced by
   `npm run codegen`, drift-gated by `npm run check:codegen`.
 - Production-readiness checklist: [`checklist.md`](../checklist.md).
+- Deployment runbook: [`steps.md`](../steps.md) — one-time prerequisites, local
+  verification, tagging, published-release checks, and failure recovery.
