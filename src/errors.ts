@@ -172,6 +172,22 @@ export class NervlyNetworkError extends NervlyError {
 }
 
 /**
+ * A webhook signature did not verify.
+ *
+ * `provider` names the source the caller was verifying, so a multi-provider
+ * endpoint can log which integration failed without re-deriving it.
+ */
+export class NervlyWebhookSignatureError extends NervlyError {
+	public readonly provider: string;
+
+	constructor(provider: string) {
+		super(`Invalid webhook signature from provider: ${provider}`);
+		this.name = "NervlyWebhookSignatureError";
+		this.provider = provider;
+	}
+}
+
+/**
  * Every retry attempt was used up; the SDK stopped rather than looping.
  */
 export class NervlyRetryExhaustedError extends NervlyError {
@@ -203,6 +219,7 @@ export class NervlyRetryExhaustedError extends NervlyError {
 /** Alias of {@link NervlyServerError}. */
 /** Alias of {@link NervlyNetworkError}. */
 /** Alias of {@link NervlyRetryExhaustedError}. */
+/** Alias of {@link NervlyWebhookSignatureError}. */
 export {
 	NervlyApiError as ApiError,
 	NervlyAuthenticationError as AuthenticationError,
@@ -214,4 +231,5 @@ export {
 	NervlyRetryExhaustedError as RetryExhaustedError,
 	NervlyServerError as ServerError,
 	NervlyValidationError as ValidationError,
+	NervlyWebhookSignatureError as WebhookSignatureError,
 };

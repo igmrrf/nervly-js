@@ -89,13 +89,15 @@ NervlyError
 │   ├── NervlyRateLimitError           429  (+ retryAfterMs)
 │   └── NervlyServerError              5xx  (+ statusCode as received)
 ├── NervlyNetworkError                 no response: DNS, TLS, refused, timeout (+ cause)
-└── NervlyRetryExhaustedError          retries ran and all failed (+ attempts, lastError)
+├── NervlyRetryExhaustedError          retries ran and all failed (+ attempts, lastError)
+└── NervlyWebhookSignatureError        an inbound webhook signature did not verify (+ provider)
 ```
 
 Every status-specific class has a short alias (`AuthenticationError`,
-`RateLimitError`, …) that is the *same class object*, so `instanceof` behaves
-identically whichever spelling you import. Both are exported; new code should
-prefer the aliases.
+`RateLimitError`, …), and `NervlyWebhookSignatureError` has the alias
+`WebhookSignatureError`; each alias is the *same class object*, so `instanceof`
+behaves identically whichever spelling you import. Both are exported; new code
+should prefer the aliases.
 
 `NervlyApiError` carries `statusCode`, `errorType` (the gateway's machine-readable
 code, or `UNKNOWN_ERROR`), and `requestId` when the response sent

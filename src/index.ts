@@ -161,6 +161,8 @@ export {
 	NervlyServerError as ServerError,
 	NervlyValidationError,
 	NervlyValidationError as ValidationError,
+	NervlyWebhookSignatureError,
+	NervlyWebhookSignatureError as WebhookSignatureError,
 } from "./errors.js";
 export { EmailResource } from "./resources/email.js";
 export { EventsResource } from "./resources/events.js";

@@ -9,7 +9,8 @@
  * are exercised through the resolver a consumer would use, not through a
  * relative path into `dist/`.
  *
- * Requires `npm run build` first.
+ * Self-sufficient: it builds `dist/` before packing, so `npm run check:exports`
+ * is the whole packaging proof and `npm run verify` can include it directly.
  */
 import { execFileSync } from "node:child_process";
 import {
@@ -25,9 +26,14 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+execFileSync(process.execPath, [resolve(root, "scripts/build.mjs")], {
+	cwd: root,
+	stdio: "inherit",
+});
+
 for (const build of ["dist/esm/index.js", "dist/cjs/index.js"]) {
 	if (!existsSync(resolve(root, build))) {
-		console.error(`  ${build} is missing. Run "npm run build" first.`);
+		console.error(`  ${build} is missing after the build.`);
 		process.exit(1);
 	}
 }

@@ -184,7 +184,12 @@ describe("EventsResource.triggerEmail — branches", () => {
 		assert.equal(captured.last?.body.payload?.body, "b");
 		assert.equal(captured.last?.body.name, "transactional-email");
 		assert.equal(captured.last?.body.category, "transactional");
-		assert.deepEqual(captured.last?.headers, {});
+		assert.match(
+			captured.last?.headers["Idempotency-Key"] ?? "",
+			/^[0-9a-f-]{36}$/,
+			"trigger auto-generates an idempotency key",
+		);
+		assert.equal(captured.last?.headers["X-Priority-Override"], undefined);
 	});
 
 	it("lets option values win over request values for headers", async () => {
@@ -257,7 +262,7 @@ describe("EventsResource.trigger — header branches", () => {
 		assert.deepEqual(captured.last, { "Idempotency-Key": "idem" });
 	});
 
-	it("sets only the priority header when only that option is given", async () => {
+	it("sets the priority header and auto-generates the idempotency header when only priority is given", async () => {
 		const captured = recorder<Record<string, string>>();
 
 		const events = new EventsResource(
@@ -273,7 +278,8 @@ describe("EventsResource.trigger — header branches", () => {
 			{ name: "e", to: { subscriberId: "s" } },
 			{ priority: "LOW" },
 		);
-		assert.deepEqual(captured.last, { "X-Priority-Override": "LOW" });
+		assert.equal(captured.last?.["X-Priority-Override"], "LOW");
+		assert.match(captured.last?.["Idempotency-Key"] ?? "", /^[0-9a-f-]{36}$/);
 	});
 });
 

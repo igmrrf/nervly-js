@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { describe, it } from "node:test";
+import {
+	NervlyError,
+	NervlyWebhookSignatureError,
+	WebhookSignatureError,
+} from "../src/errors.js";
 import { WebhooksResource } from "../src/resources/webhooks.js";
 
 describe("WebhooksResource", () => {
@@ -89,6 +94,79 @@ describe("WebhooksResource", () => {
 
 			assert.equal(result, false);
 		});
+
+		it("should return false for an empty secret instead of rejecting", async () => {
+			const result = await webhooks.verifySignature({
+				provider: "termii",
+				payload: '{"status": "DELIVERED"}',
+				signature: "0".repeat(64),
+				secret: "",
+			});
+
+			assert.equal(result, false);
+		});
+
+		it("should reject with NervlyWebhookSignatureError when WebCrypto fails", async () => {
+			const original = globalThis.crypto.subtle.importKey;
+			globalThis.crypto.subtle.importKey = () => {
+				throw new DOMException("boom", "OperationError");
+			};
+
+			try {
+				const error = await webhooks
+					.verifySignature({
+						provider: "termii",
+						payload: '{"status": "DELIVERED"}',
+						signature: "0".repeat(64),
+						secret: "test_secret",
+					})
+					.then(
+						() => null,
+						(e: unknown) => e,
+					);
+
+				assert.ok(error instanceof NervlyWebhookSignatureError);
+				assert.ok(error instanceof NervlyError);
+				assert.equal(error.provider, "termii");
+			} finally {
+				globalThis.crypto.subtle.importKey = original;
+			}
+		});
+
+		it("should accept a Uint8Array payload without Buffer or node:crypto", async () => {
+			const secret = "bytes_secret";
+			const payload = new TextEncoder().encode('{"status":"DELIVERED"}');
+			const signature = createHmac("sha256", secret)
+				.update(payload)
+				.digest("hex");
+
+			const result = await webhooks.verifySignature({
+				provider: "termii",
+				payload,
+				signature,
+				secret,
+			});
+
+			assert.equal(result, true);
+		});
+
+		it("should accept an uppercase hex signature", async () => {
+			const secret = "case_secret";
+			const payload = '{"status": "DELIVERED"}';
+			const signature = createHmac("sha256", secret)
+				.update(payload)
+				.digest("hex")
+				.toUpperCase();
+
+			const result = await webhooks.verifySignature({
+				provider: "termii",
+				payload,
+				signature,
+				secret,
+			});
+
+			assert.equal(result, true);
+		});
 	});
 
 	describe("parse", () => {
@@ -114,6 +192,15 @@ describe("WebhooksResource", () => {
 
 			const result = webhooks.parse(buffer);
 			assert.equal(result.message_id, "msg_789");
+			assert.equal(result.status, "SENT");
+		});
+
+		it("should parse Uint8Array payloads", () => {
+			const payload = { message_id: "msg_bytes", status: "sent" };
+			const bytes = new TextEncoder().encode(JSON.stringify(payload));
+
+			const result = webhooks.parse(bytes);
+			assert.equal(result.message_id, "msg_bytes");
 			assert.equal(result.status, "SENT");
 		});
 
@@ -151,17 +238,42 @@ describe("WebhooksResource", () => {
 			assert.equal(result.status, "CLICKED");
 		});
 
-		it("should throw on invalid signature", async () => {
-			await assert.rejects(
-				() =>
-					webhooks.verifyAndParse({
-						provider: "termii",
-						payload: '{"test": true}',
-						signature: "bad_sig",
-						secret: "secret",
-					}),
-				/Invalid webhook signature/,
-			);
+		it("should throw NervlyWebhookSignatureError on invalid signature", async () => {
+			const error = await webhooks
+				.verifyAndParse({
+					provider: "termii",
+					payload: '{"test": true}',
+					signature: "bad_sig",
+					secret: "secret",
+				})
+				.then(
+					() => null,
+					(e: unknown) => e,
+				);
+
+			assert.ok(error instanceof NervlyWebhookSignatureError);
+			assert.ok(error instanceof NervlyError);
+			assert.equal(error.provider, "termii");
+			assert.match(error.message, /Invalid webhook signature/);
+			assert.equal(WebhookSignatureError, NervlyWebhookSignatureError);
+		});
+
+		it("should reject with NervlyWebhookSignatureError for an empty secret", async () => {
+			const error = await webhooks
+				.verifyAndParse({
+					provider: "termii",
+					payload: '{"status": "DELIVERED"}',
+					signature: "0".repeat(64),
+					secret: "",
+				})
+				.then(
+					() => null,
+					(e: unknown) => e,
+				);
+
+			assert.ok(error instanceof NervlyWebhookSignatureError);
+			assert.ok(error instanceof NervlyError);
+			assert.equal(error.provider, "termii");
 		});
 	});
 });

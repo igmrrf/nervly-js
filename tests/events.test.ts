@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { Nervly } from "../src/index.js";
 import { EventsResource } from "../src/resources/events.js";
 import type {
 	BulkTriggerRequest,
@@ -8,6 +9,7 @@ import type {
 	TriggerEventRequest,
 	TriggerEventResponse,
 } from "../src/types.js";
+import { jsonResponse, withFetch } from "./helpers/http.js";
 import { mockClient, recorder } from "./helpers/mock-client.js";
 
 describe("EventsResource", () => {
@@ -67,7 +69,7 @@ describe("EventsResource", () => {
 		assert.deepEqual(result, response);
 	});
 
-	it("should omit both headers when no options are given", async () => {
+	it("should auto-generate an Idempotency-Key and omit priority when no options are given", async () => {
 		const captured = recorder<Record<string, string>>();
 
 		const events = new EventsResource(
@@ -90,7 +92,119 @@ describe("EventsResource", () => {
 			to: { subscriberId: "usr_001" },
 		});
 
-		assert.deepEqual(captured.last, {});
+		assert.match(
+			captured.last?.["Idempotency-Key"] ?? "",
+			/^[0-9a-f-]{36}$/,
+			"a UUID key is generated for the caller",
+		);
+		assert.equal(captured.last?.["X-Priority-Override"], undefined);
+	});
+
+	it("should treat an empty explicit Idempotency-Key as absent and let a non-empty one win", async () => {
+		const captured = recorder<Record<string, string>>();
+
+		const events = new EventsResource(
+			mockClient({
+				post: (_path, _body, headers) => {
+					captured.push(headers ?? {});
+					return {
+						eventId: "evt_1",
+						status: "QUEUED",
+						priority: "NORMAL",
+						channel: "sms",
+						timestamp: "2026-08-03T00:00:00Z",
+					} satisfies TriggerEventResponse;
+				},
+			}),
+		);
+
+		await events.trigger(
+			{ name: "empty_key", to: { subscriberId: "usr_001" } },
+			{ idempotencyKey: "" },
+		);
+		await events.trigger(
+			{ name: "explicit_key", to: { subscriberId: "usr_001" } },
+			{ idempotencyKey: "caller-key-verbatim" },
+		);
+
+		assert.match(
+			captured.calls[0]?.["Idempotency-Key"] ?? "",
+			/^[0-9a-f-]{36}$/,
+			"an empty key is treated as absent and replaced by a generated UUID",
+		);
+		assert.equal(
+			captured.calls[1]?.["Idempotency-Key"],
+			"caller-key-verbatim",
+			"a non-empty explicit key is sent verbatim",
+		);
+	});
+
+	it("should generate a distinct key per logical call", async () => {
+		const captured = recorder<Record<string, string>>();
+
+		const events = new EventsResource(
+			mockClient({
+				post: (_path, _body, headers) => {
+					captured.push(headers ?? {});
+					return {
+						eventId: "evt_1",
+						status: "QUEUED",
+						priority: "NORMAL",
+						channel: "sms",
+						timestamp: "2026-08-03T00:00:00Z",
+					} satisfies TriggerEventResponse;
+				},
+			}),
+		);
+
+		await events.trigger({ name: "a", to: { subscriberId: "usr_001" } });
+		await events.trigger({ name: "b", to: { subscriberId: "usr_001" } });
+
+		assert.notEqual(
+			captured.calls[0]?.["Idempotency-Key"],
+			captured.calls[1]?.["Idempotency-Key"],
+		);
+	});
+
+	it("should reuse one generated Idempotency-Key across internal retries", async () => {
+		const keys: Array<string | null> = [];
+		const response: TriggerEventResponse = {
+			eventId: "evt_retried",
+			status: "QUEUED",
+			priority: "NORMAL",
+			channel: "sms",
+			timestamp: "2026-08-03T00:00:00Z",
+		};
+
+		await withFetch(
+			(_url, init) => {
+				keys.push(new Headers(init?.headers).get("Idempotency-Key"));
+				return keys.length === 1
+					? jsonResponse(503, {
+							error: "UNAVAILABLE",
+							message: "try later",
+							status_code: 503,
+						})
+					: jsonResponse(200, response);
+			},
+			async () => {
+				const nervly = new Nervly({
+					apiKey: "k",
+					baseUrl: "https://test.example",
+					maxRetries: 1,
+					retryBaseDelay: 1,
+				});
+				const result = await nervly.events.trigger({
+					name: "retried",
+					to: { subscriberId: "usr_001" },
+				});
+				assert.deepEqual(result, response);
+			},
+		);
+
+		assert.equal(keys.length, 2, "the 503 was retried once");
+		assert.match(keys[0] ?? "", /^[0-9a-f-]{36}$/);
+		assert.equal(keys[1], keys[0], "the same key rides both attempts");
 	});
 
 	it("should call bulkTrigger with events array", async () => {

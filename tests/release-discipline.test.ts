@@ -66,6 +66,43 @@ describe("npm release security", () => {
 	});
 });
 
+describe("package manifest metadata", () => {
+	const pkg = readJson<{
+		files: string[];
+		engines?: { node?: string };
+		repository?: { type?: string; url?: string };
+		homepage?: string;
+		bugs?: { url?: string };
+		keywords?: string[];
+	}>("package.json");
+
+	it("declares the public GitHub repository for provenance", () => {
+		assert.equal(pkg.repository?.type, "git");
+		assert.equal(
+			pkg.repository?.url,
+			"git+https://github.com/igmrrf/nervly-js.git",
+		);
+		assert.equal(pkg.homepage, "https://github.com/igmrrf/nervly-js#readme");
+		assert.equal(pkg.bugs?.url, "https://github.com/igmrrf/nervly-js/issues");
+		assert.ok(
+			Array.isArray(pkg.keywords) && pkg.keywords.length > 0,
+			"keywords are declared",
+		);
+	});
+
+	it("states the Node floor and ships LICENSE and src", () => {
+		assert.equal(pkg.engines?.node, ">=24.0.0");
+		assert.ok(pkg.files.includes("LICENSE"));
+		assert.ok(pkg.files.includes("src"));
+	});
+
+	it("ships the MIT license with the Nervly holder", () => {
+		const license = read("LICENSE");
+		assert.match(license, /MIT License/);
+		assert.match(license, /Copyright \(c\) 2026 Nervly/);
+	});
+});
+
 describe("version compatibility matrix", () => {
 	it("maps the current SDK version to the committed gateway API version", () => {
 		const pkg = readJson<{ version: string }>("package.json");

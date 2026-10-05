@@ -19,7 +19,7 @@ and "the gate fails when it should" are different claims.
 | Runtime path coverage | `npm test` (`tests/spec-conformance.test.ts`) | Every path+method in the spec has an SDK method, no stale mappings, every referenced schema is modelled |
 | Client contract coverage | `npm run test:coverage` | Every public resource method is exercised over 2xx/4xx/5xx, and line/branch/function coverage stays at or above 80% |
 | Mutation | `npm run test:mutation` | Seeded defects in retry, backoff, encoding, auth, and error mapping make the owning tests fail |
-| Packaging | `npm run build && npm run check:exports` | The packed tarball loads and type-checks as both ESM and CJS |
+| Packaging | `npm run check:exports` (builds itself first) | The packed tarball loads and type-checks as both ESM and CJS |
 
 `npm run check` runs the first two. `npm test` builds, then runs the coverage
 gate followed by the mutation gate. CI runs all six.
@@ -102,8 +102,8 @@ pass even with both conditions pointing at the same build.
 ## 3. Dual ESM/CJS build
 
 ```bash
-npm run build          # tsc ×2 → dist/esm + dist/cjs, each with a type marker
-npm run check:exports  # packs, installs into a scratch dir, loads + type-checks both
+npm run check:exports  # builds (tsc ×2 → dist/esm + dist/cjs), then packs,
+                       # installs into a scratch dir, loads + type-checks both
 ```
 
 `dist/esm` is compiled with `module: NodeNext` and `dist/cjs` with
@@ -223,12 +223,12 @@ mutations readable in review.
 ## 5. Running everything
 
 ```bash
-npm install
+npm ci
 npm run check           # codegen drift + type-level conformance + typecheck
 npm test                # build → coverage thresholds → mutation gate
 npm run test:coverage   # builds, then the coverage gate (standalone)
 npm run test:mutation   # mutation gate only (no build needed)
-npm run build
-npm run check:exports
+npm run check:exports   # builds, then the packaging proof (standalone)
+npm run verify          # check + test + check:exports, the release gate
 ```
 

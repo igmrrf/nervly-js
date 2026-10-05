@@ -142,8 +142,8 @@ const MUTATIONS = [
 	{
 		id: "idempotency-header-skipped",
 		file: "src/resources/events.ts",
-		find: "\t\tif (options?.idempotencyKey) {",
-		replace: "\t\tif (false) {",
+		find: '\t\theaders["Idempotency-Key"] = idempotencyKey;',
+		replace: '\t\theaders["X-Mutated-No-Idempotency"] = idempotencyKey;',
 		test: "tests/http-contract.test.ts",
 		proves: "the Idempotency-Key header is sent",
 	},

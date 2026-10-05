@@ -17,8 +17,10 @@ import {
 	NervlyRetryExhaustedError,
 	NervlyServerError,
 	NervlyValidationError,
+	NervlyWebhookSignatureError,
 	RateLimitError,
 	ValidationError,
+	WebhookSignatureError,
 } from "../src/index.js";
 import { SDK_VERSION } from "../src/version.js";
 
@@ -36,6 +38,7 @@ describe("Error hierarchy", () => {
 			new NervlyServerError(),
 			new NervlyNetworkError("offline"),
 			new NervlyRetryExhaustedError(3, new Error("last")),
+			new NervlyWebhookSignatureError("termii"),
 		];
 
 		for (const error of errors) {
@@ -69,6 +72,7 @@ describe("Error hierarchy", () => {
 		assert.equal(sdk.NetworkError, NervlyNetworkError);
 		assert.equal(sdk.RetryExhaustedError, NervlyRetryExhaustedError);
 		assert.equal(sdk.NervlySdkError, NervlyError);
+		assert.equal(WebhookSignatureError, NervlyWebhookSignatureError);
 
 		// The alias catches what the long name throws.
 		const caught: unknown = (() => {

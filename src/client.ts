@@ -1,6 +1,7 @@
 import {
 	NervlyApiError,
 	NervlyAuthenticationError,
+	NervlyError,
 	NervlyIdempotencyError,
 	NervlyNetworkError,
 	NervlyNotFoundError,
@@ -38,12 +39,36 @@ export class NervlyHttpClient {
 		if (!config.apiKey) {
 			throw new NervlyAuthenticationError("API key is required");
 		}
+		if (
+			config.maxRetries !== undefined &&
+			(!Number.isInteger(config.maxRetries) || config.maxRetries < 0)
+		) {
+			throw new NervlyError(
+				`maxRetries must be a non-negative integer, received ${config.maxRetries}`,
+			);
+		}
+		if (
+			config.timeout !== undefined &&
+			(!Number.isFinite(config.timeout) || config.timeout <= 0)
+		) {
+			throw new NervlyError(
+				`timeout must be a positive finite number of milliseconds, received ${config.timeout}`,
+			);
+		}
+		if (
+			config.retryBaseDelay !== undefined &&
+			(!Number.isFinite(config.retryBaseDelay) || config.retryBaseDelay <= 0)
+		) {
+			throw new NervlyError(
+				`retryBaseDelay must be a positive finite number of milliseconds, received ${config.retryBaseDelay}`,
+			);
+		}
 		this.apiKey = config.apiKey;
 		this.baseUrl =
 			config.baseUrl?.replace(/\/$/, "") || "https://api.nervly.io";
-		this.timeout = config.timeout || 10000;
+		this.timeout = config.timeout ?? 10000;
 		this.maxRetries = config.maxRetries ?? 3;
-		this.retryBaseDelay = config.retryBaseDelay || 1000;
+		this.retryBaseDelay = config.retryBaseDelay ?? 1000;
 	}
 
 	/**
@@ -109,13 +134,15 @@ export class NervlyHttpClient {
 		const url = `${this.baseUrl}${options.path.startsWith("/") ? options.path : `/${options.path}`}`;
 
 		let attempt = 0;
-		let lastError: Error | null = null;
 
-		while (attempt <= this.maxRetries) {
+		// `maxRetries` is validated as a non-negative integer in the constructor,
+		// so `shouldRetry` bounds the loop and every exit happens inside `catch`.
+		while (true) {
 			try {
 				return await this.executeRequest<T>(url, options);
 			} catch (error) {
-				lastError = error instanceof Error ? error : new Error(String(error));
+				const lastError =
+					error instanceof Error ? error : new Error(String(error));
 
 				if (this.shouldRetry(lastError, attempt)) {
 					attempt++;
@@ -131,8 +158,6 @@ export class NervlyHttpClient {
 				throw lastError;
 			}
 		}
-
-		throw new NervlyRetryExhaustedError(attempt, lastError!);
 	}
 
 	private async executeRequest<T>(
@@ -181,7 +206,23 @@ export class NervlyHttpClient {
 			return {} as T;
 		}
 
-		return response.json() as Promise<T>;
+		// A 2xx with an empty body means "accepted, nothing to return" just as
+		// 204 does. Read the text first so malformed JSON is classified as an SDK
+		// error instead of leaking the JSON parser's raw SyntaxError.
+		const text = await response.text();
+		if (text.length === 0) {
+			return {} as T;
+		}
+
+		try {
+			return JSON.parse(text) as T;
+		} catch (error) {
+			throw new NervlyError(
+				`Failed to parse the ${response.status} response body as JSON: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+			);
+		}
 	}
 
 	private async handleErrorResponse(response: Response): Promise<never> {

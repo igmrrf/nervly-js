@@ -508,7 +508,7 @@ export interface WebhookPayload {
 
 export interface WebhookVerifyOptions {
 	provider: string;
-	payload: string | Buffer;
+	payload: string | Uint8Array;
 	signature: string;
 	secret: string;
 }

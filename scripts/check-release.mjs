@@ -5,16 +5,19 @@
  * The release claims — provenance, a runtime dependency audit, an SBOM, and a
  * published disclosure policy — are only real if the pipeline that ships the
  * package enforces them. This gate reads the manifest, the tagged release
- * workflow, `SECURITY.md`, and the compatibility matrix and fails when any of
- * those claims is absent or drifts.
+ * workflow, `SECURITY.md`, `LICENSE`, the README's Node floor, and the
+ * compatibility matrix and fails when any of those claims is absent or drifts.
  *
  * It cannot publish to npm; what it proves is that the one path that *does*
  * publish is configured to sign with provenance, audit, and inventory the
  * artifact. Exported and self-tested against mutations.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/** The one repository the package may be published from. */
+const GITHUB_REPOSITORY_URL = "git+https://github.com/igmrrf/nervly-js.git";
 
 function cells(line) {
 	return line
@@ -48,10 +51,30 @@ export function evaluateRelease({
 	security,
 	matrix,
 	specVersion,
+	readme,
+	licenseExists,
 }) {
 	const errors = [];
 
 	// ── Manifest ──────────────────────────────────────────────────────────────
+	if (pkg.repository?.url !== GITHUB_REPOSITORY_URL) {
+		errors.push(
+			`package.json repository.url must be ${GITHUB_REPOSITORY_URL} for provenance to point at the source`,
+		);
+	}
+
+	const readmeNode = Number(readme?.match(/Node\s*(\d+)\+?/)?.[1]);
+	const enginesMajor = /^>=\s*(\d+)/.exec(pkg.engines?.node ?? "")?.[1];
+	if (!enginesMajor) {
+		errors.push('package.json engines.node must state a ">=NN" floor');
+	} else if (!readmeNode) {
+		errors.push("README.md must state the Node floor as `Node NN+`");
+	} else if (Number(enginesMajor) !== readmeNode) {
+		errors.push(
+			`package.json engines.node major ${enginesMajor} differs from the README Node floor ${readmeNode}`,
+		);
+	}
+
 	const publish = pkg.publishConfig ?? {};
 	if (publish.access !== "public") {
 		errors.push('package.json publishConfig.access must be "public"');
@@ -75,10 +98,14 @@ export function evaluateRelease({
 		"README.md",
 		"SECURITY.md",
 		"CHANGELOG.md",
+		"LICENSE",
 	]) {
 		if (!files.includes(required)) {
 			errors.push(`package.json files[] must ship ${required}`);
 		}
+	}
+	if (licenseExists !== true) {
+		errors.push("LICENSE must exist at the repository root");
 	}
 
 	if (!pkg.scripts?.audit)
@@ -164,24 +191,43 @@ export function readInputs(root) {
 		join(root, "docs/version-compatibility.md"),
 		"utf8",
 	);
+	const readme = readFileSync(join(root, "README.md"), "utf8");
+	const licenseExists = existsSync(join(root, "LICENSE"));
 	const spec = JSON.parse(
 		readFileSync(
 			join(root, "../nervly-docs/static/openapi/gateway.json"),
 			"utf8",
 		),
 	);
-	return { pkg, workflow, security, matrix, specVersion: spec.info.version };
+	return {
+		pkg,
+		workflow,
+		security,
+		matrix,
+		readme,
+		licenseExists,
+		specVersion: spec.info.version,
+	};
 }
 
 const GOOD = {
 	pkg: {
 		version: "0.1.0",
+		repository: { type: "git", url: GITHUB_REPOSITORY_URL },
+		engines: { node: ">=24.0.0" },
 		publishConfig: {
 			access: "public",
 			provenance: true,
 			registry: "https://registry.npmjs.org/",
 		},
-		files: ["dist/esm", "dist/cjs", "README.md", "SECURITY.md", "CHANGELOG.md"],
+		files: [
+			"dist/esm",
+			"dist/cjs",
+			"README.md",
+			"SECURITY.md",
+			"CHANGELOG.md",
+			"LICENSE",
+		],
 		scripts: { audit: "npm audit", sbom: "node scripts/sbom.mjs" },
 	},
 	workflow:
@@ -192,6 +238,8 @@ const GOOD = {
 		"# Security Policy\n\n## Reporting a vulnerability\n\nEmail security@nervly.io\n\n" +
 		"## Disclosure\n\ncoordinated\n\n## Supported versions\n\nlatest 0.x\n",
 	matrix: "| `0.1.0` | `0.1.0` | Supported | Current |\n",
+	readme: "# @nervly/sdk\n\nShips as both ES modules and CommonJS. Node 24+.\n",
+	licenseExists: true,
 	specVersion: "0.1.0",
 };
 
@@ -209,6 +257,38 @@ function selfTest() {
 		[
 			"security not shipped",
 			{ pkg: { ...GOOD.pkg, files: ["dist/esm", "dist/cjs"] } },
+		],
+		["repository removed", { pkg: { ...GOOD.pkg, repository: undefined } }],
+		[
+			"repository points at another host",
+			{
+				pkg: {
+					...GOOD.pkg,
+					repository: {
+						type: "git",
+						url: "git+https://github.com/igmrrf/nervly-sdk.git",
+					},
+				},
+			},
+		],
+		["LICENSE missing from disk", { licenseExists: false }],
+		[
+			"LICENSE not shipped",
+			{
+				pkg: {
+					...GOOD.pkg,
+					files: GOOD.pkg.files.filter((file) => file !== "LICENSE"),
+				},
+			},
+		],
+		[
+			"engines floor drifts from the README",
+			{ pkg: { ...GOOD.pkg, engines: { node: ">=26.0.0" } } },
+		],
+		["engines removed", { pkg: { ...GOOD.pkg, engines: undefined } }],
+		[
+			"README loses the Node floor",
+			{ readme: "# @nervly/sdk\n\nNo runtime requirement stated.\n" },
 		],
 		[
 			"workflow lost the provenance flag",
@@ -253,6 +333,6 @@ if (
 		process.exit(1);
 	}
 	console.log(
-		"✓ provenance, audit, SBOM, disclosure policy, and matrix are wired",
+		"✓ provenance, manifest metadata, LICENSE, audit, SBOM, disclosure policy, and matrix are wired",
 	);
 }

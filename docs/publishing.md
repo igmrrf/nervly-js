@@ -29,7 +29,7 @@ tagged release workflow:
 | --- | --- | --- |
 | Changelog | `npm run check:changelog` | `package.json`, `src/version.ts`, and a dated, non-empty Keep-a-Changelog entry all agree |
 | Deprecations | `npm run check:deprecations` | every `@deprecated` symbol is registered in `deprecations.json`, carries the predicted annotation, and is removed before its `removeIn` window closes |
-| Release | `npm run check:release` | provenance, audit, SBOM, `SECURITY.md`, and the [compatibility matrix](version-compatibility.md) are all wired |
+| Release | `npm run check:release` | provenance, audit, SBOM, `SECURITY.md`, and the [compatibility matrix](version-compatibility.md) are all wired; the `repository` URL is the GitHub repo, `LICENSE` exists on disk and in `files[]`, and the `engines.node` major agrees with the Node floor stated in the README |
 
 The deprecation policy is a one-minor warning. A release that reaches a
 deprecated symbol's `removeIn` version without deleting the symbol fails
@@ -37,8 +37,10 @@ deprecated symbol's `removeIn` version without deleting the symbol fails
 
 ## 2. What Ships
 
-`files` limits the tarball to `dist/esm`, `dist/cjs`, and `README.md`. The
-`exports` map is the only supported entry point:
+`files` limits the tarball to the built `dist/esm` and `dist/cjs` trees, the
+`src/` sources (so the shipped source maps resolve), `README.md`,
+`CHANGELOG.md`, `SECURITY.md`, and `LICENSE`. The `exports` map is the only
+supported entry point:
 
 | Condition | JavaScript | Declarations |
 | --- | --- | --- |
@@ -62,12 +64,14 @@ locally before tagging.
 
 1. Verify the contract and the build in one pass:
    ```bash
-   npm install
-   npm run check          # codegen, types, changelog, deprecations, release, tsc
-   npm test               # unit + contract tests (rebuilds dist via pretest)
-   npm run build
-   npm run check:exports  # packed tarball loads and type-checks as ESM and CJS
+   npm ci
+   npm run verify         # check + tests + the packaging proof
    ```
+   `verify` runs `check` (codegen, types, changelog, deprecations, release,
+   tsc), `test` (coverage thresholds and the mutation harness), and
+   `check:exports`. `check:exports` builds `dist/` itself before packing, so the
+   packaging proof is part of the one command rather than a step a release can
+   skip.
 2. Update `version` in `package.json` and `SDK_VERSION` in `src/version.ts` to
    match. `tests/api-stability.test.ts` asserts the two agree, and
    `check:changelog` fails when the new version has no dated entry, so a
@@ -78,7 +82,7 @@ locally before tagging.
 4. Audit the runtime dependency tree and inventory the build:
    ```bash
    npm run audit          # fails on high/critical advisories (runtime)
-   npm run sbom            # writes .security-reports/sbom/nervly-sdk.cdx.json
+   npm run sbom            # writes .security-reports/sbom/nervly-js.cdx.json
    ```
 5. Tag and push. The workflow re-runs the gates, checks that the tag equals
    `v<package.json version>`, then:
@@ -88,6 +92,13 @@ locally before tagging.
    Provenance is signed by the workflow's OIDC identity (`id-token: write`), so
    the tarball is cryptographically linked to the commit that built it. The SBOM
    is attached to the GitHub release.
+
+   Provenance only verifies if the source is publicly readable: npm records the
+   `repository` URL from `package.json`, and consumers replay the build from
+   that repository. So the `repository` URL must match the package and the
+   GitHub repository (`igmrrf/nervly-js`) must be public before the first
+   tagged publish. `check:release` pins the URL; making the repo public is a
+   one-time human step outside this workflow.
 
 ### Why `--provenance` is passed twice
 

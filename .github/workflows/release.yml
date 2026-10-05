@@ -21,6 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # check-codegen.mjs and check-release.mjs (both run by `npm run check`
+      # inside `npm run verify`) read
+      # ../nervly-docs/static/openapi/gateway.json — a real dependency hidden
+      # inside the npm scripts, so the fixture must be checked out or a tag
+      # push dies with ENOENT before it can publish.
+      - name: Checkout nervly-docs (OpenAPI spec fixture)
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository_owner }}/nervly-docs.git" \
+            ../nervly-docs
+
       - uses: actions/setup-node@v7
         with:
           node-version: 26

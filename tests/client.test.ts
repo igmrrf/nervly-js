@@ -12,7 +12,7 @@ import {
 	NervlyValidationError,
 } from "../src/errors.js";
 import { Nervly } from "../src/index.js";
-import type { HealthStatus } from "../src/types.js";
+import type { HealthStatus, NervlyConfig } from "../src/types.js";
 
 /** Replaces `globalThis.fetch` for the duration of `run`, then restores it. */
 async function withFetch(
@@ -579,5 +579,99 @@ describe("NervlyHttpClient — error classification", () => {
 			() => new NervlyHttpClient({ apiKey: "" }),
 			/API key is required/,
 		);
+	});
+});
+
+describe("NervlyHttpClient — config validation", () => {
+	const cases: Array<[keyof NervlyConfig, number, RegExp]> = [
+		["maxRetries", -1, /maxRetries/],
+		["maxRetries", 1.5, /maxRetries/],
+		["maxRetries", Number.NaN, /maxRetries/],
+		["maxRetries", Number.POSITIVE_INFINITY, /maxRetries/],
+		["timeout", 0, /timeout/],
+		["timeout", -5, /timeout/],
+		["timeout", Number.NaN, /timeout/],
+		["timeout", Number.POSITIVE_INFINITY, /timeout/],
+		["retryBaseDelay", 0, /retryBaseDelay/],
+		["retryBaseDelay", -1, /retryBaseDelay/],
+		["retryBaseDelay", Number.NaN, /retryBaseDelay/],
+		["retryBaseDelay", Number.POSITIVE_INFINITY, /retryBaseDelay/],
+	];
+
+	for (const [field, value, pattern] of cases) {
+		it(`should reject ${field}: ${String(value)}`, () => {
+			assert.throws(
+				() => new NervlyHttpClient({ apiKey: "k", [field]: value }),
+				(error: unknown) =>
+					error instanceof NervlyError && pattern.test(error.message),
+			);
+		});
+	}
+
+	it("should apply defaults only when the field is undefined", () => {
+		const client = new NervlyHttpClient({
+			apiKey: "k",
+			timeout: undefined,
+			maxRetries: undefined,
+			retryBaseDelay: undefined,
+		}) as unknown as {
+			timeout: number;
+			maxRetries: number;
+			retryBaseDelay: number;
+		};
+
+		assert.equal(client.timeout, 10000);
+		assert.equal(client.maxRetries, 3);
+		assert.equal(client.retryBaseDelay, 1000);
+	});
+});
+
+describe("NervlyHttpClient — response bodies", () => {
+	it("should return {} for a 2xx with an empty body", async () => {
+		await withFetch(
+			() => new Response(null, { status: 200 }),
+			async () => {
+				const client = new NervlyHttpClient({
+					apiKey: "k",
+					baseUrl: "https://example.test",
+					maxRetries: 0,
+				});
+
+				assert.deepEqual(await client.get("/v1/health"), {});
+			},
+		);
+	});
+
+	it("should throw a NervlyError, not a SyntaxError, for malformed JSON", async () => {
+		let attempts = 0;
+
+		await withFetch(
+			() => {
+				attempts += 1;
+				return new Response("not json", {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				});
+			},
+			async () => {
+				const client = new NervlyHttpClient({
+					apiKey: "k",
+					baseUrl: "https://example.test",
+					maxRetries: 2,
+					retryBaseDelay: 1,
+				});
+
+				const error = await client.get("/v1/health").then(
+					() => null,
+					(e: unknown) => e,
+				);
+
+				assert.ok(error instanceof NervlyError);
+				assert.ok(!(error instanceof SyntaxError));
+				assert.match(error.message, /parse/i);
+			},
+		);
+
+		assert.equal(attempts, 1, "a parse failure is not retryable");
 	});
 });

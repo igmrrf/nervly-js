@@ -30,8 +30,13 @@ permissions:
 
 jobs:
   sdk:
-    name: SDK — Typecheck & Tests
+    name: SDK — Typecheck & Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The declared floor and the pinned toolchain are both exercised.
+        node-version: [24, 26]
     steps:
       - uses: actions/checkout@v7
       # check-codegen.mjs and check-release.mjs (both run by `npm run check`)
@@ -49,14 +54,14 @@ jobs:
             ../nervly-docs
       - uses: actions/setup-node@v7
         with:
-          node-version: 26
+          node-version: ${{ matrix.node-version }}
       # `npm run check` also runs the release-discipline gates (Ticket 20):
       # changelog/version agreement, the deprecation registry, and the
       # provenance/audit/SBOM/disclosure-policy wiring.
       - name: sdk
         run: |
           set -euo pipefail
-          npm install
+          npm ci
           npm run check
           npm test
       # README-as-tested gate (checklist.md Documentation#01): the README's
@@ -87,7 +92,7 @@ jobs:
       # gates against this commit instead of waiting for the next manual run
       # there or a full `make push-all`.
       - name: Notify nervly-base (repository_dispatch)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && matrix.node-version == 26
         env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
         run: |

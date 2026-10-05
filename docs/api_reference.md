@@ -320,17 +320,18 @@ non-2xx status.
 ```typescript
 const payload = await nervly.webhooks.verifyAndParse({
   provider: 'resend',
-  payload: req.body,                       // raw string or Buffer — not parsed JSON
+  payload: req.body,                       // raw string or Uint8Array (Buffer included) — not parsed JSON
   signature: req.headers['x-nervly-signature']!,
   secret: process.env.NERVLY_WEBHOOK_SECRET!,
 });
 // { message_id?, recipient?, status?, channel?, latency_ms?, cost? }
 ```
 
-Comparison is HMAC-SHA256 through `timingSafeEqual`, and a length mismatch
-returns `false` rather than throwing. `verifyAndParse` throws a plain `Error`
-with `Invalid webhook signature from provider: <provider>` when verification
-fails — handle it as a 400 to your own caller.
+Comparison is HMAC-SHA256 through the runtime-neutral WebCrypto primitive with
+a constant-time comparison, and a length mismatch returns `false` rather than
+throwing. `verifyAndParse` throws `NervlyWebhookSignatureError` (alias
+`WebhookSignatureError`, carrying `provider`) when verification fails — handle
+it as a 400 to your own caller.
 
 ---
 

@@ -8,12 +8,21 @@ import type {
 	TriggerEventResponse,
 } from "../types.js";
 
+/** A fresh idempotency key for one logical trigger call. */
+function generateIdempotencyKey(): string {
+	return globalThis.crypto.randomUUID();
+}
+
 export class EventsResource {
 	constructor(private readonly client: NervlyHttpClient) {}
 
 	/**
 	 * Trigger a single notification event.
 	 * Maps to: POST /v1/events/trigger
+	 *
+	 * A unique `Idempotency-Key` is generated when the caller does not supply
+	 * one, so the SDK's own retries of this call cannot double-send. An explicit
+	 * `options.idempotencyKey` always wins.
 	 *
 	 * @param data - The event trigger payload
 	 * @param options - Optional idempotency key and priority override
@@ -23,10 +32,8 @@ export class EventsResource {
 		options?: TriggerEventOptions,
 	): Promise<TriggerEventResponse> {
 		const headers: Record<string, string> = {};
-
-		if (options?.idempotencyKey) {
-			headers["Idempotency-Key"] = options.idempotencyKey;
-		}
+		const idempotencyKey = options?.idempotencyKey || generateIdempotencyKey();
+		headers["Idempotency-Key"] = idempotencyKey;
 
 		if (options?.priority) {
 			headers["X-Priority-Override"] = options.priority;

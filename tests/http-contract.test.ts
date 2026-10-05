@@ -354,13 +354,17 @@ describe("resource methods — 2xx wire contract", () => {
 		});
 	}
 
-	it("omits Idempotency-Key and X-Priority-Override when no options are given", async () => {
+	it("auto-generates Idempotency-Key and omits X-Priority-Override when no options are given", async () => {
 		await withFetch(
 			() => jsonResponse(200, TRIGGER_RESPONSE),
 			async (requests) => {
 				const nervly = new Nervly({ apiKey: API_KEY, baseUrl: BASE_URL });
 				await nervly.events.trigger(triggerInput);
-				assert.equal(requests[0]!.headers.get("idempotency-key"), null);
+				assert.match(
+					requests[0]!.headers.get("idempotency-key") ?? "",
+					/^[0-9a-f-]{36}$/,
+					"a unique key is generated for the caller",
+				);
 				assert.equal(requests[0]!.headers.get("x-priority-override"), null);
 			},
 		);
