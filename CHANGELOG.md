@@ -4,11 +4,26 @@ All notable changes to `@nervly/sdk` are documented here. The format follows [Ke
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-06
+
+### Added
+
+- Sender-identity types now cover the control plane's WhatsApp surface: `SenderChannel` includes `whatsapp`, `IdentityUnit` includes `phone_number`, and `CreateSenderInput` / `CreateBindingInput` accept the provider-native `unit_value` (required for WhatsApp bindings, refused for every other channel).
+
+### Changed
+
+- README documents `nervly.users.updatePreferences` as the canonical preferences call; `nervly.subscribers.updatePreferences` is named as its deprecated alias (removal in 0.2.0).
+- README states that `to.subscriberId` is required and stored with the message, and describes erasure accurately: contact data and preferences are deleted and queued deliveries suppressed, while the subscriber ID is retained in the erasure tombstone, the audit trail and, for a short window, recent message rows.
+
+### Fixed
+
+- The `[0.1.0]` entry now names the methods that actually shipped (`events.bulkTrigger`, `subscribers.delete`, `users.updatePreferences`).
+
 ## [0.1.0] - 2026-10-05
 
 ### Added
 
-- Typed client for the Nervly gateway: `events.trigger`, `events.triggerBulk`, `events.get`, `messages.list`, `subscribers.erase`, `preferences.update`, `health.check`, and webhook signature verification and parsing.
+- Typed client for the Nervly gateway: `events.trigger`, `events.bulkTrigger`, `events.get`, `messages.list`, `subscribers.delete`, `users.updatePreferences`, `health.check`, and webhook signature verification and parsing.
 - Types generated from the same OpenAPI contract the gateway publishes, with compile-time assertions that the hand-written public types stay equivalent to the spec.
 - Dual ESM and CommonJS builds with zero runtime dependencies, on Node.js 24+ and any runtime with `fetch` and WebCrypto.
 - Strict, discriminated error types for every documented failure mode.
@@ -35,5 +50,6 @@ All notable changes to `@nervly/sdk` are documented here. The format follows [Ke
 
 - `check:release` now fails when `repository.url` is missing or not the GitHub repo, when `LICENSE` is absent from disk or `files[]`, or when the `engines.node` major disagrees with the Node floor in the README.
 
-[Unreleased]: https://github.com/igmrrf/nervly-js/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/igmrrf/nervly-js/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/igmrrf/nervly-js/releases/tag/v0.1.1
 [0.1.0]: https://github.com/igmrrf/nervly-js/releases/tag/v0.1.0

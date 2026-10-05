@@ -294,9 +294,14 @@ export interface ListMessagesResponse {
 // snake_case on the wire like the rest of the API. These are management-plane
 // objects: they are served by `https://console.nervly.io`, not the gateway.
 
-export type SenderChannel = "email" | "sms" | "voice";
+export type SenderChannel = "email" | "sms" | "voice" | "whatsapp";
 
-export type IdentityUnit = "domain" | "address" | "sender_id" | "caller_id";
+export type IdentityUnit =
+	| "domain"
+	| "address"
+	| "sender_id"
+	| "caller_id"
+	| "phone_number";
 
 export type VerificationSource = "byo" | "platform";
 
@@ -357,6 +362,12 @@ export interface CreateSenderInput {
 	identity_unit?: IdentityUnit;
 	/** Optional; validated against the provider's supported channels. */
 	channel?: SenderChannel;
+	/**
+	 * Provider-native primitive the binding verifies. Required for WhatsApp
+	 * (`phone_number`), where it is the numeric Meta phone number ID, and
+	 * refused for every other channel.
+	 */
+	unit_value?: string;
 	/** Who verifies the binding; defaults to the credential actually used. */
 	verify_with?: "nervly" | "provider";
 }
@@ -366,6 +377,8 @@ export interface CreateBindingInput {
 	provider: string;
 	/** Optional; derived from the identity value and channel when omitted. */
 	identity_unit?: IdentityUnit;
+	/** Provider-native primitive; see `CreateSenderInput.unit_value`. */
+	unit_value?: string;
 	/** Who verifies the binding; defaults to the credential actually used. */
 	verify_with?: "nervly" | "provider";
 }

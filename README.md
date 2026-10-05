@@ -80,6 +80,11 @@ main();
 Trigger a single notification event.
 Maps to `POST /v1/events/trigger`.
 
+`to.subscriberId` is required and is stored with the message as the stable
+end-user reference; it is also the per-subscriber rate-limit bucket. The
+contact fields you supply decide which channels are eligible — omit `email`
+and no email is attempted.
+
 ```typescript
 const result = await nervly.events.trigger(
   {
@@ -147,21 +152,30 @@ for (const message of result.messages) {
 
 #### `nervly.subscribers.delete(subscriberId)`
 
-Erase a subscriber and delete their personal data (NDPR / right-to-erasure).
-Maps to `DELETE /v1/subscribers/:subscriberId`.
+Erase a subscriber: clear their contact data, delete their preferences, and
+suppress any delivery queued for them. Maps to
+`DELETE /v1/subscribers/:subscriberId`.
 
 ```typescript
 const res = await nervly.subscribers.delete('usr_123');
 console.log('Erasure confirmed:', res.status, res.subscriberId);
 ```
 
-#### `nervly.subscribers.updatePreferences(subscriberId, data)`
+> [!NOTE]
+> The subscriber ID itself is **not** deleted. The gateway keeps it in the
+> erasure tombstone and the audit trail, and recent message rows keep the ID
+> link for a short billing/audit window before it is unlinked. Treat the ID
+> as retained pseudonymous data, not as a place to carry personal data.
 
-Update a subscriber's channel preferences.
+### Users
+
+#### `nervly.users.updatePreferences(subscriberId, data)`
+
+Update a subscriber's channel and category preferences.
 Maps to `PUT /v1/users/:subscriberId/preferences`.
 
 ```typescript
-await nervly.subscribers.updatePreferences('usr_123', {
+await nervly.users.updatePreferences('usr_123', {
   channels: {
     email: true,
     sms: false,
@@ -169,6 +183,9 @@ await nervly.subscribers.updatePreferences('usr_123', {
   },
 });
 ```
+
+`nervly.subscribers.updatePreferences` is a deprecated alias of the same call,
+removed in 0.2.0.
 
 ### Sender identities
 

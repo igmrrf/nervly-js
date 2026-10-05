@@ -171,9 +171,12 @@ const erasure = await nervly.subscribers.delete('user_8f21c');
 // { status: 'accepted', subscriberId, message }
 ```
 
-Anonymises the subscriber row and suppresses any delivery queued for it.
+Anonymises the subscriber row and suppresses any delivery queued for it. The
+subscriber ID itself is retained in the erasure tombstone and the audit trail;
+recent message rows keep the ID link for a short billing/audit window before
+it is unlinked.
 
-### `subscribers.updatePreferences(subscriberId, data) → UserPreferencesResponse` — `PUT /v1/users/{subscriberId}/preferences` (200)
+### `subscribers.updatePreferences(subscriberId, data) → UserPreferencesResponse` — `PUT /v1/users/{subscriberId}/preferences` (200), deprecated alias
 
 ### `users.updatePreferences(subscriberId, data) → UserPreferencesResponse` — same endpoint
 
@@ -232,6 +235,11 @@ const created = await nervly.senders.create({
 
 Repeating the same `(value, provider, identity_unit)` reuses the identity and
 binding rather than creating duplicates.
+
+WhatsApp identities are created with `channel: 'whatsapp'` and
+`identity_unit: 'phone_number'`, plus `unit_value` — the numeric Meta phone
+number ID. `unit_value` is required there and rejected for every other
+channel.
 
 ### `senders.addBinding(identityId, input) → CreateSenderResponse` — `POST /v1/senders/{identityId}/bindings` (201)
 

@@ -9,7 +9,8 @@ compatibility guarantee: which SDK release is built against which API version.
 
 | `@nervly/sdk` | Gateway / control-plane API | Status | Notes |
 | --- | --- | --- | --- |
-| `0.1.0` | `0.1.0` | Supported | Current release. Dual ESM/CJS, zero runtime dependencies. |
+| `0.1.1` | `0.1.0` | Supported | Current release. Adds the WhatsApp sender units; README and erasure wording corrected. |
+| `0.1.0` | `0.1.0` | Supported | Initial release. Dual ESM/CJS, zero runtime dependencies. |
 
 The API version is the `info.version` of
 [`nervly-docs/static/openapi/gateway.json`](../../nervly-docs/static/openapi/gateway.json),

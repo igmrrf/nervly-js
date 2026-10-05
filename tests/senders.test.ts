@@ -82,6 +82,34 @@ const bindingInput: CreateBindingInput = {
 	verify_with: "provider",
 };
 
+const whatsappCreateInput: CreateSenderInput = {
+	provider: "meta",
+	value: "+2348012345678",
+	channel: "whatsapp",
+	identity_unit: "phone_number",
+	unit_value: "123456789012345",
+};
+
+const WHATSAPP_BINDING: SenderBinding = {
+	...BINDING,
+	provider: "meta",
+	channel: "whatsapp",
+	identity_unit: "phone_number",
+	unit_value: "123456789012345",
+};
+
+const WHATSAPP_CREATE_RESPONSE: CreateSenderResponse = {
+	sender: {
+		...SENDER,
+		channel: "whatsapp",
+		sender_value: "+2348012345678",
+		display_name: null,
+		bindings: [WHATSAPP_BINDING],
+	},
+	binding: WHATSAPP_BINDING,
+	dns: [],
+};
+
 function managementNervly(
 	config: { managementUrl?: string; maxRetries?: number } = {},
 ) {
@@ -139,6 +167,15 @@ const operations: Operation[] = [
 		status: 201,
 		response: CREATE_RESPONSE,
 		run: (nervly) => nervly.senders.create(createInput),
+	},
+	{
+		name: "senders.create (whatsapp phone_number unit)",
+		method: "POST",
+		path: "/v1/senders",
+		expectedBody: whatsappCreateInput,
+		status: 201,
+		response: WHATSAPP_CREATE_RESPONSE,
+		run: (nervly) => nervly.senders.create(whatsappCreateInput),
 	},
 	{
 		name: "senders.addBinding (URL-encodes the id)",

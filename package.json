@@ -1,6 +1,6 @@
 {
 	"name": "@nervly/sdk",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Official TypeScript SDK for Nervly Unified Notification-as-a-Service (NaaS) Platform",
 	"type": "module",
 	"main": "./dist/cjs/index.js",
