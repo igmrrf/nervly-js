@@ -9,7 +9,7 @@
 # `make test-unit` and `make test-mutation` run them individually.
 
 .PHONY: help deps install build codegen check-codegen check-types check changelog deprecations \
-	release exports readme test test-unit test-coverage test-mutation test-live audit sbom verify ci dev hooks clean
+	release exports readme test test-unit test-coverage test-mutation test-live audit sbom verify ci local-ci dev hooks clean
 
 help:
 	@echo "nervly-js (SDK) commands:"
@@ -27,6 +27,7 @@ help:
 	@echo "  make test-live      - live contract suite (needs NERVLY_BASE_URL/NERVLY_API_KEY)"
 	@echo "  make verify         - check + test"
 	@echo "  make ci             - local mirror of this repo's CI job"
+	@echo "  make local-ci       - alias for make ci"
 	@echo "  make dev            - run the SDK dev entrypoint"
 	@echo "  make hooks          - reinstall Husky hooks"
 	@echo "  make clean          - remove dist/"
@@ -102,6 +103,9 @@ verify:
 
 ci: check test audit sbom exports readme
 	@echo "==> nervly-js CI steps complete."
+
+# Uniform workspace entry point: `make local-ci` is this repo's local CI.
+local-ci: ci
 
 dev:
 	npm run dev
