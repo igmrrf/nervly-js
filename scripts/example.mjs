@@ -9,10 +9,12 @@
  *
  * The dispatcher keeps `npm run example` stable as more examples land in this
  * repo; it forwards every other argument to the example's `main.ts` unchanged.
+ * Examples import the published package entry (`@nervly/sdk` → `dist/`), so the
+ * dispatcher builds the SDK first when `dist/` is missing or stale.
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -50,9 +52,53 @@ if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
 const entry = join(ROOT, "examples", name, "main.ts");
 if (!existsSync(entry)) {
 	process.stderr.write(
-		`unknown example "${name}": ${entry} does not exist\n\n${HELP}`,
+		`unknown example "${name}": ${entry} does not exist\n\n${HELP}\n`,
 	);
 	process.exit(2);
+}
+
+// The example apps import the published package entry (`@nervly/sdk`), which
+// resolves to the built `dist/`. Build it when it is missing or older than the
+// SDK sources so `npm run example` can never run against a stale bundle.
+const BUILT_ENTRY = join(ROOT, "dist", "esm", "index.js");
+
+function newestSourceMtime(dir) {
+	let newest = 0;
+	for (const child of readdirSync(dir, { withFileTypes: true })) {
+		const full = join(dir, child.name);
+		newest = Math.max(
+			newest,
+			child.isDirectory() ? newestSourceMtime(full) : statSync(full).mtimeMs,
+		);
+	}
+	return newest;
+}
+
+function sdkDistIsStale() {
+	if (!existsSync(BUILT_ENTRY)) return true;
+	return newestSourceMtime(join(ROOT, "src")) > statSync(BUILT_ENTRY).mtimeMs;
+}
+
+if (sdkDistIsStale()) {
+	process.stderr.write(
+		"example: SDK dist is missing or stale; building it first (npm run build)…\n",
+	);
+	const build = spawnSync(
+		process.execPath,
+		[join(ROOT, "scripts", "build.mjs")],
+		{
+			cwd: ROOT,
+			stdio: "inherit",
+		},
+	);
+	if (build.error) {
+		process.stderr.write(`failed to build the SDK: ${build.error.message}\n`);
+		process.exit(2);
+	}
+	if (build.status !== 0) {
+		process.stderr.write(`SDK build failed with exit ${build.status}\n`);
+		process.exit(2);
+	}
 }
 
 const tsx = join(

@@ -69,7 +69,6 @@ import {
 } from "../examples/node-app/harness/summary.js";
 import { Transcript } from "../examples/node-app/harness/transcript.js";
 import { runExample } from "../examples/node-app/main.js";
-import { Nervly } from "../src/index.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const TOKEN = "b".repeat(64);
@@ -327,9 +326,36 @@ async function startStubStack(
 					status: "QUEUED",
 					priority: "NORMAL",
 					channel: "email",
+					idempotencyKey: request.headers["idempotency-key"] ?? null,
 					timestamp: new Date().toISOString(),
 				});
 				return;
+			case "POST /v1/events/bulk": {
+				const events = Array.isArray(jsonBody(request).events)
+					? (jsonBody(request).events as unknown[])
+					: [];
+				if (events.length === 0) {
+					sendJson(response, 400, {
+						error: "BAD_REQUEST",
+						message: "Events array cannot be empty",
+						status_code: 400,
+					});
+					return;
+				}
+				sendJson(response, 200, {
+					jobId: "job_batch_stub",
+					status: "QUEUED",
+					count: events.length,
+					failedCount: 0,
+					events: events.map((_event, index) => ({
+						index,
+						eventId: `evt_bulk_${index}_0123456789abcdef`,
+						status: "QUEUED",
+						channel: "email",
+					})),
+				});
+				return;
+			}
 			case "GET /v1/messages": {
 				const delivered = options.delivered !== false;
 				sendJson(response, 200, {
@@ -357,7 +383,47 @@ async function startStubStack(
 				});
 				return;
 			}
+			case `GET /v1/events/evt_${"0".repeat(32)}`:
+				sendJson(response, 404, {
+					error: "NOT_FOUND",
+					message: "Event not found",
+					status_code: 404,
+				});
+				return;
+			case "GET /v1/events/evt_0123456789abcdef0123456789abcdef":
+				sendJson(response, 200, {
+					event_id: state.eventId,
+					event_name: "example.node_app.trigger",
+					subscriber_id: "sub-example",
+					priority: 3,
+					status: "DELIVERED",
+					channel: "email",
+					attempts: 1,
+					cost_micro_usd: 0,
+					test_mode: true,
+					category: "transactional",
+					variables_keys: ["runId"],
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				});
+				return;
 			default:
+				if (
+					request.method === "PUT" &&
+					/^\/v1\/users\/[^/]+\/preferences$/.test(pathOf(request))
+				) {
+					const subscriberId = decodeURIComponent(
+						pathOf(request)
+							.replace(/^\/v1\/users\//, "")
+							.replace(/\/preferences$/, ""),
+					);
+					sendJson(response, 200, {
+						status: "UPDATED",
+						subscriberId,
+						updated_at: new Date().toISOString(),
+					});
+					return;
+				}
 				sendJson(response, 404, { error: "unexpected", route });
 		}
 	});
@@ -1636,13 +1702,41 @@ describe("bootstrap", () => {
 // ---------------------------------------------------------------------------
 
 describe("checks", () => {
+	/** The message DTO the app stub serves from `GET /messages` and lookups. */
+	function messageDto(
+		eventId: string,
+		options: { status?: string; testMode?: boolean },
+	): Record<string, unknown> {
+		return {
+			event_id: eventId,
+			event_name: "example.node_app.trigger",
+			subscriber_id: "sub-example",
+			priority: 3,
+			status: options.status ?? "DELIVERED",
+			channel: "email",
+			attempts: 1,
+			cost_micro_usd: 0,
+			test_mode: options.testMode !== false,
+			variables_keys: [],
+			created_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+		};
+	}
+
+	/**
+	 * A stub of the node-app server: `runChecks` drives the app over HTTP, so
+	 * these tests pin the check logic against the app's contract without a
+	 * gateway. The real app is exercised in `tests/node-app-app.test.ts`.
+	 */
 	async function runAgainstStub(
 		options: {
-			delivered?: boolean;
 			status?: string;
 			testMode?: boolean;
 			natsConnected?: boolean;
 			timeoutMs?: number;
+			healthStatus?: number;
+			validationStatus?: number;
+			validationType?: string;
 			intercept?: (request: StubRequest, response: ServerResponse) => boolean;
 		} = {},
 	) {
@@ -1650,10 +1744,20 @@ describe("checks", () => {
 		const stub = await startHttpStub((request, response) => {
 			if (options.intercept?.(request, response)) return;
 			const route = `${request.method} ${pathOf(request)}`;
-			if (route === "GET /v1/health") {
+			if (route === "GET /health") {
+				if (options.healthStatus && options.healthStatus !== 200) {
+					sendJson(response, options.healthStatus, {
+						error: {
+							type: "NETWORK_ERROR",
+							message: "gateway unreachable",
+							status: options.healthStatus,
+						},
+					});
+					return;
+				}
 				sendJson(response, 200, {
 					status: "OK",
-					service: "stub",
+					service: "stub-app",
 					version: "0",
 					environment: "test",
 					deployment: "stub",
@@ -1663,50 +1767,86 @@ describe("checks", () => {
 				});
 				return;
 			}
-			if (route === "POST /v1/events/trigger") {
+			if (route === "POST /events") {
 				sendJson(response, 202, {
 					eventId: state.eventId,
 					status: "QUEUED",
 					priority: "NORMAL",
 					channel: "email",
-					timestamp: new Date().toISOString(),
+					idempotencyKey: jsonBody(request).idempotencyKey ?? null,
 				});
 				return;
 			}
-			if (route === "GET /v1/messages") {
-				sendJson(response, 200, {
-					messages: [
-						{
-							event_id: state.eventId,
-							event_name: "example.node_app.trigger",
-							subscriber_id: "sub-example",
-							priority: 3,
-							status: options.status ?? "DELIVERED",
-							channel: "email",
-							attempts: 1,
-							cost_micro_usd: 0,
-							test_mode: options.testMode !== false,
-							variables_keys: [],
-							created_at: new Date().toISOString(),
-							updated_at: new Date().toISOString(),
+			if (route === "POST /events/bulk") {
+				const events = Array.isArray(jsonBody(request).events)
+					? (jsonBody(request).events as unknown[])
+					: [];
+				if (events.length === 0) {
+					sendJson(response, options.validationStatus ?? 400, {
+						error: {
+							type: options.validationType ?? "VALIDATION_ERROR",
+							message: "Events array cannot be empty",
+							status: 400,
 						},
-					],
+					});
+					return;
+				}
+				sendJson(response, 202, {
+					jobId: "job-stub",
+					status: "QUEUED",
+					count: events.length,
+					failedCount: 0,
+					events: events.map((_event, index) => ({
+						index,
+						status: "QUEUED",
+						eventId: `evt_bulk_${index}_0123456789abcdef`,
+						channel: "email",
+					})),
 				});
 				return;
 			}
-			sendJson(response, 404, { error: "unexpected", route });
+			if (route.startsWith("PUT /subscribers/")) {
+				const subscriberId = decodeURIComponent(
+					route
+						.replace(/^PUT \/subscribers\//, "")
+						.replace(/\/preferences$/, ""),
+				);
+				sendJson(response, 200, {
+					status: "UPDATED",
+					subscriberId,
+					updated_at: new Date().toISOString(),
+				});
+				return;
+			}
+			if (route === `GET /events/evt_${"0".repeat(32)}`) {
+				sendJson(response, 404, {
+					error: { type: "NOT_FOUND", message: "Event not found", status: 404 },
+				});
+				return;
+			}
+			if (route === `GET /events/${state.eventId}`) {
+				sendJson(response, 200, messageDto(state.eventId, options));
+				return;
+			}
+			if (route === "GET /messages") {
+				sendJson(response, 200, {
+					messages: [messageDto(state.eventId, options)],
+				});
+				return;
+			}
+			sendJson(response, 404, {
+				error: {
+					type: "NOT_FOUND",
+					message: `no route for ${route}`,
+					status: 404,
+				},
+			});
 		});
 		const dir = makeTempDir("node-app-checks-");
 		const { log } = collectingTranscript(dir);
-		const client = new Nervly({
-			apiKey: "nervly_sk_test_stub",
-			baseUrl: stub.url,
-			timeout: 2000,
-			maxRetries: 0,
-		});
 		try {
 			const result = await runChecks({
-				client,
+				appUrl: stub.url,
 				runId: "20261007T084712Z-cafe",
 				timeoutMs: options.timeoutMs ?? 500,
 				log,
@@ -1717,18 +1857,31 @@ describe("checks", () => {
 		}
 	}
 
-	it("requires an observed DELIVERED message, then reports three passing checks", async () => {
+	it("requires an observed DELIVERED message, then reports every check passing", async () => {
 		const { result } = await runAgainstStub();
 		assert.deepEqual(
 			result.checks.map((check) => [check.name, check.status]),
 			[
 				["gateway health", "pass"],
 				["trigger accepted", "pass"],
+				["event lookup", "pass"],
+				["bulk trigger", "pass"],
+				["preferences updated", "pass"],
+				["typed error: validation", "pass"],
+				["typed error: not found", "pass"],
 				["trigger delivered", "pass"],
+				["idempotent replay", "pass"],
 			],
 		);
-		assert.match(result.checks[2]?.detail ?? "", /status DELIVERED/);
-		assert.match(result.checks[2]?.detail ?? "", /test_mode=true/);
+		const delivered = result.checks.find(
+			(check) => check.name === "trigger delivered",
+		);
+		assert.match(delivered?.detail ?? "", /status DELIVERED/);
+		assert.match(delivered?.detail ?? "", /test_mode=true/);
+		const replay = result.checks.find(
+			(check) => check.name === "idempotent replay",
+		);
+		assert.match(replay?.detail ?? "", /1 message observed/);
 	});
 
 	it("fails the assertion when the message never reaches DELIVERED", async () => {
@@ -1781,7 +1934,7 @@ describe("checks", () => {
 	it("matches evt_-prefixed and bare event ids as the same event", async () => {
 		const { result } = await runAgainstStub({
 			intercept: (request, response) => {
-				if (pathOf(request) !== "/v1/messages") return false;
+				if (pathOf(request) !== "/messages") return false;
 				// The gateway may return the bare UUID without the evt_ prefix.
 				sendJson(response, 200, {
 					messages: [
@@ -1803,29 +1956,169 @@ describe("checks", () => {
 				return true;
 			},
 		});
-		assert.equal(result.checks[2]?.status, "pass");
+		assert.equal(
+			result.checks.find((check) => check.name === "trigger delivered")?.status,
+			"pass",
+		);
 	});
 
 	it("maps a dead gateway to an environment failure naming make up", async () => {
+		await assert.rejects(
+			() => runAgainstStub({ healthStatus: 503 }),
+			(error: unknown) =>
+				error instanceof EnvironmentFailure &&
+				error.exitCode === 2 &&
+				error.message.includes("make up"),
+		);
+	});
+
+	it("treats an unreachable app as an environment failure", async () => {
 		const stub = await startHttpStub((_request, response) =>
 			sendJson(response, 200, {}),
 		);
 		const url = stub.url;
 		await stub.close();
-		const dir = makeTempDir("node-app-checks-dead-");
+		const dir = makeTempDir("node-app-checks-app-down-");
 		const { log } = collectingTranscript(dir);
-		const client = new Nervly({
-			apiKey: "nervly_sk_test_stub",
-			baseUrl: url,
-			timeout: 500,
-			maxRetries: 0,
-		});
 		await assert.rejects(
-			() => runChecks({ client, runId: "r", timeoutMs: 100, log }),
+			() => runChecks({ appUrl: url, runId: "r", timeoutMs: 100, log }),
+			(error: unknown) =>
+				error instanceof EnvironmentFailure &&
+				error.exitCode === 2 &&
+				error.message.includes("the app did not answer"),
+		);
+	});
+
+	it("treats a 5xx typed-error response as an environment failure", async () => {
+		await assert.rejects(
+			() => runAgainstStub({ validationStatus: 503 }),
 			(error: unknown) =>
 				error instanceof EnvironmentFailure &&
 				error.exitCode === 2 &&
 				error.message.includes("make up"),
+		);
+	});
+
+	it("fails the validation check when the app returns the wrong error type", async () => {
+		await assert.rejects(
+			() => runAgainstStub({ validationType: "INTERNAL_ERROR" }),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("VALIDATION_ERROR"),
+		);
+	});
+
+	it("fails the replay check when the replay returns a different event id", async () => {
+		let triggers = 0;
+		await assert.rejects(
+			() =>
+				runAgainstStub({
+					intercept: (request, response) => {
+						if (request.method !== "POST" || pathOf(request) !== "/events") {
+							return false;
+						}
+						triggers += 1;
+						if (triggers !== 2) return false;
+						sendJson(response, 202, {
+							eventId: "evt_ffffffffffffffffffffffffffffffff",
+							status: "QUEUED",
+							priority: "NORMAL",
+							channel: "email",
+						});
+						return true;
+					},
+				}),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("idempotent replay") &&
+				error.message.includes("instead of"),
+		);
+	});
+
+	it("fails the replay check when two messages exist for the replayed event", async () => {
+		await assert.rejects(
+			() =>
+				runAgainstStub({
+					intercept: (request, response) => {
+						if (pathOf(request) !== "/messages") return false;
+						const message = messageDto(
+							"evt_abcdef0123456789abcdef0123456789",
+							{},
+						);
+						sendJson(response, 200, { messages: [message, message] });
+						return true;
+					},
+				}),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("idempotent replay produced 2 messages"),
+		);
+	});
+
+	it("fails the bulk check when the app does not accept both events", async () => {
+		await assert.rejects(
+			() =>
+				runAgainstStub({
+					intercept: (request, response) => {
+						if (pathOf(request) !== "/events/bulk") return false;
+						sendJson(response, 202, {
+							jobId: "job-stub",
+							status: "QUEUED",
+							count: 1,
+							failedCount: 1,
+							events: [{ index: 0, status: "QUEUED", eventId: "evt_only_one" }],
+						});
+						return true;
+					},
+				}),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("bulk trigger"),
+		);
+	});
+
+	it("fails the preferences check when the app echoes another subscriber", async () => {
+		await assert.rejects(
+			() =>
+				runAgainstStub({
+					intercept: (request, response) => {
+						if (!pathOf(request).endsWith("/preferences")) return false;
+						sendJson(response, 200, {
+							status: "UPDATED",
+							subscriberId: "someone-else",
+							updated_at: new Date().toISOString(),
+						});
+						return true;
+					},
+				}),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("preferences"),
+		);
+	});
+
+	it("fails the event lookup check when the app returns another event", async () => {
+		await assert.rejects(
+			() =>
+				runAgainstStub({
+					intercept: (request, response) => {
+						if (!pathOf(request).startsWith("/events/")) return false;
+						sendJson(response, 200, {
+							event_id: "evt_11111111111111111111111111111111",
+							status: "QUEUED",
+						});
+						return true;
+					},
+				}),
+			(error: unknown) =>
+				error instanceof Error &&
+				(error as { exitCode?: number }).exitCode === 1 &&
+				error.message.includes("event lookup"),
 		);
 	});
 });
@@ -1924,7 +2217,21 @@ describe("main runExample", () => {
 			});
 			assert.deepEqual(
 				summary.checks.map((check) => check.name),
-				["gateway health", "trigger accepted", "trigger delivered"],
+				[
+					"gateway health",
+					"trigger accepted",
+					"event lookup",
+					"bulk trigger",
+					"preferences updated",
+					"typed error: validation",
+					"typed error: not found",
+					"trigger delivered",
+					"idempotent replay",
+				],
+			);
+			assert.equal(
+				summary.checks.every((check) => check.status === "pass"),
+				true,
 			);
 			assert.deepEqual(summary.artifacts, ["transcript.log", "bootstrap.json"]);
 

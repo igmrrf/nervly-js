@@ -2,10 +2,12 @@
  * Node SDK walking skeleton — the reference implementation of the example
  * harness contract (`nervly-base/docs/examples/harness-contract.md`).
  *
- * Flow: guard → bootstrap (fresh-signup, seed, or env-first) → SDK health +
- * trigger → asserted test-mode DELIVERED read-back → `artifacts/summary.json` +
- * transcript → honest exit code (0 pass / 1 assertion / 2 environment / 3
- * guard refusal). Secrets are redacted at every output boundary.
+ * Flow: guard → bootstrap (fresh-signup, seed, or env-first) → start the
+ * node-app server on an ephemeral port with the minted test key → drive every
+ * endpoint over HTTP → asserted test-mode DELIVERED read-back →
+ * `artifacts/summary.json` + transcript → honest exit code (0 pass / 1
+ * assertion / 2 environment / 3 guard refusal). Secrets are redacted at every
+ * output boundary.
  *
  * Run through the repo entrypoint: `npm run example` (or `make example`).
  */
@@ -13,7 +15,7 @@
 import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import Nervly from "../../src/index.js";
+import { type RunningApp, resolveAppConfig, startApp } from "./app.js";
 import {
 	type BootstrapDeps,
 	type BootstrapResult,
@@ -158,6 +160,7 @@ export async function runExample(options: RunOptions = {}): Promise<number> {
 	let runId = newRunId(startedAt);
 	let failure: HarnessFailure | null = null;
 	let bootstrap: BootstrapResult | null = null;
+	let app: RunningApp | null = null;
 	let removeSignals: (() => void) | null = null;
 	const checks: CheckResult[] = [];
 	const artifacts: string[] = [];
@@ -214,14 +217,17 @@ export async function runExample(options: RunOptions = {}): Promise<number> {
 			});
 		}
 
-		const client = new Nervly({
+		const appOptions = resolveAppConfig({
 			apiKey: bootstrap.apiKey,
 			baseUrl: config.gatewayUrl,
-			timeout: 10_000,
-			maxRetries: 2,
 		});
+		app = await startApp(appOptions);
+		transcript.line(
+			`→ app: listening at ${app.url} (timeout=${appOptions.timeoutMs}ms maxRetries=${appOptions.maxRetries} retryBaseDelay=${appOptions.retryBaseDelayMs}ms)`,
+		);
+
 		const result = await runChecks({
-			client,
+			appUrl: app.url,
 			runId: config.runId,
 			timeoutMs: config.checkTimeoutMs,
 			log: transcript,
@@ -244,6 +250,11 @@ export async function runExample(options: RunOptions = {}): Promise<number> {
 	if (removeSignals !== null) {
 		removeSignals();
 		removeSignals = null;
+	}
+	if (app !== null) {
+		const running = app;
+		app = null;
+		await running.close();
 	}
 	if (bootstrap !== null && config !== null && transcript !== null) {
 		if (config.keep) {
