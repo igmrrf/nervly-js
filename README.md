@@ -11,6 +11,8 @@ The official TypeScript SDK for Nervly NaaS (Notification as a Service). Easily 
 ## Overview
 Nervly is a unified notification infrastructure designed for developers. This SDK provides simple and intuitive access to the Nervly API, allowing you to seamlessly manage user preferences, trigger events, handle webhooks, inspect message delivery status, and ensure robust delivery across Email, SMS, Push, WhatsApp, and Voice.
 
+**Examples:** [`examples/node-app/`](examples/node-app/) (Node SDK app), [`examples/edge-worker/`](examples/edge-worker/) (edge runtime), and [`examples/mcp-agent/`](examples/mcp-agent/) (MCP + agent toolkit) are scaffolding stubs until the shared harness contract lands, alongside the SDK wire-pinning example [`examples/basic-usage.ts`](examples/basic-usage.ts).
+
 ## Documentation & Links
 
 - [**Nervly documentation**](https://docs.nervly.io) — SDK quickstart, integration guides, and the full API reference.
