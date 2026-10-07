@@ -3,6 +3,9 @@ dist/
 .security-reports/
 docs/readme-snippets/
 artifacts/
+# Edge-worker example: run-scoped local secret + wrangler caches, never committed.
+examples/edge-worker/.dev.vars
+examples/edge-worker/.wrangler/
 *.tsbuildinfo
 *.log
 .DS_Store

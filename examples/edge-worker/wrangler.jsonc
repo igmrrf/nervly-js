@@ -1,0 +1,15 @@
+{
+	// nervly-js edge SDK example — served locally by `wrangler dev` (workerd),
+	// driven end to end by `npm run example -- edge-worker`.
+	"name": "nervly-edge-worker-example",
+	"main": "worker.ts",
+	// Workerd's Node compatibility (`node:crypto`, `Buffer`) is on by default
+	// for compatibility dates >= 2026-08-04; only `webhooks.verifySignature`
+	// needs it. Local dev needs no account or login.
+	"compatibility_date": "2026-08-04",
+	// The worker imports the built package entry (`@nervly/sdk` -> `dist/esm`).
+	// If a future esbuild release stops resolving the package self-reference,
+	// uncomment the alias and keep the harness's stale-`dist` check in place:
+	// "alias": { "@nervly/sdk": "../../dist/esm/index.js" }
+	"vars": {}
+}
