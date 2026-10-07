@@ -9,7 +9,7 @@
 # `make test-unit` and `make test-mutation` run them individually.
 
 .PHONY: help deps install build codegen check-codegen check-types check changelog deprecations \
-	release exports readme test test-unit test-coverage test-mutation test-live audit sbom verify ci local-ci dev hooks clean
+	release exports readme test test-unit test-coverage test-mutation test-live example audit sbom verify ci local-ci dev hooks clean
 
 help:
 	@echo "nervly-js (SDK) commands:"
@@ -20,6 +20,7 @@ help:
 	@echo "  make test           - coverage + mutation (what CI runs)"
 	@echo "  make test-unit      - unit tests with the 80%% coverage floor"
 	@echo "  make test-mutation  - seeded mutation test"
+	@echo "  make example        - run the default example app (node-app)"
 	@echo "  make exports        - dual ESM/CJS packaging gate"
 	@echo "  make readme         - README gate (snippets type-check + docs agreement)"
 	@echo "  make audit          - npm audit (runtime deps, high+)"
@@ -91,6 +92,13 @@ test-mutation:
 # booted stack). Locally: point NERVLY_BASE_URL at a running gateway.
 test-live:
 	npm run test:live
+
+# The repo example convention (harness contract §2): node-app is the default;
+# `make example` delegates to `npm run example`; extra args pass through, e.g.
+# `make example ARGS="--json"` or `make example ARGS="edge-worker --json"`.
+ARGS ?=
+example:
+	npm run example -- $(ARGS)
 
 audit:
 	npm run audit

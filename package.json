@@ -70,6 +70,7 @@
 		"verify": "npm run check && npm test && npm run check:exports",
 		"test": "npm run test:coverage && npm run test:mutation",
 		"test:live": "tsx --test tests/live-contract.test.ts",
+		"example": "node scripts/example.mjs",
 		"test:coverage": "npm run build && tsx --test --experimental-test-coverage --test-coverage-include='src/**/*.ts' --test-coverage-exclude='src/generated/**' --test-coverage-exclude='src/types.ts' --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 tests/*.test.ts",
 		"test:mutation": "node scripts/mutation-test.mjs",
 		"dev": "tsx src/index.ts",
