@@ -54,6 +54,7 @@ import {
 	assertSupportedBootstrapMode,
 	guardConfig,
 	isLocalHost,
+	isProductionHost,
 } from "../examples/edge-worker/harness/guards.js";
 import { redact, redactValue } from "../examples/edge-worker/harness/redact.js";
 import {
@@ -449,6 +450,13 @@ describe("config", () => {
 		assert.equal(config.checkTimeoutMs, 2000);
 	});
 
+	it("resolves sandbox default URLs when NERVLY_TARGET=sandbox", () => {
+		const config = loadConfig({ NERVLY_TARGET: "sandbox" });
+		assert.equal(config.target, "sandbox");
+		assert.equal(config.apiUrl, "https://sandbox-api.nervly.io");
+		assert.equal(config.gatewayUrl, "https://sandbox-api.nervly.io");
+	});
+
 	it("refuses a malformed run id, unknown bootstrap mode and bad timeouts", () => {
 		for (const env of [
 			baseEnv({ NERVLY_RUN_ID: "bad run id" }),
@@ -495,6 +503,14 @@ describe("guards", () => {
 		assert.doesNotThrow(() => guardConfig(stubConfig()));
 	});
 
+	it("detects production hosts and allows sandbox host", () => {
+		assert.equal(isProductionHost("api.nervly.io"), true);
+		assert.equal(isProductionHost("console.nervly.io"), true);
+		assert.equal(isProductionHost("control.nervly.io"), true);
+		assert.equal(isProductionHost("nervly.io"), true);
+		assert.equal(isProductionHost("sandbox-api.nervly.io"), false);
+	});
+
 	it("refuses live or malformed keys and unsupported targets", () => {
 		for (const apiKey of [
 			syntheticApiKey("live", "abc", "def"),
@@ -513,8 +529,78 @@ describe("guards", () => {
 			guardConfig(stubConfig({ apiKey: "nervly_sk_test_ok" })),
 		);
 		assert.throws(
-			() => guardConfig(stubConfig({ target: "sandbox" })),
+			() => guardConfig(stubConfig({ target: "production" })),
 			(error: unknown) => error instanceof GuardRefusal && error.exitCode === 3,
+		);
+	});
+
+	it("accepts sandbox target with test key and sandbox URLs", () => {
+		const testKey = syntheticApiKey("test", "sandbox", "ok");
+		assert.doesNotThrow(() =>
+			guardConfig(
+				stubConfig({
+					target: "sandbox",
+					apiKey: testKey,
+					apiUrl: "https://sandbox-api.nervly.io",
+					gatewayUrl: "https://sandbox-api.nervly.io",
+					controlUrl: "https://sandbox-api.nervly.io",
+				}),
+			),
+		);
+	});
+
+	it("refuses sandbox target when apiKey is null", () => {
+		assert.throws(
+			() =>
+				guardConfig(
+					stubConfig({
+						target: "sandbox",
+						apiKey: null,
+						apiUrl: "https://sandbox-api.nervly.io",
+						gatewayUrl: "https://sandbox-api.nervly.io",
+					}),
+				),
+			(error: unknown) =>
+				error instanceof GuardRefusal &&
+				error.exitCode === 3 &&
+				error.message.includes("NERVLY_API_KEY is required"),
+		);
+	});
+
+	it("refuses sandbox target when URL points to production host", () => {
+		const testKey = syntheticApiKey("test", "sandbox", "ok");
+		for (const prodHost of [
+			"https://api.nervly.io",
+			"https://console.nervly.io",
+			"https://control.nervly.io",
+			"https://nervly.io",
+		]) {
+			assert.throws(
+				() =>
+					guardConfig(
+						stubConfig({
+							target: "sandbox",
+							apiKey: testKey,
+							apiUrl: prodHost,
+							gatewayUrl: prodHost,
+						}),
+					),
+				(error: unknown) =>
+					error instanceof GuardRefusal &&
+					error.exitCode === 3 &&
+					error.message.includes("production host"),
+				`expected refusal for ${prodHost}`,
+			);
+		}
+	});
+
+	it("refuses unknown target with GuardRefusal exit 3", () => {
+		assert.throws(
+			() => guardConfig(stubConfig({ target: "unknown" })),
+			(error: unknown) =>
+				error instanceof GuardRefusal &&
+				error.exitCode === 3 &&
+				error.message.includes("is not supported"),
 		);
 	});
 

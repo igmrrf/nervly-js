@@ -26,6 +26,8 @@ export interface ExampleConfig {
 	checkTimeoutMs: number;
 }
 
+export const SANDBOX_API_URL = "https://sandbox-api.nervly.io";
+
 export const DEFAULTS = {
 	target: "local",
 	apiUrl: "http://localhost:8080",
@@ -91,11 +93,14 @@ export function loadConfig(
 		);
 	}
 
-	const apiUrl = optional(env, "NERVLY_API_URL") ?? DEFAULTS.apiUrl;
+	const target = optional(env, "NERVLY_TARGET") ?? DEFAULTS.target;
+	const defaultApiUrl =
+		target === "sandbox" ? SANDBOX_API_URL : DEFAULTS.apiUrl;
+	const apiUrl = optional(env, "NERVLY_API_URL") ?? defaultApiUrl;
 	const gatewayOverride = optional(env, "NERVLY_GATEWAY_URL");
 
 	return {
-		target: optional(env, "NERVLY_TARGET") ?? DEFAULTS.target,
+		target,
 		gatewayUrl: gatewayOverride ?? apiUrl,
 		apiUrl,
 		controlUrl: optional(env, "NERVLY_CONTROL_URL") ?? DEFAULTS.controlUrl,
