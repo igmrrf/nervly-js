@@ -103,6 +103,30 @@ jobs:
             "https://api.github.com/repos/${{ github.repository_owner }}/nervly-base/dispatches" \
             -d '{"event_type":"service-updated","client_payload":{"repo":"nervly-js","ref":"${{ github.ref_name }}"}}'
 
+  # Ticket 15: the example apps' light CI — no stack boot. `check:types`
+  # compiles examples/** against the SDK sources (tsconfig.check.json), the
+  # build produces the package entry the edge/mcp examples import at run time,
+  # and check-examples.mjs asserts every example's README/entrypoint plus the
+  # freshness of that dist. The full-stack run lives in nervly-base's Examples
+  # Suite workflow.
+  examples:
+    name: Examples — Typecheck, SDK Dist & Presence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Install
+        run: npm ci
+      - name: Example typecheck (examples/** via tsconfig.check.json)
+        run: npm run check:types
+      - name: SDK dist build + example README/entrypoint presence
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run check:examples
+
   hooks-drift-gate:
     name: Pre-commit hook wiring is intact
     runs-on: ubuntu-latest
