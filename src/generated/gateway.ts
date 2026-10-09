@@ -489,7 +489,12 @@ export interface components {
              *     syntactically validated like `reply_to`.
              */
             cc?: string[] | null;
-            /** @description Additional SMTP headers to attach, such as `Reply-To`. */
+            /**
+             * @description Additional SMTP headers to attach, such as `X-Campaign-Id`. Headers
+             *     that carry routing or authentication identity (`From`, `Reply-To`,
+             *     `DKIM-Signature`, …) are refused at ingress; a caller sets those through
+             *     the canonical fields instead.
+             */
             customHeaders?: {
                 [key: string]: string;
             } | null;
